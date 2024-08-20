@@ -1,0 +1,8 @@
+{
+    "models": {
+        "gemma_2b": {
+            "endpoint_id": "5048363658468392960",
+            "location": "us-west1"
+        }
+    }
+}

@@ -1,0 +1,4208 @@
+{
+    "results": [
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "I"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "I"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "I"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "S"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "I"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "Y"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "*"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D"
+        },
+        {
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A"
+        },
+        {
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C"
+        },
+        {
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E"
+        }
+    ]
+}
