@@ -1,8 +1,15 @@
-from enum import Enum
 import json
 
-from langchain_google_vertexai import ChatVertexAI, HarmCategory, HarmBlockThreshold
-
+from langchain_core.rate_limiters import InMemoryRateLimiter
+from langchain_google_vertexai import (
+    ChatVertexAI,
+    HarmBlockThreshold,
+    HarmCategory,
+    VertexAIModelGarden,
+    get_vertex_maas_model,
+)
+from langchain_google_vertexai.gemma import GemmaChatVertexAIModelGarden
+from langchain_google_vertexai.model_garden import ChatAnthropicVertex
 
 _GEMINI_MODELS = [
     "gemini-1.5-pro-001",
@@ -12,7 +19,11 @@ _GEMINI_MODELS = [
 ]
 
 
-def get_model(model_name: str):
+rate_limiter_llama = InMemoryRateLimiter(requests_per_second=1.0)
+rate_limiter_mistral = InMemoryRateLimiter(requests_per_second=2.0)
+
+
+def get_model(model_name: str, temperature: float = 0.0, **kwargs):
     """Prepares a chat model for experiments."""
     safety_settings = {
         HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
@@ -26,12 +37,63 @@ def get_model(model_name: str):
     if model_name in _GEMINI_MODELS:
         return ChatVertexAI(
             model_name=model_name,
-            temperature=0.0,
+            temperature=temperature,
             safety_settings=safety_settings,
+            **kwargs
         )
-    if model_name == "gemma-2b":
-        return GemmaChatVertexAIModelGarden(
-            endpoint_id=config["models"]["gemma_2b"]["endpoint_id"],
+    if model_name in ["gemma_2b", "gemma_2b_it"]:
+        llm =  GemmaChatVertexAIModelGarden(
+            endpoint_id=config["models"][model_name]["endpoint_id"],
             project="kuligin-sandbox1",
-            location=config["models"]["gemma_2b"]["location"],
+            location=config["models"][model_name]["location"],
+            temperature=temperature,
+        )
+        if "max_output_tokens" in kwargs:
+            return llm.bind(max_tokens=kwargs["max_output_tokens"])
+        return llm
+    if model_name in ["llama_2b"]:
+        llm = VertexAIModelGarden(
+            endpoint_id=config["models"][model_name]["endpoint_id"],
+            project="kuligin-sandbox1",
+            location=config["models"][model_name]["location"],
+            allowed_model_args=["temperature", "max_tokens"],
+        ).bind(temperature=temperature)
+        if "max_output_tokens" in kwargs:
+            return llm.bind(max_tokens=kwargs["max_output_tokens"])
+        return llm
+    if model_name in ["medllama3"]:
+        llm = VertexAIModelGarden(
+            endpoint_id=config["models"][model_name]["endpoint_id"],
+            project="kuligin-sandbox1",
+            location=config["models"][model_name]["location"],
+            allowed_model_args=["temperature", "max_tokens"],
+            prompt_arg="inputs"
+        ).bind(temperature=temperature)
+        if "max_output_tokens" in kwargs:
+            return llm.bind(max_tokens=kwargs["max_output_tokens"])
+        return llm
+    if model_name == "llama_3_405b":
+        return get_vertex_maas_model(
+            model_name="meta/llama3-405b-instruct-maas",
+            temperature=temperature,
+            rate_limiter=rate_limiter_llama,
+        )
+    if model_name == "mistral_large":
+        return get_vertex_maas_model(
+            model_name="mistral-large@2407",
+            temperature=temperature,
+            rate_limiter=rate_limiter_mistral,
+        )
+    if model_name == "mistral_nemo":
+        return get_vertex_maas_model(
+            model_name="mistral-nemo@2407",
+            temperature=temperature,
+            rate_limiter=InMemoryRateLimiter(requests_per_second=2.0),
+        )
+    if model_name == "anthropic_claude":
+        return ChatAnthropicVertex(
+            model_name="claude-3-5-sonnet@20240620",
+            temperature=temperature,
+            rate_limiter=InMemoryRateLimiter(requests_per_second=2.0),
+            location="us-east5",
         )

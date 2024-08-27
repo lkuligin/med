@@ -3,6 +3,18 @@
         "gemma_2b": {
             "endpoint_id": "5048363658468392960",
             "location": "us-west1"
+        },
+        "gemma_2b_it": {
+            "endpoint_id": "9187312453510234112",
+            "location": "us-west1"
+        },
+        "llama_2b": {
+            "endpoint_id": "7034521462882959360",
+            "location": "us-east1"
+        },
+        "medllama3": {
+            "endpoint_id": "1861697486196834304",
+            "location": "europe-west1"
         }
     }
 }
