@@ -38,7 +38,7 @@ python qa/run.py --model_name=anthropic_claude  --sample_size=1 --output_file_na
 
 python qa/run.py --model_name=gemma_2b  --sample_size=1 --output_file_name=experiment8.json
 python qa/run.py --model_name=gemma_2b  --sample_size=10 --output_file_name=experiment8a.json --temperature=0.5
-python qa/run.py --model_name=gemma_2b  --sample_size=1 --output_file_name=experiment8b.json --chain_type=cot --max_output_tokens=150
+python qa/run.py --model_name=gemma_2b  --sample_size=1 --output_file_name=experiment8b.json --chain_type=cot --max_output_tokens=2048
 
 
 python qa/run.py --model_name=mistral_large  --sample_size=1 --output_file_name=experiment9.json
@@ -47,7 +47,7 @@ python qa/run.py --model_name=mistral_large  --sample_size=1 --output_file_name=
 
 python qa/run.py --model_name=mistral_nemo  --sample_size=1 --output_file_name=experiment10.json
 python qa/run.py --model_name=mistral_nemo  --sample_size=10 --output_file_name=experiment10a.json --temperature=0.5
-python qa/run.py --model_name=mistral_nemo  --sample_size=10 --output_file_name=experiment10b.json --chain_type=cot
+python qa/run.py --model_name=mistral_nemo  --sample_size=1 --output_file_name=experiment10b.json --chain_type=cot
 
 
 python qa/run.py --model_name=gemma_2b_it  --sample_size=1 --output_file_name=experiment11.json

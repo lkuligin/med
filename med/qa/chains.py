@@ -41,7 +41,10 @@ def _format_options(entry: Dict[str, str]) -> str:
 
 
 def _parse_response(response: BaseMessage) -> str:
-    return response.content.strip().strip("\n* ")[0].upper()
+    result = response.content.strip("\n* ")
+    if result:
+        return result[0].upper()
+    return "N"
 
 
 def _parse_response_llama(response: BaseMessage) -> str:
@@ -151,3 +154,4 @@ def get_cot_chain(model_name: str, max_output_tokens: int = 2048):
         }
 
     return chain
+    
