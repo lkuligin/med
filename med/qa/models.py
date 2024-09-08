@@ -16,12 +16,13 @@ _GEMINI_MODELS = [
     "gemini-1.0-pro-001",
     "gemini-1.0-pro-002",
     "gemini-1.5-flash-001",
+    "gemini-pro-experimental"
 ]
 
 
 rate_limiter_llama = InMemoryRateLimiter(requests_per_second=1.0)
 rate_limiter_mistral = InMemoryRateLimiter(requests_per_second=2.0)
-
+rate_limiter_exp = InMemoryRateLimiter(requests_per_second=0.5)
 
 def get_model(model_name: str, temperature: float = 0.0, **kwargs):
     """Prepares a chat model for experiments."""
@@ -33,7 +34,6 @@ def get_model(model_name: str, temperature: float = 0.0, **kwargs):
     }
     with open("config.json", "r") as read_f:
         config = json.load(read_f)
-
     if model_name in _GEMINI_MODELS:
         return ChatVertexAI(
             model_name=model_name,
