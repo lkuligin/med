@@ -13,6 +13,7 @@ from langchain_google_vertexai.model_garden import ChatAnthropicVertex
 
 _GEMINI_MODELS = [
     "gemini-1.5-pro-001",
+    "gemini-1.5-pro-002",
     "gemini-1.0-pro-001",
     "gemini-1.0-pro-002",
     "gemini-1.5-flash-001",
@@ -41,6 +42,15 @@ def get_model(model_name: str, temperature: float = 0.0, **kwargs):
             safety_settings=safety_settings,
             **kwargs
         )
+    if model_name == "gemma_9b_it":
+        llm =  VertexAIModelGarden(
+            endpoint_id=config["models"][model_name]["endpoint_id"],
+            project="kuligin-sandbox1",
+            location=config["models"][model_name]["location"],
+            prompt_arg="inputs",
+            allowed_model_args=["temperature", "max_tokens"]
+        ).bind(temperature=temperature)
+        return llm
     if model_name in ["gemma_2b", "gemma_2b_it"]:
         llm =  GemmaChatVertexAIModelGarden(
             endpoint_id=config["models"][model_name]["endpoint_id"],

@@ -1,15 +1,21 @@
 from collections import Counter
 from operator import itemgetter
-from typing import Dict, Union
+from typing import Any, Dict
 
 from langchain_core.messages import BaseMessage
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import (
     RunnableLambda,
     RunnablePassthrough,
 )
+from langchain_core.output_parsers import StrOutputParser
+from langgraph.prebuilt import create_react_agent
 
 from qa.models import get_model
+from qa.agents_utils import get_search_tool
+from qa.agent_plan import get_workflow
+from qa.utils import _parse_response, _format_options
+
 
 _PROMPT_COT = (
     "You're taking an exam with a multiple-choice question. The question is:\n"
@@ -18,7 +24,7 @@ _PROMPT_COT = (
     "concept being tested? Are there any keywords or clues?\n"
     "Consider each answer choice: Does the answer choice make sense based on "
     "the information given in the question? Is there any evidence to support "
-    "or refute the choice?\nEliminate incorrect choices: Can you rule out any "
+    "or refuse the choice?\nEliminate incorrect choices: Can you rule out any "
     "answer choices based on your analysis?\nEvaluate the remaining choices: "
     "Which answer choice is the most likely to be correct? Is there any reason "
     "to doubt the accuracy of your choice? Once you've completed your analysis, "
@@ -65,23 +71,8 @@ class Sampler:
             return self._run(entry, retry + 1)
 
 
-def _format_options(entry: Dict[str, str]) -> str:
-    return "\n".join([f"{value['key']}: {value['value']}" for value in entry])
-
-
-def _parse_response(response: Union[BaseMessage, str]) -> str:
-    if isinstance(response, str):
-        result = response
-    else:
-        result = response.content
-    result = result.strip(".:[\"'(\\ *\n ")
-    if result:
-        return result[0].upper()
-    return "N"
-
-
 def _parse_response_llama(response: BaseMessage) -> str:
-    answer = response.strip("”.:[\"'(\\ *\n ")[0].upper()
+    answer = response.strip("”.:[\"'(\\ *\n `")[0].upper()
     return answer
 
 
@@ -95,6 +86,10 @@ def get_chain(
             return get_cot_chain(model_name, max_output_tokens=max_output_tokens)
         case "self-refl":
             return get_refl_chain(model_name, max_output_tokens=max_output_tokens)
+        case "react":
+            return get_react_chain(model_name)
+        case "plan":
+            return get_plan_chain(model_name)
 
 
 def get_simple_chain(model_name: str, sample_size: int = 10, temperature: float = 0.0):
@@ -108,7 +103,7 @@ def get_simple_chain(model_name: str, sample_size: int = 10, temperature: float 
         )
     )
 
-    if model_name in ["llama_2b", "medllama3"]:
+    if model_name in ["llama_2b", "medllama3", "gemma_9b_it"]:
         chain = (
             {
                 "question": itemgetter("question"),
@@ -147,13 +142,7 @@ def get_cot_chain(model_name: str, max_output_tokens: int = 2048):
         llm2 = llm
 
     prompt_first = PromptTemplate.from_template(_PROMPT_COT)
-
-    prompt_second = PromptTemplate.from_template(
-        "You're given a full answer for a multiple-choice question. The intermediate answer "
-        "includes reasoning and explanation.\n FULL ANSWER WITH REASONING:\n{full_answer}\n"
-        "Your task is to extract only the final "
-        "answer itself. Answer only a single letter and don't give any explanations: "
-    )
+    prompt_second = PromptTemplate.from_template(_PROMPT_EXTRACT_ANSWER)
 
     chain_start = (
         {
@@ -170,9 +159,9 @@ def get_cot_chain(model_name: str, max_output_tokens: int = 2048):
             "answer": RunnableLambda(lambda x: _parse_response_llama(x["final_answer"])),
         }
         return chain
-
+    parser = StrOutputParser()
     chain = chain_start | {
-            "full_output": RunnableLambda(lambda x: x["first_step"].content),
+            "full_output": RunnableLambda(lambda x: parser.invoke(input=x["first_step"])),
             "answer": RunnableLambda(lambda x: _parse_response(x["final_answer"])),
         }
 
@@ -218,3 +207,54 @@ def get_refl_chain(model_name: str, max_output_tokens: int = 2048):
     )
 
     return chain
+
+
+def get_react_chain(model_name: str, max_output_tokens: int = 2048):
+    llm = get_model(model_name, temperature=0., max_output_tokens=max_output_tokens)
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system", (
+                    "Try to answer the given medical exam question. Thinks step by step "
+                    " and get required information from Google Search if needed."
+                )),
+            MessagesPlaceholder(variable_name="messages"),
+        ]
+    )
+    prompt_second = PromptTemplate.from_template(_PROMPT_EXTRACT_ANSWER)
+        
+    tool = get_search_tool()
+    agent = create_react_agent(llm, [tool], messages_modifier=prompt)
+    chain =  {
+        "question": itemgetter("question"),
+        "options": RunnableLambda(lambda x: _format_options(x["options"])),
+    } | RunnablePassthrough.assign(messages=lambda x: [("user", _PROMPT_COT.format(**x))]) | agent | RunnablePassthrough.assign(
+        final_answer=lambda x: ((prompt_second | llm).invoke(x["messages"][-1]))) | {"answer": RunnableLambda(lambda x: _parse_response(x["final_answer"]))}
+    return chain
+
+
+def get_plan_chain(model_name: str, max_output_tokens: int = 2048):
+    llm = get_model(model_name, temperature=0., max_output_tokens=max_output_tokens)
+    agent = get_workflow(llm)
+    prompt_second = PromptTemplate.from_template(_PROMPT_EXTRACT_ANSWER)
+
+    chain =  {
+        "question": itemgetter("question"),
+        "options": RunnableLambda(lambda x: _format_options(x["options"])),
+    } | agent | RunnablePassthrough.assign(
+        final_answer=lambda x: ((prompt_second | llm).invoke(x["response"]))) | {"answer": RunnableLambda(lambda x: _parse_response(x["final_answer"]))}
+    return chain
+
+
+def _format_question(entry: Dict[str, Any]) -> str:
+    prompt_qa = PromptTemplate.from_template(
+        (
+            "Choose the right answer to the following question:\n{question}\n"
+            "You need to choose the correct options out of:\n{options}\n"
+            "Answer only a single letter and don't give any explanations:"
+        )
+    )
+    return prompt_qa.format(
+        question=entry["question"],
+        options=_format_options(entry["options"])
+    )

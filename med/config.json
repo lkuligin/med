@@ -8,6 +8,14 @@
             "endpoint_id": "9187312453510234112",
             "location": "us-west1"
         },
+        "gemma_9b_it": {
+            "endpoint_id": "9004353718648307712",
+            "location": "us-east1"
+        },
+        "gemma_27b_it": {
+            "endpoint_id": "6097843109134073856",
+            "location": "us-west1"
+        },
         "llama_2b": {
             "endpoint_id": "7034521462882959360",
             "location": "us-east1"
