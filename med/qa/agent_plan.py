@@ -12,6 +12,7 @@ import operator
 from qa.utils import _parse_response
 from qa.agents_utils import Queries, get_search_info
 
+
 class AgentState(TypedDict):
     # messages: Annotated[Sequence[BaseMessage], add_messages]
     question: str
@@ -27,18 +28,20 @@ class Act(BaseModel):
 
     queries: Optional[Queries] = Field(
         description="Queries to run across Google Search to gather additional information. Either queries or response should be set.",
-        default=None
+        default=None,
     )
     response: Optional[str] = Field(
         description="A final response to the question. If you need to gather additional information from Google Search, it should be None.",
-        default=None
+        default=None,
     )
+
 
 def _run_step(state):
     return {
         "context": get_search_info(state["queries"].search_queries),
-        "steps": state.get("steps", 1) + 1
+        "steps": state.get("steps", 1) + 1,
     }
+
 
 def _should_end(state: AgentState) -> Literal["run", "force_response", END]:
     if "response" in state and state["response"]:
@@ -56,13 +59,18 @@ def get_force_generation(model):
         "choices are:\n{options}\n."
     )
     generation_prompt = ChatPromptTemplate.from_template(generation_prompt_template)
-    return generation_prompt | model | {
-        "response": RunnableLambda(lambda x: Act(response=_parse_response(x.content))),
-    }
+    return (
+        generation_prompt
+        | model
+        | {
+            "response": RunnableLambda(
+                lambda x: Act(response=_parse_response(x.content))
+            ),
+        }
+    )
 
 
 def get_planner(model):
-    
     planner_prompt_template = (
         "You're taking a mdecial exam with a multiple-choice question. The question is:\n"
         "{question}.\n\nThe answer choices are:\n{options}\n "
@@ -73,13 +81,24 @@ def get_planner(model):
         "Do not use search too much, try to answer the question when you have enough information."
     )
     planner_prompt = ChatPromptTemplate.from_template(planner_prompt_template)
-    return planner_prompt | model.with_structured_output(Act) | {"queries": RunnableLambda(lambda x: Queries(search_queries=x.queries.search_queries[:5])), "response": RunnableLambda(lambda x: x.response)}
+    return (
+        planner_prompt
+        | model.with_structured_output(Act)
+        | {
+            "queries": RunnableLambda(
+                lambda x: Queries(
+                    search_queries=x.queries.search_queries[:5] if x.queries else []
+                )
+            ),
+            "response": RunnableLambda(lambda x: x.response),
+        }
+    )
 
 
 def get_workflow(model):
     planner = get_planner(model)
     generation = get_force_generation(model)
-    
+
     workflow = StateGraph(AgentState)
     workflow.add_node("plan", planner.invoke)
     workflow.add_node("run", _run_step)
@@ -88,4 +107,3 @@ def get_workflow(model):
     workflow.add_edge("run", "plan")
     workflow.add_conditional_edges("plan", _should_end)
     return workflow.compile()
-

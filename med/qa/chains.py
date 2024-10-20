@@ -3,7 +3,11 @@ from operator import itemgetter
 from typing import Any, Dict
 
 from langchain_core.messages import BaseMessage
-from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import (
+    PromptTemplate,
+    ChatPromptTemplate,
+    MessagesPlaceholder,
+)
 from langchain_core.runnables import (
     RunnableLambda,
     RunnablePassthrough,
@@ -39,7 +43,7 @@ _PROMPT_CRITIQUE = (
     "\nSTUDENT's ANSWER:\n:{cot_answer}."
 )
 
-_PROMPT_EXTRACT_ANSWER = (
+_PROMPT_EXTRACT_ANSWER = PromptTemplate.from_template(
     "You're given a full answer for a multiple-choice question. The intermediate answer "
     "includes reasoning and explanation.\n FULL ANSWER WITH REASONING:\n{full_answer}\n"
     "Your task is to extract only the final "
@@ -76,22 +80,6 @@ def _parse_response_llama(response: BaseMessage) -> str:
     return answer
 
 
-def get_chain(
-    model_name: str, chain_type: str, sample_size: int = 1, temperature: float = 0.0, max_output_tokens: int = 2048
-):
-    match chain_type:
-        case "simple":
-            return get_simple_chain(model_name, temperature=temperature)
-        case "cot":
-            return get_cot_chain(model_name, max_output_tokens=max_output_tokens)
-        case "self-refl":
-            return get_refl_chain(model_name, max_output_tokens=max_output_tokens)
-        case "react":
-            return get_react_chain(model_name)
-        case "plan":
-            return get_plan_chain(model_name)
-
-
 def get_simple_chain(model_name: str, sample_size: int = 10, temperature: float = 0.0):
     llm = get_model(model_name, temperature=temperature)
 
@@ -103,7 +91,7 @@ def get_simple_chain(model_name: str, sample_size: int = 10, temperature: float 
         )
     )
 
-    if model_name in ["llama_2b", "medllama3", "gemma_9b_it"]:
+    if model_name in ["llama_2b", "medllama3", "gemma_9b_it", "gemma_27b_it"]:
         chain = (
             {
                 "question": itemgetter("question"),
@@ -135,14 +123,13 @@ def get_simple_chain(model_name: str, sample_size: int = 10, temperature: float 
 
 
 def get_cot_chain(model_name: str, max_output_tokens: int = 2048):
-    llm = get_model(model_name, temperature=0., max_output_tokens=max_output_tokens)
+    llm = get_model(model_name, temperature=0.0, max_output_tokens=max_output_tokens)
     if model_name in ["llama_2b", "gemma_2b"]:
-        llm2 = get_model(model_name, temperature=0.)
+        llm2 = get_model(model_name, temperature=0.0)
     else:
         llm2 = llm
 
     prompt_first = PromptTemplate.from_template(_PROMPT_COT)
-    prompt_second = PromptTemplate.from_template(_PROMPT_EXTRACT_ANSWER)
 
     chain_start = (
         {
@@ -151,33 +138,37 @@ def get_cot_chain(model_name: str, max_output_tokens: int = 2048):
         }
         | RunnablePassthrough.assign(first_step=(prompt_first | llm).invoke)
         | RunnablePassthrough.assign(
-            final_answer=lambda x: ((prompt_second | llm2).invoke(x["first_step"])))
+            final_answer=lambda x: (
+                (_PROMPT_EXTRACT_ANSWER | llm2).invoke(x["first_step"])
+            )
+        )
     )
     if model_name == "llama_2b":
         chain = chain_start | {
             "full_output": RunnableLambda(lambda x: x["first_step"]),
-            "answer": RunnableLambda(lambda x: _parse_response_llama(x["final_answer"])),
+            "answer": RunnableLambda(
+                lambda x: _parse_response_llama(x["final_answer"])
+            ),
         }
         return chain
     parser = StrOutputParser()
     chain = chain_start | {
-            "full_output": RunnableLambda(lambda x: parser.invoke(input=x["first_step"])),
-            "answer": RunnableLambda(lambda x: _parse_response(x["final_answer"])),
-        }
+        "full_output": RunnableLambda(lambda x: parser.invoke(input=x["first_step"])),
+        "answer": RunnableLambda(lambda x: _parse_response(x["final_answer"])),
+    }
 
     return chain
 
 
 def get_refl_chain(model_name: str, max_output_tokens: int = 2048):
-    llm = get_model(model_name, temperature=0., max_output_tokens=max_output_tokens)
+    llm = get_model(model_name, temperature=0.0, max_output_tokens=max_output_tokens)
     if model_name in ["llama_2b", "gemma_2b"]:
-        llm2 = get_model(model_name, temperature=0.)
+        llm2 = get_model(model_name, temperature=0.0)
     else:
         llm2 = llm
 
     prompt_cot = PromptTemplate.from_template(_PROMPT_COT)
     prompt_critique = PromptTemplate.from_template(_PROMPT_CRITIQUE)
-    prompt_extract_answer = PromptTemplate.from_template(_PROMPT_EXTRACT_ANSWER)
 
     prompt_fin = PromptTemplate.from_template(
         "You're taking an exam with a multiple-choice question. The question is:\n"
@@ -193,13 +184,9 @@ def get_refl_chain(model_name: str, max_output_tokens: int = 2048):
             "options": RunnableLambda(lambda x: _format_options(x["options"])),
         }
         | RunnablePassthrough.assign(cot_answer=(prompt_cot | llm))
-        | RunnablePassthrough.assign(
-            critique=(prompt_critique | llm))
-        | RunnablePassthrough.assign(
-            full_answer=(prompt_fin | llm)
-        )
-        | RunnablePassthrough.assign(
-            final_answer=(prompt_extract_answer | llm2))
+        | RunnablePassthrough.assign(critique=(prompt_critique | llm))
+        | RunnablePassthrough.assign(full_answer=(prompt_fin | llm))
+        | RunnablePassthrough.assign(final_answer=(_PROMPT_EXTRACT_ANSWER | llm2))
         | {
             "final_answer": RunnableLambda(lambda x: x["final_answer"]),
             "answer": RunnableLambda(lambda x: _parse_response(x["final_answer"])),
@@ -210,39 +197,58 @@ def get_refl_chain(model_name: str, max_output_tokens: int = 2048):
 
 
 def get_react_chain(model_name: str, max_output_tokens: int = 2048):
-    llm = get_model(model_name, temperature=0., max_output_tokens=max_output_tokens)
+    llm = get_model(model_name, temperature=0.0, max_output_tokens=max_output_tokens)
     prompt = ChatPromptTemplate.from_messages(
         [
             (
-                "system", (
+                "system",
+                (
                     "Try to answer the given medical exam question. Thinks step by step "
                     " and get required information from Google Search if needed."
-                )),
+                ),
+            ),
             MessagesPlaceholder(variable_name="messages"),
         ]
     )
-    prompt_second = PromptTemplate.from_template(_PROMPT_EXTRACT_ANSWER)
-        
+
     tool = get_search_tool()
     agent = create_react_agent(llm, [tool], messages_modifier=prompt)
-    chain =  {
-        "question": itemgetter("question"),
-        "options": RunnableLambda(lambda x: _format_options(x["options"])),
-    } | RunnablePassthrough.assign(messages=lambda x: [("user", _PROMPT_COT.format(**x))]) | agent | RunnablePassthrough.assign(
-        final_answer=lambda x: ((prompt_second | llm).invoke(x["messages"][-1]))) | {"answer": RunnableLambda(lambda x: _parse_response(x["final_answer"]))}
+    chain = (
+        {
+            "question": itemgetter("question"),
+            "options": RunnableLambda(lambda x: _format_options(x["options"])),
+        }
+        | RunnablePassthrough.assign(
+            messages=lambda x: [("user", _PROMPT_COT.format(**x))]
+        )
+        | agent
+        | RunnablePassthrough.assign(
+            final_answer=lambda x: (
+                (_PROMPT_EXTRACT_ANSWER | llm).invoke(x["messages"][-1])
+            )
+        )
+        | {"answer": RunnableLambda(lambda x: _parse_response(x["final_answer"]))}
+    )
     return chain
 
 
 def get_plan_chain(model_name: str, max_output_tokens: int = 2048):
-    llm = get_model(model_name, temperature=0., max_output_tokens=max_output_tokens)
+    llm = get_model(model_name, temperature=0.0, max_output_tokens=max_output_tokens)
     agent = get_workflow(llm)
-    prompt_second = PromptTemplate.from_template(_PROMPT_EXTRACT_ANSWER)
 
-    chain =  {
-        "question": itemgetter("question"),
-        "options": RunnableLambda(lambda x: _format_options(x["options"])),
-    } | agent | RunnablePassthrough.assign(
-        final_answer=lambda x: ((prompt_second | llm).invoke(x["response"]))) | {"answer": RunnableLambda(lambda x: _parse_response(x["final_answer"]))}
+    chain = (
+        {
+            "question": itemgetter("question"),
+            "options": RunnableLambda(lambda x: _format_options(x["options"])),
+        }
+        | agent
+        | RunnablePassthrough.assign(
+            final_answer=lambda x: (
+                (_PROMPT_EXTRACT_ANSWER | llm).invoke(x["response"])
+            )
+        )
+        | {"answer": RunnableLambda(lambda x: _parse_response(x["final_answer"]))}
+    )
     return chain
 
 
@@ -255,6 +261,5 @@ def _format_question(entry: Dict[str, Any]) -> str:
         )
     )
     return prompt_qa.format(
-        question=entry["question"],
-        options=_format_options(entry["options"])
+        question=entry["question"], options=_format_options(entry["options"])
     )

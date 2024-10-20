@@ -51,8 +51,12 @@ class ModelGardenCallbackHandler(BaseCallbackHandler):
                     )
                 if not usage_metadata and generations[0].message.usage_metadata:
                     usage_metadata = generations[0].message.usage_metadata
-                completion_tokens += usage_metadata.get("candidates_token_count", usage_metadata.get("output_tokens", 0))
-                tokens = usage_metadata.get("prompt_token_count", usage_metadata.get("input_tokens", 0))
+                completion_tokens += usage_metadata.get(
+                    "candidates_token_count", usage_metadata.get("output_tokens", 0)
+                )
+                tokens = usage_metadata.get(
+                    "prompt_token_count", usage_metadata.get("input_tokens", 0)
+                )
                 prompt_tokens += tokens
                 if tokens > max_tokens:
                     max_tokens = tokens
@@ -65,9 +69,8 @@ class ModelGardenCallbackHandler(BaseCallbackHandler):
                 self.max_input_tokens = max_tokens
 
 
-
 def get_callback(model_name: str):
-    #if model_name in _GEMINI_MODELS:
+    # if model_name in _GEMINI_MODELS:
     #    return VertexAICallbackHandler()
-    
+
     return ModelGardenCallbackHandler()

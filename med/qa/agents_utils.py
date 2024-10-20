@@ -32,8 +32,13 @@ class Queries(BaseModel):
 
 
 class StructuredRunnableWithRetries:
-
-    def __init__(self, runnable, validator, max_retries: int = 3, answer_key: Optional[str] = None):
+    def __init__(
+        self,
+        runnable,
+        validator,
+        max_retries: int = 3,
+        answer_key: Optional[str] = None,
+    ):
         self._runnable = runnable
         self._validator = validator
         self._max_retries = max_retries
@@ -49,17 +54,22 @@ class StructuredRunnableWithRetries:
                 if self._answer_key:
                     return {self._answer_key: response_parsed[0]}
                 return response
-                
+
             except ValidationError as e:
                 if not response.tool_calls:
                     err = "No tool cals found! Please, make sure to invoke a tool"
                     tool_call_id = None
                 else:
-                    err = (f"{repr(e)}\n\nPay close attention to the function schema.\n\n"
+                    err = (
+                        f"{repr(e)}\n\nPay close attention to the function schema.\n\n"
                         + self.validator.schema_json()
-                        + " Respond by fixing all validation errors.")
-                    tool_call_id=response.tool_calls[0]["id"]
-                state = state + [response, ToolMessage(content=err, tool_call_id = tool_call_id)]
+                        + " Respond by fixing all validation errors."
+                    )
+                    tool_call_id = response.tool_calls[0]["id"]
+                state = state + [
+                    response,
+                    ToolMessage(content=err, tool_call_id=tool_call_id),
+                ]
         return []
 
 
@@ -73,13 +83,16 @@ def get_search_info(search_queries: list[str], k: int = 5) -> str:
         search_result = ""
         for result in search.results(query, num_results=3):
             if "title" in result and "snippet" in result:
-                search_result += f'Source: {result["title"]}.\nShort snippet: {result["snippet"]}\n'
+                search_result += (
+                    f'Source: {result["title"]}.\nShort snippet: {result["snippet"]}\n'
+                )
         if search_result:
             results.append(search_result)
     output = ""
     for query, result in zip(search_queries, results):
         output += f"Search query: '{query}'. Results:\n{results}\n"
     return output
+
 
 def get_search_tool(n: int = 3):
     search = GoogleSearchAPIWrapper(

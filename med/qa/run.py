@@ -5,8 +5,9 @@ from collections import Counter
 
 from grpc._channel import _InactiveRpcError
 
-from qa.chains import get_chain
+from qa.chains import get_simple_chain, get_cot_chain, get_refl_chain, get_plan_chain
 from qa.callbacks import get_callback
+from qa.agent_reflect import get_reflection_chain
 
 
 def parse_args():
@@ -28,14 +29,14 @@ class Sampler:
         self._chain = chain
         self._max_retries = max_retries
 
-    def run(self, entry, n=10, stream: bool = False, *, callback = None):
+    def run(self, entry, n=10, stream: bool = False, *, callback=None):
         answers = [self._run(entry, stream=stream, callback=callback) for _ in range(n)]
         results = [a["answer"] for a in answers]
         counter = Counter(results)
         winner, _ = counter.most_common()[0]
         return winner
 
-    def _run(self, entry, retry: int = 0, stream: bool = False, *, callback = None):
+    def _run(self, entry, retry: int = 0, stream: bool = False, *, callback=None):
         if retry > self._max_retries:
             raise ValueError("Max retries reached")
         try:
@@ -50,9 +51,32 @@ class Sampler:
         except _InactiveRpcError:
             time.sleep(1)
             return self._run(entry, retry + 1)
-        except Exception:
+        except Exception as e:
+            print(e)
             time.sleep(1)
             return self._run(entry, retry + 1)
+
+
+def get_chain(
+    model_name: str,
+    chain_type: str,
+    sample_size: int = 1,
+    temperature: float = 0.0,
+    max_output_tokens: int = 2048,
+):
+    match chain_type:
+        case "simple":
+            return get_simple_chain(model_name, temperature=temperature)
+        case "cot":
+            return get_cot_chain(model_name, max_output_tokens=max_output_tokens)
+        case "self-refl":
+            return get_refl_chain(model_name, max_output_tokens=max_output_tokens)
+        case "react":
+            return get_react_chain(model_name)
+        case "plan":
+            return get_plan_chain(model_name)
+        case "react-refl":
+            return get_reflection_chain(model_name, max_output_tokens=max_output_tokens)
 
 
 def run():
@@ -90,19 +114,23 @@ def run():
         stream = False
         callback = get_callback(model_name=args["model_name"]) if use_callback else None
         start_time = time.time()
-        result = sampler.run(entry, n=args["sample_size"], stream=stream, callback=callback)
+        result = sampler.run(
+            entry, n=args["sample_size"], stream=stream, callback=callback
+        )
         result = {
-                "correct_answer_idx": answer_idx,
-                "genai_answer_idx": result,
-                "latency": time.time() - start_time
+            "correct_answer_idx": answer_idx,
+            "genai_answer_idx": result,
+            "latency": time.time() - start_time,
         }
         if callback:
-            result = {**result, **{
-                "prompt_tokens": callback.prompt_tokens,
-                "completion_tokens": callback.completion_tokens,
-                "max_input_tokens": callback.max_input_tokens
+            result = {
+                **result,
+                **{
+                    "prompt_tokens": callback.prompt_tokens,
+                    "completion_tokens": callback.completion_tokens,
+                    "max_input_tokens": callback.max_input_tokens,
+                },
             }
-        }
         results.append(result)
 
         if i % 5 == 0:
