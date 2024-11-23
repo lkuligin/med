@@ -5,9 +5,16 @@ from collections import Counter
 
 from grpc._channel import _InactiveRpcError
 
-from qa.chains import get_simple_chain, get_cot_chain, get_refl_chain, get_plan_chain
-from qa.callbacks import get_callback
 from qa.agent_reflect import get_reflection_chain
+from qa.agent_multi import get_diag_chain
+from qa.callbacks import get_callback
+from qa.chains import (
+    get_cot_chain,
+    get_plan_chain,
+    get_refl_chain,
+    get_simple_chain,
+    get_react_chain,
+)
 
 
 def parse_args():
@@ -76,7 +83,13 @@ def get_chain(
         case "plan":
             return get_plan_chain(model_name)
         case "react-refl":
-            return get_reflection_chain(model_name, max_output_tokens=max_output_tokens)
+            return get_reflection_chain(
+                model_name, max_output_tokens=max_output_tokens, temperature=temperature
+            )
+        case "diag":
+            return get_diag_chain(
+                model_name, max_output_tokens=max_output_tokens, temperature=temperature
+            )
 
 
 def run():
@@ -133,10 +146,11 @@ def run():
             }
         results.append(result)
 
-        if i % 5 == 0:
+        if i % 1 == 0:
             print(f"Processed {i} entries")
             with open(args["output_file_name"], "w") as json_file:
                 json.dump({"results": results}, json_file, indent=4)
+            # break
 
     with open(args["output_file_name"], "w") as json_file:
         json.dump({"results": results}, json_file, indent=4)

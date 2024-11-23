@@ -1,35 +1,25 @@
-from typing import Annotated, Literal, Optional, TypedDict
 from operator import itemgetter
+from typing import Literal, Optional, TypedDict
+
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+from langgraph.graph import END, START, StateGraph
+from langgraph.prebuilt import create_react_agent
 from pydantic import BaseModel, Field
 
-from qa.models import get_model
 from qa.agents_utils import get_search_tool
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables import (
-    RunnableLambda,
-)
-from langgraph.graph import StateGraph, START, END
-from langgraph.prebuilt import create_react_agent
-from langchain_core.runnables import (
-    RunnableLambda,
-    RunnablePassthrough,
-)
-from qa.utils import _parse_response, _format_options
-
-import operator
-
-from qa.utils import _parse_response
-from qa.agents_utils import Queries, get_search_info
 from qa.chains import _PROMPT_EXTRACT_ANSWER
+from qa.models import get_model
+from qa.utils import _format_options, _parse_response
 
 _REACT_PROMPT = ChatPromptTemplate.from_messages(
     [
         (
             "system",
             (
-                "Try to answer the given medical exam question. Thinks step by step."
-                "Always provide an argumentation for your answer and validate it with "
-                "facts retrieved from Google Search"
+                "Answer the given medical exam question. Thinks step by step."
+                "Always provide an argumentation for your answer, and use Google Search "
+                "to support your answer."
             ),
         ),
         MessagesPlaceholder(variable_name="messages"),

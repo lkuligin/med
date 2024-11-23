@@ -3,23 +3,19 @@ from operator import itemgetter
 from typing import Any, Dict
 
 from langchain_core.messages import BaseMessage
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import (
-    PromptTemplate,
     ChatPromptTemplate,
     MessagesPlaceholder,
+    PromptTemplate,
 )
-from langchain_core.runnables import (
-    RunnableLambda,
-    RunnablePassthrough,
-)
-from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langgraph.prebuilt import create_react_agent
 
-from qa.models import get_model
-from qa.agents_utils import get_search_tool
 from qa.agent_plan import get_workflow
-from qa.utils import _parse_response, _format_options
-
+from qa.agents_utils import get_search_tool
+from qa.models import get_model
+from qa.utils import _format_options, _parse_response
 
 _PROMPT_COT = (
     "You're taking an exam with a multiple-choice question. The question is:\n"

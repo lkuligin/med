@@ -1,16 +1,13 @@
+import operator
 from typing import Annotated, Literal, Optional, TypedDict
-from pydantic import BaseModel, Field
 
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import (
-    RunnableLambda,
-)
-from langgraph.graph import StateGraph, START, END
+from langchain_core.runnables import RunnableLambda
+from langgraph.graph import END, START, StateGraph
+from pydantic import BaseModel, Field
 
-import operator
-
-from qa.utils import _parse_response
 from qa.agents_utils import Queries, get_search_info
+from qa.utils import _parse_response
 
 
 class AgentState(TypedDict):

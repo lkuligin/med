@@ -21,7 +21,7 @@ _GEMINI_MODELS = [
 ]
 
 
-rate_limiter_llama = InMemoryRateLimiter(requests_per_second=1.0)
+rate_limiter_llama = InMemoryRateLimiter(requests_per_second=0.8)
 rate_limiter_llama2 = InMemoryRateLimiter(requests_per_second=2.0)
 rate_limiter_mistral = InMemoryRateLimiter(requests_per_second=2.0)
 rate_limiter_exp = InMemoryRateLimiter(requests_per_second=0.5)
@@ -89,6 +89,13 @@ def get_model(model_name: str, temperature: float = 0.0, **kwargs):
     if model_name == "llama_3_405b":
         return get_vertex_maas_model(
             model_name="meta/llama3-405b-instruct-maas",
+            temperature=temperature,
+            rate_limiter=rate_limiter_llama,
+            append_tools_to_system_message=True,
+        )
+    if model_name == "llama3_70b":
+        return get_vertex_maas_model(
+            model_name="meta/llama3-70b-instruct-maas",
             temperature=temperature,
             rate_limiter=rate_limiter_llama,
             append_tools_to_system_message=True,
