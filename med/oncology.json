@@ -1,0 +1,398 @@
+{
+    "questions": [
+        {
+            "question": "A 9-year-old boy presents to the emergency department with emesis and headache of 3 weeks’ duration. MRI reveals a large heterogeneous mass in the cerebellum. He undergoes aresection, and the pathology is most consistent with a classic medulloblastoma. Which of the following findings would classify the patient as a high-risk medulloblastoma?",
+            "options": [
+                {
+                    "A": "Elevated serum and CSF AFP and beta-HCG tumor markers",
+                    "B": "WNT subgrouping on molecular classification",
+                    "C": "A presurgical spine MRI that reveals bulky tumor in the spine",
+                    "D": "A postoperative brain MRI with no signs of residual tumor"
+                }
+            ],
+            "correct_answer": "C"
+        },
+        {
+            "question": "A 6-year-old boy is noted to have worsening visual acuity on serial eye exams. Recent MRI of his brain and orbits reveals an optic chiasm mass, most consistent with an optic pathwayglioma. Upon further examination, the physician notes axillary freckling and numerous “spots” on the patient’s skin. This patient most likely has a which of the following genetic disorders?",
+            "options": {
+                "A": "Neurofibromatosis type-1 (NF1)",
+                "B": "Li Fraumeni syndrome",
+                "C": "Tuberous sclerosis",
+                "D": "Cystic Fibrosis"
+            },
+            "correct_answer": "A"
+        },
+        {
+            "question": "An 8-year-old boy undergoes a resection of a tumor in the right cerebrum next to the lateral ventricle (supratentorial). The pathologist feels the histology is most consistent with an ependymoma. The tumor is sent for advanced molecular and genetic testing. Which of the following findings would further support a diagnosis of ependymoma?",
+            "options": {
+                "A": "BRAFKIAA1549 fusion",
+                "B": "BRAFV600E mutation",
+                "C": "RELA fusion",
+                "D": "H3K27M mutation"
+            },
+            "correct_answer": "C"
+        },
+        {
+            "question": "A 5-year-old boy presents with a 3-week history of his right eye “not moving to the right side.” The remainder of his neurologic exam is normal with the exception of a weak gag. MRI of the brain reveals a diffusely infiltrative mass in the pons. If this patient were to undergo a stereotactic biopsy, what would be the most likely molecular finding?",
+            "options": {
+                "A": "BRAFKIAA1549 fusion",
+                "B": "Trisomy 21",
+                "C": "H3 K27M mutation",
+                "D": "RELA fusion"
+            },
+            "correct_answer": "C"
+        },
+        {
+            "question": "Blinatumomab, a bispecific T-cell engaging molecule, is active against which CD antigen that is expressed on B-lymphoblasts?",
+            "options": {
+                "A": "CD10",
+                "B": "CD15",
+                "C": "CD19",
+                "D": "CD20",
+                "E": "CD22"
+            },
+            "correct_answer": "C"
+        },
+        {
+            "question": "Of the variables listed below, what is the most important factor for survival after relapse of acute lymphoblastic leukemia?",
+            "options": {
+                "A": "Time to marrow relapse since initial diagnosis",
+                "B": "Sex",
+                "C": "Central nervous system involvement at relapse",
+                "D": "Response to induction therapy during initial diagnosis",
+                "E": "Percent of marrow blasts at the time of relapse"
+            },
+            "correct_answer": "A"
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        },
+        {
+            "question": "",
+            "options": {
+                "A": "",
+                "B": "",
+                "C": "",
+                "D": "",
+                "E": ""
+            },
+            "correct_answer": ""
+        }
+    ]
+}
