@@ -76,8 +76,12 @@ def _parse_response_llama(response: BaseMessage) -> str:
     return answer
 
 
-def get_simple_chain(model_name: str, sample_size: int = 10, temperature: float = 0.0):
-    llm = get_model(model_name, temperature=temperature)
+def get_simple_chain(
+    model_name: str, config_path: str, sample_size: int = 10, temperature: float = 0.0
+):
+    llm = get_model(
+        model_name=model_name, config_path=config_path, temperature=temperature
+    )
 
     prompt = PromptTemplate.from_template(
         (
@@ -118,10 +122,17 @@ def get_simple_chain(model_name: str, sample_size: int = 10, temperature: float 
     return chain
 
 
-def get_cot_chain(model_name: str, max_output_tokens: int = 2048):
-    llm = get_model(model_name, temperature=0.0, max_output_tokens=max_output_tokens)
+def get_cot_chain(model_name: str, config_path: str, max_output_tokens: int = 2048):
+    llm = get_model(
+        model_name=model_name,
+        config_path=config_path,
+        temperature=0.0,
+        max_output_tokens=max_output_tokens,
+    )
     if model_name in ["llama_2b", "gemma_2b"]:
-        llm2 = get_model(model_name, temperature=0.0)
+        llm2 = get_model(
+            model_name=model_name, config_path=config_path, temperature=0.0
+        )
     else:
         llm2 = llm
 
@@ -156,10 +167,17 @@ def get_cot_chain(model_name: str, max_output_tokens: int = 2048):
     return chain
 
 
-def get_refl_chain(model_name: str, max_output_tokens: int = 2048):
-    llm = get_model(model_name, temperature=0.0, max_output_tokens=max_output_tokens)
+def get_refl_chain(model_name: str, config_path: str, max_output_tokens: int = 2048):
+    llm = get_model(
+        model_name=model_name,
+        config_path=config_path,
+        temperature=0.0,
+        max_output_tokens=max_output_tokens,
+    )
     if model_name in ["llama_2b", "gemma_2b"]:
-        llm2 = get_model(model_name, temperature=0.0)
+        llm2 = get_model(
+            model_name=model_name, config_path=config_path, temperature=0.0
+        )
     else:
         llm2 = llm
 
@@ -192,8 +210,13 @@ def get_refl_chain(model_name: str, max_output_tokens: int = 2048):
     return chain
 
 
-def get_react_chain(model_name: str, max_output_tokens: int = 2048):
-    llm = get_model(model_name, temperature=0.0, max_output_tokens=max_output_tokens)
+def get_react_chain(model_name: str, config_path: str, max_output_tokens: int = 2048):
+    llm = get_model(
+        model_name=model_name,
+        config_path=config_path,
+        temperature=0.0,
+        max_output_tokens=max_output_tokens,
+    )
     prompt = ChatPromptTemplate.from_messages(
         [
             (
@@ -228,8 +251,13 @@ def get_react_chain(model_name: str, max_output_tokens: int = 2048):
     return chain
 
 
-def get_plan_chain(model_name: str, max_output_tokens: int = 2048):
-    llm = get_model(model_name, temperature=0.0, max_output_tokens=max_output_tokens)
+def get_plan_chain(model_name: str, config_path: str, max_output_tokens: int = 2048):
+    llm = get_model(
+        model_name=model_name,
+        config_path=config_path,
+        temperature=0.0,
+        max_output_tokens=max_output_tokens,
+    )
     agent = get_workflow(llm)
 
     chain = (

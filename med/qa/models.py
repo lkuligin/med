@@ -27,7 +27,7 @@ rate_limiter_mistral = InMemoryRateLimiter(requests_per_second=2.0)
 rate_limiter_exp = InMemoryRateLimiter(requests_per_second=0.5)
 
 
-def get_model(model_name: str, temperature: float = 0.0, **kwargs):
+def get_model(model_name: str, config_path: str, temperature: float = 0.0, **kwargs):
     """Prepares a chat model for experiments."""
     safety_settings = {
         HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
@@ -35,11 +35,15 @@ def get_model(model_name: str, temperature: float = 0.0, **kwargs):
         HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
         HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
     }
-    with open("config.json", "r") as read_f:
+    with open(config_path, "r") as read_f:
         config = json.load(read_f)
+
+    project = config["project"]
     if model_name in _GEMINI_MODELS:
         return ChatVertexAI(
             model_name=model_name,
+            project=project,
+            # location=config["models"]["gemini"]["location"],
             temperature=temperature,
             safety_settings=safety_settings,
             **kwargs,
@@ -47,7 +51,7 @@ def get_model(model_name: str, temperature: float = 0.0, **kwargs):
     if model_name in ["gemma_9b_it", "gemma_27b_it"]:
         llm = VertexAIModelGarden(
             endpoint_id=config["models"][model_name]["endpoint_id"],
-            project="kuligin-sandbox1",
+            project=project,
             location=config["models"][model_name]["location"],
             prompt_arg="inputs",
             allowed_model_args=["temperature", "max_tokens"],
@@ -58,7 +62,7 @@ def get_model(model_name: str, temperature: float = 0.0, **kwargs):
     if model_name in ["gemma_2b", "gemma_2b_it"]:
         llm = GemmaChatVertexAIModelGarden(
             endpoint_id=config["models"][model_name]["endpoint_id"],
-            project="kuligin-sandbox1",
+            project=project,
             location=config["models"][model_name]["location"],
             temperature=temperature,
         )
@@ -68,7 +72,7 @@ def get_model(model_name: str, temperature: float = 0.0, **kwargs):
     if model_name in ["llama_2b"]:
         llm = VertexAIModelGarden(
             endpoint_id=config["models"][model_name]["endpoint_id"],
-            project="kuligin-sandbox1",
+            project=project,
             location=config["models"][model_name]["location"],
             allowed_model_args=["temperature", "max_tokens"],
         ).bind(temperature=temperature)
@@ -78,7 +82,7 @@ def get_model(model_name: str, temperature: float = 0.0, **kwargs):
     if model_name in ["medllama3"]:
         llm = VertexAIModelGarden(
             endpoint_id=config["models"][model_name]["endpoint_id"],
-            project="kuligin-sandbox1",
+            project=project,
             location=config["models"][model_name]["location"],
             allowed_model_args=["temperature", "max_tokens"],
             prompt_arg="inputs",
@@ -89,6 +93,7 @@ def get_model(model_name: str, temperature: float = 0.0, **kwargs):
     if model_name == "llama_3_405b":
         return get_vertex_maas_model(
             model_name="meta/llama3-405b-instruct-maas",
+            project=project,
             temperature=temperature,
             rate_limiter=rate_limiter_llama,
             append_tools_to_system_message=True,
@@ -96,6 +101,7 @@ def get_model(model_name: str, temperature: float = 0.0, **kwargs):
     if model_name == "llama3_70b":
         return get_vertex_maas_model(
             model_name="meta/llama3-70b-instruct-maas",
+            project=project,
             temperature=temperature,
             rate_limiter=rate_limiter_llama,
             append_tools_to_system_message=True,
@@ -103,6 +109,7 @@ def get_model(model_name: str, temperature: float = 0.0, **kwargs):
     if model_name == "llama_3.2_90b":
         return get_vertex_maas_model(
             model_name="meta/llama-3.2-90b-vision-instruct-maas",
+            project=project,
             temperature=temperature,
             rate_limiter=rate_limiter_llama2,
             append_tools_to_system_message=True,
@@ -110,18 +117,21 @@ def get_model(model_name: str, temperature: float = 0.0, **kwargs):
     if model_name == "mistral_large":
         return get_vertex_maas_model(
             model_name="mistral-large@2407",
+            project=project,
             temperature=temperature,
             rate_limiter=rate_limiter_mistral,
         )
     if model_name == "mistral_nemo":
         return get_vertex_maas_model(
             model_name="mistral-nemo@2407",
+            project=project,
             temperature=temperature,
             rate_limiter=InMemoryRateLimiter(requests_per_second=2.0),
         )
     if model_name == "anthropic_claude":
         return ChatAnthropicVertex(
             model_name="claude-3-5-sonnet@20240620",
+            project=project,
             temperature=temperature,
             rate_limiter=InMemoryRateLimiter(requests_per_second=2.0),
             location="us-east5",
