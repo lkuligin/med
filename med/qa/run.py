@@ -15,11 +15,13 @@ from qa.chains import (
     get_simple_chain,
     get_react_chain,
 )
+from qa.agent_lats import get_lats_chain
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output_file_name", type=str)
+    parser.add_argument("--config_path", type=str, default="config.json")
     parser.add_argument("--model_name", type=str)
     parser.add_argument("--chain_type", type=str, default="simple")
     parser.add_argument("--sample_size", type=int, default=1)
@@ -44,6 +46,7 @@ class Sampler:
         return winner
 
     def _run(self, entry, retry: int = 0, stream: bool = False, *, callback=None):
+        print(entry)
         if retry > self._max_retries:
             raise ValueError("Max retries reached")
         try:
@@ -67,28 +70,52 @@ class Sampler:
 def get_chain(
     model_name: str,
     chain_type: str,
+    config_path: str,
     sample_size: int = 1,
     temperature: float = 0.0,
     max_output_tokens: int = 2048,
 ):
     match chain_type:
         case "simple":
-            return get_simple_chain(model_name, temperature=temperature)
+            return get_simple_chain(
+                model_name=model_name, config_path=config_path, temperature=temperature
+            )
         case "cot":
-            return get_cot_chain(model_name, max_output_tokens=max_output_tokens)
+            return get_cot_chain(
+                model_name=model_name,
+                config_path=config_path,
+                max_output_tokens=max_output_tokens,
+            )
         case "self-refl":
-            return get_refl_chain(model_name, max_output_tokens=max_output_tokens)
+            return get_refl_chain(
+                model_name=model_name,
+                config_path=config_path,
+                max_output_tokens=max_output_tokens,
+            )
         case "react":
-            return get_react_chain(model_name)
+            return get_react_chain(model_name=model_name, config_path=config_path)
         case "plan":
-            return get_plan_chain(model_name)
+            return get_plan_chain(model_name=model_name, config_path=config_path)
         case "react-refl":
             return get_reflection_chain(
-                model_name, max_output_tokens=max_output_tokens, temperature=temperature
+                model_name=model_name,
+                config_path=config_path,
+                max_output_tokens=max_output_tokens,
+                temperature=temperature,
             )
         case "diag":
             return get_diag_chain(
-                model_name, max_output_tokens=max_output_tokens, temperature=temperature
+                model_name=model_name,
+                config_path=config_path,
+                max_output_tokens=max_output_tokens,
+                temperature=temperature,
+            )
+        case "lats":
+            return get_lats_chain(
+                model_name=model_name,
+                config_path=config_path,
+                max_output_tokens=max_output_tokens,
+                temperature=temperature,
             )
 
 
@@ -102,6 +129,7 @@ def run():
             sample_size=args["sample_size"],
             chain_type=args["chain_type"],
             model_name=args["model_name"],
+            config_path=args["config_path"],
             temperature=args["temperature"],
         )
         sampler = Sampler(chain=chain)

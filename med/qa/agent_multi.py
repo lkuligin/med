@@ -151,11 +151,16 @@ def _get_parse_step(model):
     return _run
 
 
-def get_workflow(model_name, max_output_tokens, temperature):
+def get_workflow(
+    model_name: str, config_path: str, max_output_tokens: int, temperature: float
+):
     model = get_model(
-        model_name, temperature=temperature, max_output_tokens=max_output_tokens
+        model_name=model_name,
+        config_path=config_path,
+        temperature=temperature,
+        max_output_tokens=max_output_tokens,
     )
-    model2 = get_model(model_name, temperature=0.0)
+    model2 = get_model(model_name=model_name, config_path=config_path, temperature=0.0)
     react_agent_initial = get_react_chain(model)
     react_agent = get_react_chain(model, prompt=_STUDENT_PROMPT)
 
@@ -190,8 +195,16 @@ def get_workflow(model_name, max_output_tokens, temperature):
     return workflow.compile()
 
 
-def get_diag_chain(model_name, max_output_tokens=2048, temperature=0.0):
+def get_diag_chain(
+    model_name: str,
+    config_path: str,
+    max_output_tokens: int = 2048,
+    temperature: float = 0.0,
+):
     agent = get_workflow(
-        model_name, temperature=temperature, max_output_tokens=max_output_tokens
+        model_name=model_name,
+        config_path=config_path,
+        temperature=temperature,
+        max_output_tokens=max_output_tokens,
     )
     return agent | {"answer": lambda x: x["final_answer"]}
