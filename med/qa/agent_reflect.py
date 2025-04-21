@@ -53,7 +53,7 @@ _REFLECTION_PROMPT = ChatPromptTemplate.from_template(
 
 def get_react_chain(model, prompt=_PROMPT_QUESTION):
     tool = get_search_tool()
-    agent = create_react_agent(model, [tool], messages_modifier=_REACT_PROMPT)
+    agent = create_react_agent(model, [tool], prompt=_REACT_PROMPT)
     chain = (
         {
             "question": itemgetter("question"),
@@ -111,7 +111,7 @@ def _get_force_generation_step(model):
             "critique": state["response"].critique if state.get("response") else "",
             "question": state["question"],
         }
-        result = chain.invoke(parsed_state)
+        return chain.invoke(parsed_state)
 
     return _run_force_generation
 
@@ -144,11 +144,14 @@ def _get_parse_step(model):
     return _run
 
 
-def get_workflow(model_name, max_output_tokens, temperature):
+def get_workflow(model_name, max_output_tokens, temperature, config_path: str):
     model = get_model(
-        model_name, temperature=temperature, max_output_tokens=max_output_tokens
+        model_name,
+        temperature=temperature,
+        max_output_tokens=max_output_tokens,
+        config_path=config_path,
     )
-    model2 = get_model(model_name, temperature=0.0)
+    model2 = get_model(model_name, temperature=0.0, config_path=config_path)
     react_agent_initial = get_react_chain(model)
     react_agent = get_react_chain(model, prompt=_PROMPT_QUESTION_WITH_CRITIQUE)
 
@@ -180,8 +183,13 @@ def get_workflow(model_name, max_output_tokens, temperature):
     return workflow.compile()
 
 
-def get_reflection_chain(model_name, max_output_tokens=2048, temperature=0.0):
+def get_reflection_chain(
+    model_name, max_output_tokens=2048, temperature=0.0, config_path=None
+):
     agent = get_workflow(
-        model_name, temperature=temperature, max_output_tokens=max_output_tokens
+        model_name,
+        temperature=temperature,
+        max_output_tokens=max_output_tokens,
+        config_path=config_path,
     )
     return agent | {"answer": lambda x: x["response"].answer}

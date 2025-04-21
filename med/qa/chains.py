@@ -72,6 +72,8 @@ class Sampler:
 
 
 def _parse_response_llama(response: BaseMessage) -> str:
+    if not response:
+        return ""
     answer = response.strip("”.:[\"'(\\ *\n `")[0].upper()
     return answer
 
@@ -91,7 +93,13 @@ def get_simple_chain(
         )
     )
 
-    if model_name in ["llama_2b", "medllama3", "gemma_9b_it", "gemma_27b_it"]:
+    if model_name in [
+        "llama_2b",
+        "medllama3",
+        "gemma_9b_it",
+        "gemma_27b_it",
+        "deepseek",
+    ]:
         chain = (
             {
                 "question": itemgetter("question"),
@@ -231,7 +239,7 @@ def get_react_chain(model_name: str, config_path: str, max_output_tokens: int = 
     )
 
     tool = get_search_tool()
-    agent = create_react_agent(llm, [tool], messages_modifier=prompt)
+    agent = create_react_agent(llm, [tool], prompt=prompt)
     chain = (
         {
             "question": itemgetter("question"),

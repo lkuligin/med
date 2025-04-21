@@ -84,10 +84,12 @@ def get_planner(model):
         | {
             "queries": RunnableLambda(
                 lambda x: Queries(
-                    search_queries=x.queries.search_queries[:5] if x.queries else []
+                    search_queries=x.queries.search_queries[:5]
+                    if x and x.queries
+                    else []
                 )
             ),
-            "response": RunnableLambda(lambda x: x.response),
+            "response": RunnableLambda(lambda x: x.response if x else ""),
         }
     )
 

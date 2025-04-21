@@ -81,7 +81,7 @@ def _format_history(state):
 
 def get_react_chain(model, prompt=_PROMPT_QUESTION):
     tool = get_search_tool()
-    agent = create_react_agent(model, [tool], messages_modifier=_REACT_PROMPT)
+    agent = create_react_agent(model, [tool], prompt=_REACT_PROMPT)
     chain = (
         {
             "question": itemgetter("question"),
@@ -99,7 +99,6 @@ def _get_run_professor_step(model):
     chain = _PROFESSOR_PROMPT | model.with_structured_output(Response)
 
     def _run(state):
-        tool = get_search_tool()
         scratchpad = state["scratchpad"]
         history = "\n".join([f"{role}: {msg}" for role, msg in scratchpad])
         result = chain.invoke(
