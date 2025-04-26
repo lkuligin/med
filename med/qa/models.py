@@ -1,6 +1,7 @@
 import json
 
 from langchain_core.rate_limiters import InMemoryRateLimiter
+from langchain_openai import ChatOpenAI
 from langchain_google_vertexai import (
     ChatVertexAI,
     HarmBlockThreshold,
@@ -10,6 +11,12 @@ from langchain_google_vertexai import (
 )
 from langchain_google_vertexai.gemma import GemmaChatVertexAIModelGarden
 from langchain_google_vertexai.model_garden import ChatAnthropicVertex
+from langchain_core.language_models.llms import BaseLLM
+from typing import Any, Optional, List
+from pydantic import Field, model_validator
+from langchain_core.outputs import Generation, LLMResult
+from google.cloud import aiplatform
+
 
 _GEMINI_MODELS = [
     "gemini-1.5-pro-001",
@@ -18,13 +25,78 @@ _GEMINI_MODELS = [
     "gemini-1.0-pro-002",
     "gemini-1.5-flash-001",
     "gemini-pro-experimental",
+    "gemini-2.0-flash-001",
 ]
 
+_GEMINI_MODELS_EXP = ["gemini-2.5-flash-preview-04-17", "gemini-2.5-pro-preview-03-25"]
 
-rate_limiter_llama = InMemoryRateLimiter(requests_per_second=0.8)
-rate_limiter_llama2 = InMemoryRateLimiter(requests_per_second=2.0)
+rate_limiter_llama = InMemoryRateLimiter(requests_per_second=1.0)
+rate_limiter_llama2 = InMemoryRateLimiter(requests_per_second=0.5)
 rate_limiter_mistral = InMemoryRateLimiter(requests_per_second=2.0)
 rate_limiter_exp = InMemoryRateLimiter(requests_per_second=0.5)
+rate_limiter_gpt = InMemoryRateLimiter(requests_per_second=0.5)
+rate_limiter_gemini_exp = InMemoryRateLimiter(requests_per_second=2.0)
+
+
+class _DeepSeekLLM(BaseLLM):
+    location: str
+    project: str
+    endpoint_id: str
+    client: Any = Field(default=None, exclude=True)  #: :meta private:
+
+    @model_validator(mode="after")
+    def validate_environment(self):
+        """Validate that the python package exists in environment."""
+
+        self.client = aiplatform.Endpoint(
+            self.endpoint_id, project=self.project, location=self.location
+        )
+        return self
+
+    def _generate(
+        self,
+        prompts: List[str],
+        stop: Optional[List[str]] = None,
+        **kwargs: Any,
+    ) -> LLMResult:
+        """Run the LLM on the given prompt and input."""
+        instances = [{"text": t} for t in prompts]
+        parameters = {
+            "sampling_params": {
+                "max_new_tokens": 128,
+                "temperature": 0.6,
+                "top_p": 0.95,
+            }
+        }
+        if "temperature" in kwargs:
+            parameters["temperature"] = kwargs["temperature"]
+        if "max_output_tokens" in kwargs:
+            parameters["max_new_tokens"] = kwargs["max_output_tokens"]
+
+        response = self.client.predict(
+            instances=instances, parameters=parameters, use_dedicated_endpoint=True
+        )
+        generations = []
+        for prediction in response.predictions:
+            info = prediction["meta_info"]
+            usage_metadata = {
+                "input_tokens": info["prompt_tokens"],
+                "output_tokens": info["completion_tokens"],
+            }
+            generations.append(
+                [
+                    Generation(
+                        text=prediction["text"],
+                        generation_info={"usage_metadata": usage_metadata},
+                    )
+                ]
+            )
+
+        return LLMResult(generations=generations)
+
+    @property
+    def _llm_type(self) -> str:
+        return "vertexai_model_garden"
 
 
 def get_model(model_name: str, config_path: str, temperature: float = 0.0, **kwargs):
@@ -39,6 +111,7 @@ def get_model(model_name: str, config_path: str, temperature: float = 0.0, **kwa
         config = json.load(read_f)
 
     project = config["project"]
+    project_id = config["project_id"]
     if model_name in _GEMINI_MODELS:
         return ChatVertexAI(
             model_name=model_name,
@@ -48,6 +121,24 @@ def get_model(model_name: str, config_path: str, temperature: float = 0.0, **kwa
             safety_settings=safety_settings,
             **kwargs,
         )
+    if model_name in _GEMINI_MODELS_EXP:
+        return ChatVertexAI(
+            model_name=model_name,
+            project=project,
+            temperature=temperature,
+            safety_settings=safety_settings,
+            rate_limiter=rate_limiter_gemini_exp,
+            **kwargs,
+        )
+    if model_name in ["deepseek"]:
+        llm = _DeepSeekLLM(
+            endpoint_id=config["models"][model_name]["endpoint_id"],
+            project=project_id,
+            location=config["models"][model_name]["location"],
+        )
+        if "max_output_tokens" in kwargs:
+            return llm.bind(max_tokens=kwargs["max_output_tokens"])
+        return llm
     if model_name in ["gemma_9b_it", "gemma_27b_it"]:
         llm = VertexAIModelGarden(
             endpoint_id=config["models"][model_name]["endpoint_id"],
@@ -114,9 +205,24 @@ def get_model(model_name: str, config_path: str, temperature: float = 0.0, **kwa
             rate_limiter=rate_limiter_llama2,
             append_tools_to_system_message=True,
         )
+    if model_name == "llama_3.3_70b":
+        return get_vertex_maas_model(
+            model_name="meta/llama-3.3-70b-instruct-maas",
+            project=project,
+            temperature=temperature,
+            rate_limiter=rate_limiter_llama2,
+            append_tools_to_system_message=True,
+        )
+    if model_name in ["gpt-4", "gpt-4o"]:
+        return ChatOpenAI(
+            model_name=model_name,
+            temperature=temperature,
+            rate_limiter=rate_limiter_gpt,
+        )
     if model_name == "mistral_large":
         return get_vertex_maas_model(
-            model_name="mistral-large@2407",
+            # model_name="mistral-large@2407",
+            model_name="mistral-large-2411@001",
             project=project,
             temperature=temperature,
             rate_limiter=rate_limiter_mistral,
@@ -131,6 +237,15 @@ def get_model(model_name: str, config_path: str, temperature: float = 0.0, **kwa
     if model_name == "anthropic_claude":
         return ChatAnthropicVertex(
             model_name="claude-3-5-sonnet@20240620",
+            project=project,
+            temperature=temperature,
+            rate_limiter=InMemoryRateLimiter(requests_per_second=2.0),
+            location="us-east5",
+        )
+
+    if model_name == "anthropic_claude_v2":
+        return ChatAnthropicVertex(
+            model_name="claude-3-5-sonnet-v2@20241022",
             project=project,
             temperature=temperature,
             rate_limiter=InMemoryRateLimiter(requests_per_second=2.0),

@@ -46,7 +46,6 @@ class Sampler:
         return winner
 
     def _run(self, entry, retry: int = 0, stream: bool = False, *, callback=None):
-        print(entry)
         if retry > self._max_retries:
             raise ValueError("Max retries reached")
         try:
@@ -125,6 +124,7 @@ def run():
     if args["chain_type"] in []:
         pass
     else:
+        print("getting")
         chain = get_chain(
             sample_size=args["sample_size"],
             chain_type=args["chain_type"],
