@@ -5,17 +5,17 @@ from collections import Counter
 
 from grpc._channel import _InactiveRpcError
 
-from qa.agent_reflect import get_reflection_chain
+from qa.agent_lats import get_lats_chain
 from qa.agent_multi import get_diag_chain
+from qa.agent_reflect import get_reflection_chain
 from qa.callbacks import get_callback
 from qa.chains import (
     get_cot_chain,
     get_plan_chain,
+    get_react_chain,
     get_refl_chain,
     get_simple_chain,
-    get_react_chain,
 )
-from qa.agent_lats import get_lats_chain
 
 
 def parse_args():
@@ -51,7 +51,7 @@ class Sampler:
         try:
             kwargs = {}
             if callback:
-                kwargs = {"config": {"callbacks": [callback]}}
+                kwargs = {"config": {"callbacks": [callback], "recursion_limit": 50}}
             if stream:
                 res = list(self._chain.stream(entry, **kwargs))
                 return {k: v for c in res for k, v in c.items()}
@@ -131,6 +131,7 @@ def run():
             model_name=args["model_name"],
             config_path=args["config_path"],
             temperature=args["temperature"],
+            max_output_tokens=args["max_output_tokens"],
         )
         sampler = Sampler(chain=chain)
     results = []
@@ -159,6 +160,7 @@ def run():
             entry, n=args["sample_size"], stream=stream, callback=callback
         )
         result = {
+            "idx": i,
             "correct_answer_idx": answer_idx,
             "genai_answer_idx": result,
             "latency": time.time() - start_time,
@@ -175,7 +177,7 @@ def run():
         results.append(result)
 
         if i % 1 == 0:
-            print(f"Processed {i} entries")
+            print(f"Processed {i + 1} entries")
             with open(args["output_file_name"], "w") as json_file:
                 json.dump({"results": results}, json_file, indent=4)
             # break

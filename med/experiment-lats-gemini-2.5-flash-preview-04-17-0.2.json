@@ -1,0 +1,3793 @@
+{
+    "results": [
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 154.43934655189514,
+            "prompt_tokens": 30164,
+            "completion_tokens": 4111,
+            "max_input_tokens": 2707
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 153.76178574562073,
+            "prompt_tokens": 51559,
+            "completion_tokens": 6330,
+            "max_input_tokens": 3985
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 101.15292310714722,
+            "prompt_tokens": 25449,
+            "completion_tokens": 4773,
+            "max_input_tokens": 2348
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 69.60148286819458,
+            "prompt_tokens": 13168,
+            "completion_tokens": 2639,
+            "max_input_tokens": 1933
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 109.35846161842346,
+            "prompt_tokens": 23272,
+            "completion_tokens": 4190,
+            "max_input_tokens": 2654
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 163.82416820526123,
+            "prompt_tokens": 18591,
+            "completion_tokens": 4310,
+            "max_input_tokens": 3078
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 224.93470573425293,
+            "prompt_tokens": 39273,
+            "completion_tokens": 4080,
+            "max_input_tokens": 2745
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 47.54914999008179,
+            "prompt_tokens": 8706,
+            "completion_tokens": 2096,
+            "max_input_tokens": 1157
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 44.904289960861206,
+            "prompt_tokens": 7988,
+            "completion_tokens": 1831,
+            "max_input_tokens": 1076
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 54.08793902397156,
+            "prompt_tokens": 12578,
+            "completion_tokens": 2690,
+            "max_input_tokens": 1540
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 47.915534019470215,
+            "prompt_tokens": 7389,
+            "completion_tokens": 2116,
+            "max_input_tokens": 1097
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 66.47507953643799,
+            "prompt_tokens": 14795,
+            "completion_tokens": 3281,
+            "max_input_tokens": 1778
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 44.19444417953491,
+            "prompt_tokens": 7144,
+            "completion_tokens": 2075,
+            "max_input_tokens": 1028
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 171.54143500328064,
+            "prompt_tokens": 34761,
+            "completion_tokens": 4586,
+            "max_input_tokens": 2946
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 131.75398969650269,
+            "prompt_tokens": 14145,
+            "completion_tokens": 2442,
+            "max_input_tokens": 1788
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 175.74996995925903,
+            "prompt_tokens": 28703,
+            "completion_tokens": 5089,
+            "max_input_tokens": 3487
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D",
+            "latency": 140.64493012428284,
+            "prompt_tokens": 21718,
+            "completion_tokens": 3679,
+            "max_input_tokens": 2327
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 71.94063377380371,
+            "prompt_tokens": 17794,
+            "completion_tokens": 3512,
+            "max_input_tokens": 2282
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C",
+            "latency": 83.7553391456604,
+            "prompt_tokens": 17701,
+            "completion_tokens": 4776,
+            "max_input_tokens": 2235
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 79.25523328781128,
+            "prompt_tokens": 16640,
+            "completion_tokens": 3291,
+            "max_input_tokens": 1861
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 542.513195514679,
+            "prompt_tokens": 5194,
+            "completion_tokens": 936,
+            "max_input_tokens": 1282
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 53.5651957988739,
+            "prompt_tokens": 12935,
+            "completion_tokens": 2767,
+            "max_input_tokens": 1958
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 46.78517198562622,
+            "prompt_tokens": 7471,
+            "completion_tokens": 1976,
+            "max_input_tokens": 1080
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 51.303420305252075,
+            "prompt_tokens": 9735,
+            "completion_tokens": 3033,
+            "max_input_tokens": 1425
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 196.2745623588562,
+            "prompt_tokens": 18800,
+            "completion_tokens": 4150,
+            "max_input_tokens": 2331
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 46.09751653671265,
+            "prompt_tokens": 7667,
+            "completion_tokens": 2106,
+            "max_input_tokens": 1097
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 60.89232134819031,
+            "prompt_tokens": 12750,
+            "completion_tokens": 2605,
+            "max_input_tokens": 1689
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 45.78541445732117,
+            "prompt_tokens": 7906,
+            "completion_tokens": 2101,
+            "max_input_tokens": 1150
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 66.37702465057373,
+            "prompt_tokens": 16600,
+            "completion_tokens": 3034,
+            "max_input_tokens": 1786
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 192.92844414710999,
+            "prompt_tokens": 18192,
+            "completion_tokens": 3395,
+            "max_input_tokens": 2204
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 75.3201072216034,
+            "prompt_tokens": 12069,
+            "completion_tokens": 3453,
+            "max_input_tokens": 1927
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 75.70288157463074,
+            "prompt_tokens": 14844,
+            "completion_tokens": 2920,
+            "max_input_tokens": 1893
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 121.58010983467102,
+            "prompt_tokens": 163,
+            "completion_tokens": 0,
+            "max_input_tokens": 163
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 160.79477763175964,
+            "prompt_tokens": 47381,
+            "completion_tokens": 5498,
+            "max_input_tokens": 2260
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A",
+            "latency": 679.2031390666962,
+            "prompt_tokens": 7788,
+            "completion_tokens": 2322,
+            "max_input_tokens": 1789
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 51.70634722709656,
+            "prompt_tokens": 8134,
+            "completion_tokens": 2270,
+            "max_input_tokens": 1177
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 53.76872253417969,
+            "prompt_tokens": 11755,
+            "completion_tokens": 2413,
+            "max_input_tokens": 1411
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 48.46033000946045,
+            "prompt_tokens": 7823,
+            "completion_tokens": 1993,
+            "max_input_tokens": 1139
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 140.23244857788086,
+            "prompt_tokens": 20168,
+            "completion_tokens": 2667,
+            "max_input_tokens": 2013
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 53.88583016395569,
+            "prompt_tokens": 10803,
+            "completion_tokens": 3207,
+            "max_input_tokens": 1681
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 69.85105633735657,
+            "prompt_tokens": 12901,
+            "completion_tokens": 3275,
+            "max_input_tokens": 1591
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 208.48886275291443,
+            "prompt_tokens": 89744,
+            "completion_tokens": 5404,
+            "max_input_tokens": 5551
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D",
+            "latency": 180.34798502922058,
+            "prompt_tokens": 26436,
+            "completion_tokens": 4691,
+            "max_input_tokens": 2638
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 106.15753078460693,
+            "prompt_tokens": 25392,
+            "completion_tokens": 4911,
+            "max_input_tokens": 2515
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 109.26125526428223,
+            "prompt_tokens": 35164,
+            "completion_tokens": 4918,
+            "max_input_tokens": 3179
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 108.76827454566956,
+            "prompt_tokens": 16581,
+            "completion_tokens": 4067,
+            "max_input_tokens": 2080
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 164.89592289924622,
+            "prompt_tokens": 27706,
+            "completion_tokens": 5128,
+            "max_input_tokens": 2679
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 195.72443294525146,
+            "prompt_tokens": 18800,
+            "completion_tokens": 3746,
+            "max_input_tokens": 2286
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 105.38334155082703,
+            "prompt_tokens": 24208,
+            "completion_tokens": 3004,
+            "max_input_tokens": 2284
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 195.04245162010193,
+            "prompt_tokens": 56203,
+            "completion_tokens": 3373,
+            "max_input_tokens": 2927
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "C ",
+            "genai_answer_idx": "C",
+            "latency": 331.1561782360077,
+            "prompt_tokens": 57849,
+            "completion_tokens": 6411,
+            "max_input_tokens": 3128
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 93.1212911605835,
+            "prompt_tokens": 19328,
+            "completion_tokens": 3846,
+            "max_input_tokens": 1930
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D",
+            "latency": 177.07942128181458,
+            "prompt_tokens": 16586,
+            "completion_tokens": 3024,
+            "max_input_tokens": 2209
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 78.26559329032898,
+            "prompt_tokens": 19688,
+            "completion_tokens": 4109,
+            "max_input_tokens": 2590
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 91.56689119338989,
+            "prompt_tokens": 18454,
+            "completion_tokens": 4243,
+            "max_input_tokens": 2132
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 78.20920038223267,
+            "prompt_tokens": 18753,
+            "completion_tokens": 3281,
+            "max_input_tokens": 1837
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 92.5775933265686,
+            "prompt_tokens": 11980,
+            "completion_tokens": 2749,
+            "max_input_tokens": 1430
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 70.13565611839294,
+            "prompt_tokens": 12398,
+            "completion_tokens": 2555,
+            "max_input_tokens": 1682
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "A",
+            "latency": 413.3181982040405,
+            "prompt_tokens": 112562,
+            "completion_tokens": 7012,
+            "max_input_tokens": 6107
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "A",
+            "latency": 366.9991874694824,
+            "prompt_tokens": 84923,
+            "completion_tokens": 6503,
+            "max_input_tokens": 3857
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 91.50434589385986,
+            "prompt_tokens": 21719,
+            "completion_tokens": 2925,
+            "max_input_tokens": 1812
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 42.971967697143555,
+            "prompt_tokens": 6706,
+            "completion_tokens": 1645,
+            "max_input_tokens": 1015
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 84.45812320709229,
+            "prompt_tokens": 9224,
+            "completion_tokens": 2668,
+            "max_input_tokens": 1256
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B",
+            "latency": 190.97138690948486,
+            "prompt_tokens": 102224,
+            "completion_tokens": 4416,
+            "max_input_tokens": 4563
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 116.863440990448,
+            "prompt_tokens": 33238,
+            "completion_tokens": 4399,
+            "max_input_tokens": 2772
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 223.7095127105713,
+            "prompt_tokens": 25611,
+            "completion_tokens": 6756,
+            "max_input_tokens": 3829
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 90.7436683177948,
+            "prompt_tokens": 19322,
+            "completion_tokens": 4726,
+            "max_input_tokens": 1959
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E",
+            "latency": 75.86486768722534,
+            "prompt_tokens": 14031,
+            "completion_tokens": 4460,
+            "max_input_tokens": 2026
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 168.95201778411865,
+            "prompt_tokens": 19669,
+            "completion_tokens": 5302,
+            "max_input_tokens": 2907
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 85.73269057273865,
+            "prompt_tokens": 11307,
+            "completion_tokens": 3862,
+            "max_input_tokens": 1558
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E",
+            "latency": 134.41432237625122,
+            "prompt_tokens": 15895,
+            "completion_tokens": 6999,
+            "max_input_tokens": 3423
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 133.19215607643127,
+            "prompt_tokens": 30276,
+            "completion_tokens": 6540,
+            "max_input_tokens": 2368
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 92.61039566993713,
+            "prompt_tokens": 19044,
+            "completion_tokens": 6885,
+            "max_input_tokens": 3227
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 56.65762662887573,
+            "prompt_tokens": 8817,
+            "completion_tokens": 2634,
+            "max_input_tokens": 1220
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 101.67535185813904,
+            "prompt_tokens": 13228,
+            "completion_tokens": 5265,
+            "max_input_tokens": 2322
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 139.43922996520996,
+            "prompt_tokens": 24190,
+            "completion_tokens": 3643,
+            "max_input_tokens": 2406
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "F",
+            "genai_answer_idx": "C",
+            "latency": 142.22909116744995,
+            "prompt_tokens": 10448,
+            "completion_tokens": 4508,
+            "max_input_tokens": 1890
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 266.5939245223999,
+            "prompt_tokens": 6270,
+            "completion_tokens": 4839,
+            "max_input_tokens": 3146
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 207.97767043113708,
+            "prompt_tokens": 17836,
+            "completion_tokens": 4655,
+            "max_input_tokens": 2480
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C",
+            "latency": 222.3778281211853,
+            "prompt_tokens": 25349,
+            "completion_tokens": 4197,
+            "max_input_tokens": 2522
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E",
+            "latency": 101.66203927993774,
+            "prompt_tokens": 15725,
+            "completion_tokens": 4723,
+            "max_input_tokens": 1731
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 90.16234254837036,
+            "prompt_tokens": 15464,
+            "completion_tokens": 5343,
+            "max_input_tokens": 2372
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C",
+            "latency": 137.426420211792,
+            "prompt_tokens": 26711,
+            "completion_tokens": 3572,
+            "max_input_tokens": 2315
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "E",
+            "latency": 158.81682777404785,
+            "prompt_tokens": 17769,
+            "completion_tokens": 5388,
+            "max_input_tokens": 2512
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 194.9390082359314,
+            "prompt_tokens": 14054,
+            "completion_tokens": 4407,
+            "max_input_tokens": 2159
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 142.01725888252258,
+            "prompt_tokens": 31871,
+            "completion_tokens": 6342,
+            "max_input_tokens": 3270
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 154.38879323005676,
+            "prompt_tokens": 14928,
+            "completion_tokens": 6124,
+            "max_input_tokens": 2569
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "B",
+            "latency": 88.1570291519165,
+            "prompt_tokens": 17168,
+            "completion_tokens": 6519,
+            "max_input_tokens": 2592
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "F",
+            "genai_answer_idx": "F",
+            "latency": 361.163761138916,
+            "prompt_tokens": 9579,
+            "completion_tokens": 4884,
+            "max_input_tokens": 2442
+        },
+        {
+            "idx": 6,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D",
+            "latency": 76.68648934364319,
+            "prompt_tokens": 14677,
+            "completion_tokens": 4026,
+            "max_input_tokens": 1657
+        },
+        {
+            "idx": 7,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 216.6472523212433,
+            "prompt_tokens": 18485,
+            "completion_tokens": 4008,
+            "max_input_tokens": 2472
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 92.39800977706909,
+            "prompt_tokens": 12250,
+            "completion_tokens": 4218,
+            "max_input_tokens": 2004
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 140.93248009681702,
+            "prompt_tokens": 19681,
+            "completion_tokens": 4130,
+            "max_input_tokens": 2185
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 83.0603392124176,
+            "prompt_tokens": 15675,
+            "completion_tokens": 3032,
+            "max_input_tokens": 1730
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "G",
+            "genai_answer_idx": "G",
+            "latency": 192.89756298065186,
+            "prompt_tokens": 37122,
+            "completion_tokens": 9595,
+            "max_input_tokens": 4145
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 93.01217842102051,
+            "prompt_tokens": 18708,
+            "completion_tokens": 3862,
+            "max_input_tokens": 2339
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 90.00296688079834,
+            "prompt_tokens": 26787,
+            "completion_tokens": 5255,
+            "max_input_tokens": 2426
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 102.89749598503113,
+            "prompt_tokens": 21828,
+            "completion_tokens": 4857,
+            "max_input_tokens": 2324
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 250.7283546924591,
+            "prompt_tokens": 16115,
+            "completion_tokens": 5064,
+            "max_input_tokens": 2172
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 95.49192333221436,
+            "prompt_tokens": 14627,
+            "completion_tokens": 4653,
+            "max_input_tokens": 2040
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 102.3605318069458,
+            "prompt_tokens": 31332,
+            "completion_tokens": 3819,
+            "max_input_tokens": 2366
+        },
+        {
+            "idx": 6,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 82.69983005523682,
+            "prompt_tokens": 26250,
+            "completion_tokens": 4139,
+            "max_input_tokens": 2520
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 150.1056351661682,
+            "prompt_tokens": 20516,
+            "completion_tokens": 4450,
+            "max_input_tokens": 2587
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 292.57613348960876,
+            "prompt_tokens": 74982,
+            "completion_tokens": 6073,
+            "max_input_tokens": 4199
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 108.63274264335632,
+            "prompt_tokens": 22082,
+            "completion_tokens": 4539,
+            "max_input_tokens": 2287
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 162.4125804901123,
+            "prompt_tokens": 26987,
+            "completion_tokens": 4004,
+            "max_input_tokens": 2115
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 73.49652314186096,
+            "prompt_tokens": 13016,
+            "completion_tokens": 3149,
+            "max_input_tokens": 1865
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 146.8133327960968,
+            "prompt_tokens": 23441,
+            "completion_tokens": 5452,
+            "max_input_tokens": 3499
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 150.86352801322937,
+            "prompt_tokens": 20007,
+            "completion_tokens": 3704,
+            "max_input_tokens": 2643
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 305.2143726348877,
+            "prompt_tokens": 25712,
+            "completion_tokens": 3483,
+            "max_input_tokens": 1797
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 126.5855507850647,
+            "prompt_tokens": 26973,
+            "completion_tokens": 4636,
+            "max_input_tokens": 2567
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C",
+            "latency": 209.78524708747864,
+            "prompt_tokens": 25137,
+            "completion_tokens": 4404,
+            "max_input_tokens": 2848
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C",
+            "latency": 96.09684824943542,
+            "prompt_tokens": 20454,
+            "completion_tokens": 3816,
+            "max_input_tokens": 2381
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 333.9702105522156,
+            "prompt_tokens": 45656,
+            "completion_tokens": 5098,
+            "max_input_tokens": 3904
+        },
+        {
+            "idx": 6,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 93.41758465766907,
+            "prompt_tokens": 27207,
+            "completion_tokens": 3863,
+            "max_input_tokens": 2045
+        },
+        {
+            "idx": 7,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 126.8831832408905,
+            "prompt_tokens": 37900,
+            "completion_tokens": 4978,
+            "max_input_tokens": 3098
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D",
+            "latency": 66.93948316574097,
+            "prompt_tokens": 11125,
+            "completion_tokens": 3217,
+            "max_input_tokens": 1706
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 88.43222045898438,
+            "prompt_tokens": 23296,
+            "completion_tokens": 3176,
+            "max_input_tokens": 2199
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B",
+            "latency": 242.89371848106384,
+            "prompt_tokens": 24278,
+            "completion_tokens": 4534,
+            "max_input_tokens": 2825
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 94.88103413581848,
+            "prompt_tokens": 28080,
+            "completion_tokens": 4538,
+            "max_input_tokens": 2837
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B",
+            "latency": 532.1434364318848,
+            "prompt_tokens": 3941,
+            "completion_tokens": 653,
+            "max_input_tokens": 1213
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 105.41678762435913,
+            "prompt_tokens": 19181,
+            "completion_tokens": 3334,
+            "max_input_tokens": 1985
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 67.95878505706787,
+            "prompt_tokens": 15872,
+            "completion_tokens": 2736,
+            "max_input_tokens": 1667
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 74.60208821296692,
+            "prompt_tokens": 10051,
+            "completion_tokens": 3062,
+            "max_input_tokens": 1554
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 62.90535855293274,
+            "prompt_tokens": 12838,
+            "completion_tokens": 3822,
+            "max_input_tokens": 1842
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 202.92225766181946,
+            "prompt_tokens": 19750,
+            "completion_tokens": 2976,
+            "max_input_tokens": 2211
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 124.12291812896729,
+            "prompt_tokens": 10487,
+            "completion_tokens": 2813,
+            "max_input_tokens": 1545
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 41.278457164764404,
+            "prompt_tokens": 7919,
+            "completion_tokens": 2178,
+            "max_input_tokens": 1144
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 152.04080367088318,
+            "prompt_tokens": 26403,
+            "completion_tokens": 10824,
+            "max_input_tokens": 9284
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 140.40340185165405,
+            "prompt_tokens": 13020,
+            "completion_tokens": 3417,
+            "max_input_tokens": 1722
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 52.20425295829773,
+            "prompt_tokens": 10760,
+            "completion_tokens": 2494,
+            "max_input_tokens": 1687
+        },
+        {
+            "idx": 6,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A",
+            "latency": 96.59567070007324,
+            "prompt_tokens": 27128,
+            "completion_tokens": 4149,
+            "max_input_tokens": 2644
+        },
+        {
+            "idx": 7,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 141.8627746105194,
+            "prompt_tokens": 16181,
+            "completion_tokens": 4136,
+            "max_input_tokens": 2078
+        },
+        {
+            "idx": 8,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 81.87126970291138,
+            "prompt_tokens": 16776,
+            "completion_tokens": 2868,
+            "max_input_tokens": 1453
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D",
+            "latency": 145.26646089553833,
+            "prompt_tokens": 27516,
+            "completion_tokens": 5658,
+            "max_input_tokens": 3932
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 60.87017345428467,
+            "prompt_tokens": 8828,
+            "completion_tokens": 2475,
+            "max_input_tokens": 1161
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 72.99785208702087,
+            "prompt_tokens": 22879,
+            "completion_tokens": 3309,
+            "max_input_tokens": 2229
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 124.88194966316223,
+            "prompt_tokens": 10257,
+            "completion_tokens": 2601,
+            "max_input_tokens": 1252
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 114.44022703170776,
+            "prompt_tokens": 16563,
+            "completion_tokens": 2838,
+            "max_input_tokens": 1613
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 82.45158791542053,
+            "prompt_tokens": 21965,
+            "completion_tokens": 3793,
+            "max_input_tokens": 2346
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 131.80176782608032,
+            "prompt_tokens": 16875,
+            "completion_tokens": 3100,
+            "max_input_tokens": 1967
+        },
+        {
+            "idx": 6,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "B",
+            "latency": 146.13721108436584,
+            "prompt_tokens": 29132,
+            "completion_tokens": 4964,
+            "max_input_tokens": 2600
+        },
+        {
+            "idx": 7,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 60.08693718910217,
+            "prompt_tokens": 12805,
+            "completion_tokens": 3121,
+            "max_input_tokens": 1513
+        },
+        {
+            "idx": 8,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 128.5766065120697,
+            "prompt_tokens": 22288,
+            "completion_tokens": 4448,
+            "max_input_tokens": 2711
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C",
+            "latency": 219.80717396736145,
+            "prompt_tokens": 23313,
+            "completion_tokens": 3423,
+            "max_input_tokens": 2428
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 218.42300629615784,
+            "prompt_tokens": 19747,
+            "completion_tokens": 4518,
+            "max_input_tokens": 2786
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 71.19080328941345,
+            "prompt_tokens": 12233,
+            "completion_tokens": 3986,
+            "max_input_tokens": 1965
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 79.41069006919861,
+            "prompt_tokens": 16367,
+            "completion_tokens": 3885,
+            "max_input_tokens": 2007
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 154.12344670295715,
+            "prompt_tokens": 15604,
+            "completion_tokens": 4392,
+            "max_input_tokens": 2211
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 144.97260284423828,
+            "prompt_tokens": 17787,
+            "completion_tokens": 3303,
+            "max_input_tokens": 1829
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 101.19052457809448,
+            "prompt_tokens": 27857,
+            "completion_tokens": 5378,
+            "max_input_tokens": 2783
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 150.92702221870422,
+            "prompt_tokens": 21916,
+            "completion_tokens": 4249,
+            "max_input_tokens": 2520
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 82.18164396286011,
+            "prompt_tokens": 22917,
+            "completion_tokens": 3834,
+            "max_input_tokens": 1908
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 56.702818155288696,
+            "prompt_tokens": 11014,
+            "completion_tokens": 2698,
+            "max_input_tokens": 1467
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 84.89359283447266,
+            "prompt_tokens": 18311,
+            "completion_tokens": 3888,
+            "max_input_tokens": 2147
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B",
+            "latency": 99.25341486930847,
+            "prompt_tokens": 25337,
+            "completion_tokens": 4708,
+            "max_input_tokens": 2411
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 65.78166055679321,
+            "prompt_tokens": 12249,
+            "completion_tokens": 2534,
+            "max_input_tokens": 1272
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 57.9997775554657,
+            "prompt_tokens": 9489,
+            "completion_tokens": 2499,
+            "max_input_tokens": 1451
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 88.71653294563293,
+            "prompt_tokens": 19886,
+            "completion_tokens": 3373,
+            "max_input_tokens": 1762
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 47.739614725112915,
+            "prompt_tokens": 8405,
+            "completion_tokens": 2729,
+            "max_input_tokens": 1240
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D",
+            "latency": 233.84218001365662,
+            "prompt_tokens": 18282,
+            "completion_tokens": 3029,
+            "max_input_tokens": 2666
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 159.14618349075317,
+            "prompt_tokens": 19725,
+            "completion_tokens": 3546,
+            "max_input_tokens": 1868
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 64.48334264755249,
+            "prompt_tokens": 12365,
+            "completion_tokens": 3469,
+            "max_input_tokens": 1602
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 146.60853338241577,
+            "prompt_tokens": 16416,
+            "completion_tokens": 3866,
+            "max_input_tokens": 1888
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 61.60664439201355,
+            "prompt_tokens": 13043,
+            "completion_tokens": 3081,
+            "max_input_tokens": 1605
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 108.33672666549683,
+            "prompt_tokens": 27001,
+            "completion_tokens": 4241,
+            "max_input_tokens": 2334
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 94.39833521842957,
+            "prompt_tokens": 32311,
+            "completion_tokens": 4828,
+            "max_input_tokens": 2652
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 97.18379163742065,
+            "prompt_tokens": 31437,
+            "completion_tokens": 3526,
+            "max_input_tokens": 2323
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B",
+            "latency": 137.46801781654358,
+            "prompt_tokens": 18459,
+            "completion_tokens": 4455,
+            "max_input_tokens": 2825
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 80.25120615959167,
+            "prompt_tokens": 19673,
+            "completion_tokens": 3634,
+            "max_input_tokens": 1887
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C",
+            "latency": 470.18432235717773,
+            "prompt_tokens": 22994,
+            "completion_tokens": 4282,
+            "max_input_tokens": 2974
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 165.92629218101501,
+            "prompt_tokens": 20845,
+            "completion_tokens": 4704,
+            "max_input_tokens": 2267
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 253.28284096717834,
+            "prompt_tokens": 29212,
+            "completion_tokens": 4451,
+            "max_input_tokens": 2690
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 43.35082674026489,
+            "prompt_tokens": 6584,
+            "completion_tokens": 1832,
+            "max_input_tokens": 901
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 171.8299834728241,
+            "prompt_tokens": 41706,
+            "completion_tokens": 4723,
+            "max_input_tokens": 2610
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 190.87541580200195,
+            "prompt_tokens": 21790,
+            "completion_tokens": 3662,
+            "max_input_tokens": 2253
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 50.89057230949402,
+            "prompt_tokens": 7661,
+            "completion_tokens": 2016,
+            "max_input_tokens": 1079
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 129.50124621391296,
+            "prompt_tokens": 22081,
+            "completion_tokens": 3457,
+            "max_input_tokens": 2522
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 42.43622088432312,
+            "prompt_tokens": 8843,
+            "completion_tokens": 2305,
+            "max_input_tokens": 1329
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 225.06631183624268,
+            "prompt_tokens": 37369,
+            "completion_tokens": 4482,
+            "max_input_tokens": 2540
+        },
+        {
+            "idx": 6,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 91.42297458648682,
+            "prompt_tokens": 10949,
+            "completion_tokens": 3593,
+            "max_input_tokens": 1538
+        },
+        {
+            "idx": 7,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 49.96144986152649,
+            "prompt_tokens": 8654,
+            "completion_tokens": 2506,
+            "max_input_tokens": 1203
+        },
+        {
+            "idx": 8,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 139.44152331352234,
+            "prompt_tokens": 15196,
+            "completion_tokens": 2615,
+            "max_input_tokens": 1832
+        },
+        {
+            "idx": 9,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B",
+            "latency": 58.11564016342163,
+            "prompt_tokens": 12801,
+            "completion_tokens": 2451,
+            "max_input_tokens": 1780
+        },
+        {
+            "idx": 10,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 76.65543532371521,
+            "prompt_tokens": 15717,
+            "completion_tokens": 3245,
+            "max_input_tokens": 1477
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 122.7937798500061,
+            "prompt_tokens": 14022,
+            "completion_tokens": 3112,
+            "max_input_tokens": 2030
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 95.99874114990234,
+            "prompt_tokens": 20286,
+            "completion_tokens": 4836,
+            "max_input_tokens": 2645
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 85.38265061378479,
+            "prompt_tokens": 19271,
+            "completion_tokens": 3000,
+            "max_input_tokens": 1663
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 139.34575772285461,
+            "prompt_tokens": 14307,
+            "completion_tokens": 3254,
+            "max_input_tokens": 2146
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 95.74620771408081,
+            "prompt_tokens": 20660,
+            "completion_tokens": 3766,
+            "max_input_tokens": 2038
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 82.65734958648682,
+            "prompt_tokens": 14521,
+            "completion_tokens": 3814,
+            "max_input_tokens": 1745
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "B",
+            "latency": 230.41874527931213,
+            "prompt_tokens": 24858,
+            "completion_tokens": 5291,
+            "max_input_tokens": 2705
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C",
+            "latency": 148.2963080406189,
+            "prompt_tokens": 20405,
+            "completion_tokens": 3430,
+            "max_input_tokens": 2172
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 111.46430087089539,
+            "prompt_tokens": 10052,
+            "completion_tokens": 3116,
+            "max_input_tokens": 1364
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 86.90286135673523,
+            "prompt_tokens": 24577,
+            "completion_tokens": 4260,
+            "max_input_tokens": 2191
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 83.70649647712708,
+            "prompt_tokens": 26539,
+            "completion_tokens": 4587,
+            "max_input_tokens": 2375
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 42.14130783081055,
+            "prompt_tokens": 9041,
+            "completion_tokens": 2551,
+            "max_input_tokens": 1364
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 175.26617908477783,
+            "prompt_tokens": 37738,
+            "completion_tokens": 3482,
+            "max_input_tokens": 2219
+        },
+        {
+            "idx": 6,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 172.10389804840088,
+            "prompt_tokens": 35292,
+            "completion_tokens": 5641,
+            "max_input_tokens": 2682
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 161.45512747764587,
+            "prompt_tokens": 20605,
+            "completion_tokens": 3934,
+            "max_input_tokens": 2426
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 68.58516359329224,
+            "prompt_tokens": 17213,
+            "completion_tokens": 3248,
+            "max_input_tokens": 1993
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 87.66007709503174,
+            "prompt_tokens": 24622,
+            "completion_tokens": 4252,
+            "max_input_tokens": 2154
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 69.24497771263123,
+            "prompt_tokens": 12360,
+            "completion_tokens": 4702,
+            "max_input_tokens": 1918
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 63.80428218841553,
+            "prompt_tokens": 12559,
+            "completion_tokens": 4049,
+            "max_input_tokens": 2160
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D",
+            "latency": 301.86421751976013,
+            "prompt_tokens": 2861,
+            "completion_tokens": 1511,
+            "max_input_tokens": 1437
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 54.10362219810486,
+            "prompt_tokens": 8780,
+            "completion_tokens": 2980,
+            "max_input_tokens": 1292
+        },
+        {
+            "idx": 6,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 48.44744658470154,
+            "prompt_tokens": 11579,
+            "completion_tokens": 1831,
+            "max_input_tokens": 1209
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D",
+            "latency": 114.071368932724,
+            "prompt_tokens": 33431,
+            "completion_tokens": 4977,
+            "max_input_tokens": 2584
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 63.08229374885559,
+            "prompt_tokens": 11058,
+            "completion_tokens": 2606,
+            "max_input_tokens": 1641
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 92.36018800735474,
+            "prompt_tokens": 27522,
+            "completion_tokens": 4835,
+            "max_input_tokens": 2842
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 55.179383993148804,
+            "prompt_tokens": 7483,
+            "completion_tokens": 2141,
+            "max_input_tokens": 1079
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C",
+            "latency": 124.62787985801697,
+            "prompt_tokens": 14238,
+            "completion_tokens": 2659,
+            "max_input_tokens": 1645
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 65.32689332962036,
+            "prompt_tokens": 16654,
+            "completion_tokens": 2549,
+            "max_input_tokens": 1814
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B",
+            "latency": 146.8141541481018,
+            "prompt_tokens": 20974,
+            "completion_tokens": 3561,
+            "max_input_tokens": 2744
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 82.25597858428955,
+            "prompt_tokens": 11738,
+            "completion_tokens": 2504,
+            "max_input_tokens": 1485
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 118.76772403717041,
+            "prompt_tokens": 16140,
+            "completion_tokens": 3085,
+            "max_input_tokens": 2002
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 197.35539436340332,
+            "prompt_tokens": 55246,
+            "completion_tokens": 4363,
+            "max_input_tokens": 3423
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 144.26210069656372,
+            "prompt_tokens": 17943,
+            "completion_tokens": 3241,
+            "max_input_tokens": 2081
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "B",
+            "latency": 301.6576256752014,
+            "prompt_tokens": 1890,
+            "completion_tokens": 210,
+            "max_input_tokens": 708
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 155.5145125389099,
+            "prompt_tokens": 25668,
+            "completion_tokens": 3972,
+            "max_input_tokens": 2395
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 45.194671392440796,
+            "prompt_tokens": 8210,
+            "completion_tokens": 2364,
+            "max_input_tokens": 1217
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 87.26468801498413,
+            "prompt_tokens": 16775,
+            "completion_tokens": 4055,
+            "max_input_tokens": 1845
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 290.6224362850189,
+            "prompt_tokens": 26930,
+            "completion_tokens": 5341,
+            "max_input_tokens": 3157
+        },
+        {
+            "idx": 6,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 119.72748446464539,
+            "prompt_tokens": 16541,
+            "completion_tokens": 5407,
+            "max_input_tokens": 2321
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 116.78952503204346,
+            "prompt_tokens": 24478,
+            "completion_tokens": 5091,
+            "max_input_tokens": 2603
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 133.39006400108337,
+            "prompt_tokens": 40520,
+            "completion_tokens": 5433,
+            "max_input_tokens": 2962
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 156.55780863761902,
+            "prompt_tokens": 20398,
+            "completion_tokens": 4650,
+            "max_input_tokens": 2255
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 78.51115345954895,
+            "prompt_tokens": 10490,
+            "completion_tokens": 2653,
+            "max_input_tokens": 1378
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "A",
+            "latency": 91.53588843345642,
+            "prompt_tokens": 16921,
+            "completion_tokens": 3283,
+            "max_input_tokens": 1984
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 132.0927608013153,
+            "prompt_tokens": 11821,
+            "completion_tokens": 2780,
+            "max_input_tokens": 1776
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 64.92643642425537,
+            "prompt_tokens": 14169,
+            "completion_tokens": 2576,
+            "max_input_tokens": 1395
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 200.46013164520264,
+            "prompt_tokens": 2431,
+            "completion_tokens": 363,
+            "max_input_tokens": 910
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 77.97079849243164,
+            "prompt_tokens": 12766,
+            "completion_tokens": 3312,
+            "max_input_tokens": 1747
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 80.22411680221558,
+            "prompt_tokens": 23327,
+            "completion_tokens": 4117,
+            "max_input_tokens": 2209
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 210.1696014404297,
+            "prompt_tokens": 13974,
+            "completion_tokens": 3715,
+            "max_input_tokens": 1651
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 69.58004593849182,
+            "prompt_tokens": 12038,
+            "completion_tokens": 3852,
+            "max_input_tokens": 1658
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 50.820040225982666,
+            "prompt_tokens": 9981,
+            "completion_tokens": 2708,
+            "max_input_tokens": 1597
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 46.91983342170715,
+            "prompt_tokens": 7713,
+            "completion_tokens": 1920,
+            "max_input_tokens": 1174
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 133.06612753868103,
+            "prompt_tokens": 19071,
+            "completion_tokens": 3378,
+            "max_input_tokens": 1851
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 76.10326766967773,
+            "prompt_tokens": 16952,
+            "completion_tokens": 3517,
+            "max_input_tokens": 1765
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B",
+            "latency": 112.78086447715759,
+            "prompt_tokens": 30618,
+            "completion_tokens": 4626,
+            "max_input_tokens": 2273
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 47.04091143608093,
+            "prompt_tokens": 8040,
+            "completion_tokens": 2409,
+            "max_input_tokens": 1277
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 105.07148718833923,
+            "prompt_tokens": 11808,
+            "completion_tokens": 3474,
+            "max_input_tokens": 1995
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A",
+            "latency": 47.859792709350586,
+            "prompt_tokens": 8158,
+            "completion_tokens": 2260,
+            "max_input_tokens": 1087
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 74.59900498390198,
+            "prompt_tokens": 13259,
+            "completion_tokens": 2859,
+            "max_input_tokens": 1568
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C",
+            "latency": 81.59197044372559,
+            "prompt_tokens": 9303,
+            "completion_tokens": 2865,
+            "max_input_tokens": 1378
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 61.32901430130005,
+            "prompt_tokens": 10373,
+            "completion_tokens": 3073,
+            "max_input_tokens": 1408
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 41.38097858428955,
+            "prompt_tokens": 7000,
+            "completion_tokens": 1843,
+            "max_input_tokens": 1042
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 200.30342388153076,
+            "prompt_tokens": 18442,
+            "completion_tokens": 3848,
+            "max_input_tokens": 2346
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 108.84835028648376,
+            "prompt_tokens": 12023,
+            "completion_tokens": 3466,
+            "max_input_tokens": 1785
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 58.745315074920654,
+            "prompt_tokens": 9907,
+            "completion_tokens": 3162,
+            "max_input_tokens": 1397
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 94.04265761375427,
+            "prompt_tokens": 19189,
+            "completion_tokens": 3627,
+            "max_input_tokens": 2054
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D",
+            "latency": 106.29047465324402,
+            "prompt_tokens": 13342,
+            "completion_tokens": 2975,
+            "max_input_tokens": 1397
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 85.26292562484741,
+            "prompt_tokens": 21566,
+            "completion_tokens": 3641,
+            "max_input_tokens": 2013
+        },
+        {
+            "idx": 6,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 117.10442328453064,
+            "prompt_tokens": 12259,
+            "completion_tokens": 2846,
+            "max_input_tokens": 1863
+        },
+        {
+            "idx": 7,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 70.56635475158691,
+            "prompt_tokens": 12688,
+            "completion_tokens": 2723,
+            "max_input_tokens": 1673
+        },
+        {
+            "idx": 8,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 313.40340638160706,
+            "prompt_tokens": 58094,
+            "completion_tokens": 3832,
+            "max_input_tokens": 3775
+        },
+        {
+            "idx": 9,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 83.99920558929443,
+            "prompt_tokens": 15976,
+            "completion_tokens": 3459,
+            "max_input_tokens": 1943
+        },
+        {
+            "idx": 10,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 54.31328105926514,
+            "prompt_tokens": 9084,
+            "completion_tokens": 2359,
+            "max_input_tokens": 1395
+        },
+        {
+            "idx": 11,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 83.52805995941162,
+            "prompt_tokens": 8623,
+            "completion_tokens": 2626,
+            "max_input_tokens": 1188
+        },
+        {
+            "idx": 12,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 112.18459153175354,
+            "prompt_tokens": 29211,
+            "completion_tokens": 5325,
+            "max_input_tokens": 2551
+        },
+        {
+            "idx": 13,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 39.771907567977905,
+            "prompt_tokens": 7127,
+            "completion_tokens": 1693,
+            "max_input_tokens": 981
+        },
+        {
+            "idx": 14,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 117.60050654411316,
+            "prompt_tokens": 34343,
+            "completion_tokens": 5134,
+            "max_input_tokens": 3148
+        },
+        {
+            "idx": 15,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 78.03560590744019,
+            "prompt_tokens": 18096,
+            "completion_tokens": 3522,
+            "max_input_tokens": 2255
+        },
+        {
+            "idx": 16,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 41.664955377578735,
+            "prompt_tokens": 7382,
+            "completion_tokens": 2057,
+            "max_input_tokens": 1102
+        },
+        {
+            "idx": 17,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 82.95283603668213,
+            "prompt_tokens": 10253,
+            "completion_tokens": 3298,
+            "max_input_tokens": 1476
+        },
+        {
+            "idx": 18,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 53.49232316017151,
+            "prompt_tokens": 8904,
+            "completion_tokens": 2482,
+            "max_input_tokens": 1381
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 70.10204577445984,
+            "prompt_tokens": 14475,
+            "completion_tokens": 3160,
+            "max_input_tokens": 1589
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 138.64069771766663,
+            "prompt_tokens": 15625,
+            "completion_tokens": 3056,
+            "max_input_tokens": 2052
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 207.7946047782898,
+            "prompt_tokens": 28934,
+            "completion_tokens": 4253,
+            "max_input_tokens": 3132
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "",
+            "genai_answer_idx": "D",
+            "latency": 162.29523229599,
+            "prompt_tokens": 26705,
+            "completion_tokens": 3842,
+            "max_input_tokens": 2322
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 93.94327402114868,
+            "prompt_tokens": 24105,
+            "completion_tokens": 4090,
+            "max_input_tokens": 2084
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 161.7373034954071,
+            "prompt_tokens": 29636,
+            "completion_tokens": 4401,
+            "max_input_tokens": 2492
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 187.00288701057434,
+            "prompt_tokens": 16547,
+            "completion_tokens": 2490,
+            "max_input_tokens": 1987
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 249.95347499847412,
+            "prompt_tokens": 18407,
+            "completion_tokens": 3126,
+            "max_input_tokens": 1957
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 73.60685610771179,
+            "prompt_tokens": 11768,
+            "completion_tokens": 2632,
+            "max_input_tokens": 1507
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 60.38394522666931,
+            "prompt_tokens": 10507,
+            "completion_tokens": 3449,
+            "max_input_tokens": 1694
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 60.54751992225647,
+            "prompt_tokens": 10469,
+            "completion_tokens": 2921,
+            "max_input_tokens": 1593
+        },
+        {
+            "idx": 6,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 302.2275402545929,
+            "prompt_tokens": 27584,
+            "completion_tokens": 4033,
+            "max_input_tokens": 2772
+        },
+        {
+            "idx": 7,
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E",
+            "latency": 97.69385147094727,
+            "prompt_tokens": 16358,
+            "completion_tokens": 3072,
+            "max_input_tokens": 1472
+        },
+        {
+            "idx": 8,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 164.48088455200195,
+            "prompt_tokens": 32234,
+            "completion_tokens": 5288,
+            "max_input_tokens": 2782
+        },
+        {
+            "idx": 9,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D",
+            "latency": 386.4165108203888,
+            "prompt_tokens": 77982,
+            "completion_tokens": 5417,
+            "max_input_tokens": 4660
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 187.13620018959045,
+            "prompt_tokens": 14326,
+            "completion_tokens": 2933,
+            "max_input_tokens": 1786
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 84.29518938064575,
+            "prompt_tokens": 14291,
+            "completion_tokens": 4171,
+            "max_input_tokens": 2073
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 170.5499153137207,
+            "prompt_tokens": 45226,
+            "completion_tokens": 5639,
+            "max_input_tokens": 3113
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 147.00328922271729,
+            "prompt_tokens": 15750,
+            "completion_tokens": 3819,
+            "max_input_tokens": 2224
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D",
+            "latency": 198.95439767837524,
+            "prompt_tokens": 29703,
+            "completion_tokens": 4435,
+            "max_input_tokens": 2639
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 186.28007125854492,
+            "prompt_tokens": 19836,
+            "completion_tokens": 3130,
+            "max_input_tokens": 2766
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 163.22487950325012,
+            "prompt_tokens": 23514,
+            "completion_tokens": 4369,
+            "max_input_tokens": 2776
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 168.71435356140137,
+            "prompt_tokens": 47077,
+            "completion_tokens": 5132,
+            "max_input_tokens": 3089
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 74.54381537437439,
+            "prompt_tokens": 15446,
+            "completion_tokens": 3355,
+            "max_input_tokens": 1994
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "B",
+            "latency": 369.3637070655823,
+            "prompt_tokens": 41636,
+            "completion_tokens": 6405,
+            "max_input_tokens": 4530
+        },
+        {
+            "idx": 6,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 42.253047704696655,
+            "prompt_tokens": 8563,
+            "completion_tokens": 2371,
+            "max_input_tokens": 1247
+        },
+        {
+            "idx": 7,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 185.90425753593445,
+            "prompt_tokens": 21548,
+            "completion_tokens": 2367,
+            "max_input_tokens": 2007
+        },
+        {
+            "idx": 8,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 111.53324007987976,
+            "prompt_tokens": 62392,
+            "completion_tokens": 4005,
+            "max_input_tokens": 4861
+        },
+        {
+            "idx": 9,
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "E",
+            "latency": 235.58993983268738,
+            "prompt_tokens": 24310,
+            "completion_tokens": 4428,
+            "max_input_tokens": 3020
+        },
+        {
+            "idx": 10,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 90.1563310623169,
+            "prompt_tokens": 14426,
+            "completion_tokens": 3680,
+            "max_input_tokens": 1749
+        },
+        {
+            "idx": 11,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 116.02395439147949,
+            "prompt_tokens": 21405,
+            "completion_tokens": 6405,
+            "max_input_tokens": 3273
+        },
+        {
+            "idx": 12,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 93.00283741950989,
+            "prompt_tokens": 15593,
+            "completion_tokens": 2175,
+            "max_input_tokens": 1746
+        },
+        {
+            "idx": 13,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 51.66505813598633,
+            "prompt_tokens": 9741,
+            "completion_tokens": 2625,
+            "max_input_tokens": 1692
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 77.95270419120789,
+            "prompt_tokens": 12306,
+            "completion_tokens": 3303,
+            "max_input_tokens": 1626
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 89.37808227539062,
+            "prompt_tokens": 28940,
+            "completion_tokens": 4642,
+            "max_input_tokens": 2858
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 45.525413274765015,
+            "prompt_tokens": 8219,
+            "completion_tokens": 2207,
+            "max_input_tokens": 1222
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 75.09079194068909,
+            "prompt_tokens": 12215,
+            "completion_tokens": 3159,
+            "max_input_tokens": 1493
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "B",
+            "latency": 142.65873670578003,
+            "prompt_tokens": 34421,
+            "completion_tokens": 5475,
+            "max_input_tokens": 3809
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 81.60260963439941,
+            "prompt_tokens": 20041,
+            "completion_tokens": 4995,
+            "max_input_tokens": 2546
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 92.62011218070984,
+            "prompt_tokens": 27387,
+            "completion_tokens": 4890,
+            "max_input_tokens": 2587
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 126.30091500282288,
+            "prompt_tokens": 19608,
+            "completion_tokens": 2935,
+            "max_input_tokens": 2347
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 61.06192469596863,
+            "prompt_tokens": 9643,
+            "completion_tokens": 2948,
+            "max_input_tokens": 1335
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 59.76421141624451,
+            "prompt_tokens": 11381,
+            "completion_tokens": 3368,
+            "max_input_tokens": 1658
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 137.57679414749146,
+            "prompt_tokens": 587,
+            "completion_tokens": 738,
+            "max_input_tokens": 356
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 150.41971588134766,
+            "prompt_tokens": 19921,
+            "completion_tokens": 5435,
+            "max_input_tokens": 2859
+        },
+        {
+            "idx": 6,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 81.9346399307251,
+            "prompt_tokens": 23902,
+            "completion_tokens": 3975,
+            "max_input_tokens": 2664
+        },
+        {
+            "idx": 7,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "A",
+            "latency": 168.62828016281128,
+            "prompt_tokens": 28239,
+            "completion_tokens": 4414,
+            "max_input_tokens": 2657
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 99.69243955612183,
+            "prompt_tokens": 20590,
+            "completion_tokens": 4407,
+            "max_input_tokens": 2298
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 170.74539709091187,
+            "prompt_tokens": 42674,
+            "completion_tokens": 6128,
+            "max_input_tokens": 3352
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 140.8430290222168,
+            "prompt_tokens": 20541,
+            "completion_tokens": 3717,
+            "max_input_tokens": 2118
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 85.77944612503052,
+            "prompt_tokens": 18084,
+            "completion_tokens": 3550,
+            "max_input_tokens": 1938
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 634.1031880378723,
+            "prompt_tokens": 49946,
+            "completion_tokens": 5978,
+            "max_input_tokens": 3339
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "A",
+            "latency": 226.45865845680237,
+            "prompt_tokens": 69137,
+            "completion_tokens": 11815,
+            "max_input_tokens": 9678
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 137.33789372444153,
+            "prompt_tokens": 23917,
+            "completion_tokens": 3770,
+            "max_input_tokens": 2243
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 232.86361813545227,
+            "prompt_tokens": 28242,
+            "completion_tokens": 4507,
+            "max_input_tokens": 2729
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 89.85661149024963,
+            "prompt_tokens": 22131,
+            "completion_tokens": 3848,
+            "max_input_tokens": 2125
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 70.87029075622559,
+            "prompt_tokens": 11209,
+            "completion_tokens": 2671,
+            "max_input_tokens": 1409
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 122.25715756416321,
+            "prompt_tokens": 18313,
+            "completion_tokens": 3619,
+            "max_input_tokens": 1948
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 63.74386167526245,
+            "prompt_tokens": 18768,
+            "completion_tokens": 3228,
+            "max_input_tokens": 2081
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C",
+            "latency": 85.09126210212708,
+            "prompt_tokens": 15850,
+            "completion_tokens": 3413,
+            "max_input_tokens": 2120
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 178.14514827728271,
+            "prompt_tokens": 23486,
+            "completion_tokens": 3960,
+            "max_input_tokens": 2247
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 181.59862756729126,
+            "prompt_tokens": 20457,
+            "completion_tokens": 5457,
+            "max_input_tokens": 2975
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "C",
+            "latency": 154.20541620254517,
+            "prompt_tokens": 16621,
+            "completion_tokens": 5548,
+            "max_input_tokens": 2254
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D",
+            "latency": 68.54633665084839,
+            "prompt_tokens": 9481,
+            "completion_tokens": 2398,
+            "max_input_tokens": 1205
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 49.572388887405396,
+            "prompt_tokens": 7877,
+            "completion_tokens": 2520,
+            "max_input_tokens": 1156
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 47.634721994400024,
+            "prompt_tokens": 8320,
+            "completion_tokens": 2266,
+            "max_input_tokens": 1183
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 150.6206192970276,
+            "prompt_tokens": 22649,
+            "completion_tokens": 5213,
+            "max_input_tokens": 2537
+        },
+        {
+            "idx": 6,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "A",
+            "latency": 128.93120312690735,
+            "prompt_tokens": 8923,
+            "completion_tokens": 3234,
+            "max_input_tokens": 1360
+        },
+        {
+            "idx": 7,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 82.07138848304749,
+            "prompt_tokens": 8838,
+            "completion_tokens": 2584,
+            "max_input_tokens": 1185
+        },
+        {
+            "idx": 8,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 69.97502088546753,
+            "prompt_tokens": 11256,
+            "completion_tokens": 3256,
+            "max_input_tokens": 1768
+        },
+        {
+            "idx": 9,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 60.84621071815491,
+            "prompt_tokens": 11192,
+            "completion_tokens": 2381,
+            "max_input_tokens": 1116
+        },
+        {
+            "idx": 10,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "A",
+            "latency": 287.45403504371643,
+            "prompt_tokens": 28668,
+            "completion_tokens": 4583,
+            "max_input_tokens": 2474
+        },
+        {
+            "idx": 11,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 49.79397702217102,
+            "prompt_tokens": 7890,
+            "completion_tokens": 2181,
+            "max_input_tokens": 1236
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 120.51068258285522,
+            "prompt_tokens": 23832,
+            "completion_tokens": 4193,
+            "max_input_tokens": 2112
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 85.03929781913757,
+            "prompt_tokens": 13567,
+            "completion_tokens": 3674,
+            "max_input_tokens": 2428
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 54.538490533828735,
+            "prompt_tokens": 7914,
+            "completion_tokens": 2186,
+            "max_input_tokens": 1152
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 99.79206466674805,
+            "prompt_tokens": 28965,
+            "completion_tokens": 5518,
+            "max_input_tokens": 2887
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 188.14768147468567,
+            "prompt_tokens": 29001,
+            "completion_tokens": 4558,
+            "max_input_tokens": 2487
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 62.65617299079895,
+            "prompt_tokens": 14559,
+            "completion_tokens": 2908,
+            "max_input_tokens": 1329
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 192.17825722694397,
+            "prompt_tokens": 27248,
+            "completion_tokens": 4140,
+            "max_input_tokens": 2388
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 57.081167459487915,
+            "prompt_tokens": 9277,
+            "completion_tokens": 2620,
+            "max_input_tokens": 1290
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 313.23874282836914,
+            "prompt_tokens": 1695,
+            "completion_tokens": 426,
+            "max_input_tokens": 839
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 55.27107858657837,
+            "prompt_tokens": 7940,
+            "completion_tokens": 2349,
+            "max_input_tokens": 1225
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 328.8590531349182,
+            "prompt_tokens": 32124,
+            "completion_tokens": 6682,
+            "max_input_tokens": 3527
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 117.3892195224762,
+            "prompt_tokens": 12539,
+            "completion_tokens": 3116,
+            "max_input_tokens": 2000
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 90.52416396141052,
+            "prompt_tokens": 12955,
+            "completion_tokens": 3550,
+            "max_input_tokens": 1614
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 176.90137100219727,
+            "prompt_tokens": 19719,
+            "completion_tokens": 3932,
+            "max_input_tokens": 2143
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 58.06755256652832,
+            "prompt_tokens": 13503,
+            "completion_tokens": 2378,
+            "max_input_tokens": 1632
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "D",
+            "latency": 340.1067681312561,
+            "prompt_tokens": 21024,
+            "completion_tokens": 4512,
+            "max_input_tokens": 3182
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 191.82738637924194,
+            "prompt_tokens": 28111,
+            "completion_tokens": 3725,
+            "max_input_tokens": 2355
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 81.66424441337585,
+            "prompt_tokens": 19836,
+            "completion_tokens": 3815,
+            "max_input_tokens": 2027
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "A",
+            "latency": 64.88585805892944,
+            "prompt_tokens": 13099,
+            "completion_tokens": 2520,
+            "max_input_tokens": 1432
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 61.371137380599976,
+            "prompt_tokens": 8286,
+            "completion_tokens": 2623,
+            "max_input_tokens": 1185
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 195.59655356407166,
+            "prompt_tokens": 24244,
+            "completion_tokens": 5914,
+            "max_input_tokens": 3590
+        },
+        {
+            "idx": 6,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 50.047242641448975,
+            "prompt_tokens": 8762,
+            "completion_tokens": 2761,
+            "max_input_tokens": 1273
+        },
+        {
+            "idx": 7,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 147.57922267913818,
+            "prompt_tokens": 21314,
+            "completion_tokens": 3270,
+            "max_input_tokens": 2042
+        },
+        {
+            "idx": 8,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 219.463130235672,
+            "prompt_tokens": 21896,
+            "completion_tokens": 4063,
+            "max_input_tokens": 2449
+        },
+        {
+            "idx": 9,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 112.97388482093811,
+            "prompt_tokens": 32983,
+            "completion_tokens": 4906,
+            "max_input_tokens": 2738
+        },
+        {
+            "idx": 10,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "A",
+            "latency": 978.9525902271271,
+            "prompt_tokens": 617,
+            "completion_tokens": 168,
+            "max_input_tokens": 455
+        },
+        {
+            "idx": 11,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 103.9586911201477,
+            "prompt_tokens": 26630,
+            "completion_tokens": 4964,
+            "max_input_tokens": 2903
+        },
+        {
+            "idx": 12,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 142.9243996143341,
+            "prompt_tokens": 41615,
+            "completion_tokens": 3790,
+            "max_input_tokens": 3198
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 370.6778383255005,
+            "prompt_tokens": 31487,
+            "completion_tokens": 4048,
+            "max_input_tokens": 2869
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "C",
+            "latency": 69.97013592720032,
+            "prompt_tokens": 11989,
+            "completion_tokens": 2410,
+            "max_input_tokens": 1453
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 57.165679693222046,
+            "prompt_tokens": 8536,
+            "completion_tokens": 2636,
+            "max_input_tokens": 1230
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 78.3766610622406,
+            "prompt_tokens": 12839,
+            "completion_tokens": 3708,
+            "max_input_tokens": 1675
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 80.90953159332275,
+            "prompt_tokens": 11045,
+            "completion_tokens": 3108,
+            "max_input_tokens": 1517
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 47.16773295402527,
+            "prompt_tokens": 7607,
+            "completion_tokens": 2217,
+            "max_input_tokens": 1042
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 45.62246298789978,
+            "prompt_tokens": 6658,
+            "completion_tokens": 1878,
+            "max_input_tokens": 926
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 60.42914605140686,
+            "prompt_tokens": 11418,
+            "completion_tokens": 3113,
+            "max_input_tokens": 1783
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 270.95476365089417,
+            "prompt_tokens": 39712,
+            "completion_tokens": 11249,
+            "max_input_tokens": 4848
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 163.46573328971863,
+            "prompt_tokens": 14989,
+            "completion_tokens": 3627,
+            "max_input_tokens": 1817
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 70.49481558799744,
+            "prompt_tokens": 13697,
+            "completion_tokens": 2987,
+            "max_input_tokens": 1803
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 45.77001118659973,
+            "prompt_tokens": 8062,
+            "completion_tokens": 2166,
+            "max_input_tokens": 1249
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 175.8019528388977,
+            "prompt_tokens": 25774,
+            "completion_tokens": 4442,
+            "max_input_tokens": 2086
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 61.58395600318909,
+            "prompt_tokens": 7123,
+            "completion_tokens": 2028,
+            "max_input_tokens": 1050
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 64.55844521522522,
+            "prompt_tokens": 14189,
+            "completion_tokens": 2457,
+            "max_input_tokens": 1734
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 44.63431167602539,
+            "prompt_tokens": 7405,
+            "completion_tokens": 2044,
+            "max_input_tokens": 1035
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 204.64702439308167,
+            "prompt_tokens": 4330,
+            "completion_tokens": 1848,
+            "max_input_tokens": 1034
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 60.54523825645447,
+            "prompt_tokens": 9252,
+            "completion_tokens": 2759,
+            "max_input_tokens": 1388
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 123.98940253257751,
+            "prompt_tokens": 17134,
+            "completion_tokens": 3177,
+            "max_input_tokens": 2361
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 188.67417883872986,
+            "prompt_tokens": 22197,
+            "completion_tokens": 4013,
+            "max_input_tokens": 2755
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 153.93872451782227,
+            "prompt_tokens": 28759,
+            "completion_tokens": 4074,
+            "max_input_tokens": 2411
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 144.7309546470642,
+            "prompt_tokens": 20230,
+            "completion_tokens": 3918,
+            "max_input_tokens": 2237
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 92.86019229888916,
+            "prompt_tokens": 26137,
+            "completion_tokens": 3269,
+            "max_input_tokens": 2029
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 95.62084412574768,
+            "prompt_tokens": 19171,
+            "completion_tokens": 3597,
+            "max_input_tokens": 1905
+        },
+        {
+            "idx": 6,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 147.64312314987183,
+            "prompt_tokens": 23312,
+            "completion_tokens": 4033,
+            "max_input_tokens": 2339
+        },
+        {
+            "idx": 7,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 41.559821367263794,
+            "prompt_tokens": 7790,
+            "completion_tokens": 1981,
+            "max_input_tokens": 1060
+        },
+        {
+            "idx": 8,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 83.45818448066711,
+            "prompt_tokens": 28378,
+            "completion_tokens": 4812,
+            "max_input_tokens": 2418
+        },
+        {
+            "idx": 9,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 203.2079586982727,
+            "prompt_tokens": 101109,
+            "completion_tokens": 4628,
+            "max_input_tokens": 3777
+        },
+        {
+            "idx": 10,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 51.51634645462036,
+            "prompt_tokens": 8185,
+            "completion_tokens": 2146,
+            "max_input_tokens": 1128
+        },
+        {
+            "idx": 11,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "C",
+            "latency": 44.415541887283325,
+            "prompt_tokens": 7441,
+            "completion_tokens": 2087,
+            "max_input_tokens": 1015
+        },
+        {
+            "idx": 12,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "B",
+            "latency": 75.9268810749054,
+            "prompt_tokens": 25180,
+            "completion_tokens": 6211,
+            "max_input_tokens": 3430
+        },
+        {
+            "idx": 13,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 52.7642822265625,
+            "prompt_tokens": 7895,
+            "completion_tokens": 2113,
+            "max_input_tokens": 1059
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 72.492666721344,
+            "prompt_tokens": 16075,
+            "completion_tokens": 3036,
+            "max_input_tokens": 1639
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 193.09842658042908,
+            "prompt_tokens": 29308,
+            "completion_tokens": 6245,
+            "max_input_tokens": 3226
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "D",
+            "latency": 185.69307613372803,
+            "prompt_tokens": 19935,
+            "completion_tokens": 5617,
+            "max_input_tokens": 2166
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 49.306902170181274,
+            "prompt_tokens": 8740,
+            "completion_tokens": 2572,
+            "max_input_tokens": 1530
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 264.0836081504822,
+            "prompt_tokens": 32610,
+            "completion_tokens": 5689,
+            "max_input_tokens": 3050
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "E",
+            "genai_answer_idx": "B",
+            "latency": 270.8363742828369,
+            "prompt_tokens": 32908,
+            "completion_tokens": 5769,
+            "max_input_tokens": 3571
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 78.71581363677979,
+            "prompt_tokens": 12416,
+            "completion_tokens": 4963,
+            "max_input_tokens": 2193
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 70.73736500740051,
+            "prompt_tokens": 15121,
+            "completion_tokens": 3313,
+            "max_input_tokens": 2096
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 135.67315578460693,
+            "prompt_tokens": 21214,
+            "completion_tokens": 3481,
+            "max_input_tokens": 2514
+        },
+        {
+            "idx": 5,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 104.18370532989502,
+            "prompt_tokens": 28325,
+            "completion_tokens": 3764,
+            "max_input_tokens": 2484
+        },
+        {
+            "idx": 6,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 156.22804737091064,
+            "prompt_tokens": 23103,
+            "completion_tokens": 5065,
+            "max_input_tokens": 2563
+        },
+        {
+            "idx": 7,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 81.24471521377563,
+            "prompt_tokens": 13063,
+            "completion_tokens": 3216,
+            "max_input_tokens": 1995
+        },
+        {
+            "idx": 8,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 162.46899914741516,
+            "prompt_tokens": 19377,
+            "completion_tokens": 3479,
+            "max_input_tokens": 2955
+        },
+        {
+            "idx": 9,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "A",
+            "latency": 73.12381649017334,
+            "prompt_tokens": 12640,
+            "completion_tokens": 3943,
+            "max_input_tokens": 1817
+        },
+        {
+            "idx": 10,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 55.42452120780945,
+            "prompt_tokens": 7933,
+            "completion_tokens": 2094,
+            "max_input_tokens": 1249
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 124.47702527046204,
+            "prompt_tokens": 17954,
+            "completion_tokens": 5010,
+            "max_input_tokens": 2168
+        },
+        {
+            "idx": 1,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 121.6362533569336,
+            "prompt_tokens": 37306,
+            "completion_tokens": 4881,
+            "max_input_tokens": 2856
+        },
+        {
+            "idx": 2,
+            "correct_answer_idx": "D",
+            "genai_answer_idx": "D",
+            "latency": 163.75412034988403,
+            "prompt_tokens": 18955,
+            "completion_tokens": 5134,
+            "max_input_tokens": 2568
+        },
+        {
+            "idx": 3,
+            "correct_answer_idx": "A",
+            "genai_answer_idx": "D",
+            "latency": 382.691045999527,
+            "prompt_tokens": 33143,
+            "completion_tokens": 6306,
+            "max_input_tokens": 2993
+        },
+        {
+            "idx": 4,
+            "correct_answer_idx": "B",
+            "genai_answer_idx": "B",
+            "latency": 146.92539238929749,
+            "prompt_tokens": 15855,
+            "completion_tokens": 5787,
+            "max_input_tokens": 2614
+        },
+        {
+            "idx": 0,
+            "correct_answer_idx": "C",
+            "genai_answer_idx": "C",
+            "latency": 362.36597323417664,
+            "prompt_tokens": 10869,
+            "completion_tokens": 3198,
+            "max_input_tokens": 2428
+        }
+    ]
+}

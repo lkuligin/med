@@ -1,7 +1,10 @@
 import json
+from typing import Any, List, Optional
 
+from google.cloud import aiplatform
+from langchain_core.language_models.llms import BaseLLM
+from langchain_core.outputs import Generation, LLMResult
 from langchain_core.rate_limiters import InMemoryRateLimiter
-from langchain_openai import ChatOpenAI
 from langchain_google_vertexai import (
     ChatVertexAI,
     HarmBlockThreshold,
@@ -11,12 +14,8 @@ from langchain_google_vertexai import (
 )
 from langchain_google_vertexai.gemma import GemmaChatVertexAIModelGarden
 from langchain_google_vertexai.model_garden import ChatAnthropicVertex
-from langchain_core.language_models.llms import BaseLLM
-from typing import Any, Optional, List
+from langchain_openai import ChatOpenAI
 from pydantic import Field, model_validator
-from langchain_core.outputs import Generation, LLMResult
-from google.cloud import aiplatform
-
 
 _GEMINI_MODELS = [
     "gemini-1.5-pro-001",
