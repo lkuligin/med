@@ -1,5 +1,6 @@
 {
   "project": "kuligin-sandbox1",
+  "project_id": "kuligin-sandbox1",
   "models": {
     "gemini": {
       "location": "us-west1"

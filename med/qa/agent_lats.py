@@ -1,13 +1,13 @@
-import os
-import re
-import math
 import base64
 import json
+import math
+import os
+import re
 import zlib
 from collections import deque
-from functools import partial
 from enum import Enum
-from typing import List, Dict, Optional, Type, TypedDict, Deque, Self
+from functools import partial
+from typing import Deque, Dict, List, Optional, Self, Type, TypedDict
 
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_core.callbacks import (
@@ -15,32 +15,30 @@ from langchain_core.callbacks import (
     CallbackManagerForToolRun,
 )
 from langchain_core.messages import (
+    AIMessage,
     BaseMessage,
     HumanMessage,
-    ToolMessage,
     SystemMessage,
+    ToolMessage,
 )
 from langchain_core.messages.base import (
     get_msg_title_repr,
 )
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.prompt_values import ChatPromptValue
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import (
     Runnable,
     RunnableLambda,
 )
 from langchain_core.tools import BaseTool
 from langchain_core.utils.interactive_env import is_interactive_env
-
 from langchain_google_community.search import GoogleSearchAPIWrapper
-
 from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import create_react_agent
-
 from pydantic import BaseModel, Field
 
-from qa.models import get_model
 from qa.agents_utils import get_search_tool
+from qa.models import get_model
 
 CANDIDATE_COUNT = 3
 ANSWER_TEMP = 0.0
@@ -368,17 +366,25 @@ def _select(root: Node) -> Node:
 def _expand_initial(
     generation_chain: Runnable, reflection_chain: Runnable, state: TreeState
 ) -> TreeState:
+    print("expand_initial")
     root = state["root"]
     best_candidate: Node = _select(root)
     messages = best_candidate.get_trajectory()
 
-    for _ in range(CANDIDATE_COUNT):
+    for i in range(CANDIDATE_COUNT):
+        print(f"expand_initial {i}")
         prompt: ChatPromptValue = _GENERATION_PROMPT_INITIAL.invoke(
             {"messages": messages}
         )
         response = generation_chain.invoke(prompt)["messages"]
         candidate = response[len(prompt.messages) :]
+        first = candidate[0]
+        if isinstance(first, AIMessage):
+            if not first.content:
+                print(first)
+                raise ValueError("Empty message")
 
+        print(f"expand_initial reflection {i}")
         reflection: Reflection = reflection_chain.invoke(
             {"messages": messages + candidate}
         )
@@ -400,17 +406,26 @@ def _expand(
     parse_answer_chain: Runnable,
     state: TreeState,
 ) -> TreeState:
+    print("expand")
     root = state["root"]
     best_candidate: Node = _select(root)
     messages = best_candidate.get_trajectory()
 
-    for _ in range(CANDIDATE_COUNT):
+    for i in range(CANDIDATE_COUNT):
+        print(f"expand {i}")
         prompt: ChatPromptValue = _GENERATION_PROMPT.invoke({"messages": messages})
         response = generation_chain.invoke(prompt)["messages"]
         candidate = response[len(prompt.messages) :]
 
+        first = candidate[0]
+        if isinstance(first, AIMessage):
+            if not first.content:
+                print(first)
+                raise ValueError("Empty message")
+
         answer: Answer = parse_answer_chain.invoke({"messages": messages + candidate})
 
+        print(f"expand reflection {i}")
         reflection: Reflection = reflection_chain.invoke(
             {"messages": messages + candidate}
         )
@@ -446,7 +461,7 @@ def _answer(state: TreeState):
 def _format_input(entry: Dict[str, str]) -> Dict[str, str]:
     return {
         "question": entry["question"],
-        "options": "\n".join([f'{o["key"]}: {o["value"]}' for o in entry["options"]]),
+        "options": "\n".join([f"{o['key']}: {o['value']}" for o in entry["options"]]),
     }
 
 
@@ -630,6 +645,7 @@ if __name__ == "__main__":
         parser.add_argument("--input_file", type=str)
         parser.add_argument("--temperature", type=float)
         parser.add_argument("--question_no", type=int)
+        parser.add_argument("--max_output_tokens", type=int, default=2048)
 
         return vars(parser.parse_args())
 
@@ -646,6 +662,7 @@ if __name__ == "__main__":
         model_name=args["model_name"],
         config_path=args["config_path"],
         temperature=args["temperature"],
+        max_output_tokens=args["max_output_tokens"],
     )
     run = RunnableLambda(_format_input) | _QUESTION_PROMPT | _init_state | agent
     result = run.invoke(question) | {"answer": _answer}
