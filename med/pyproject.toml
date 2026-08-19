@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "med"
+name = "qa"
 version = "0.1.0"
 description = ""
 authors = ["Leonid Kuligin <kuligin@google.com>", "Aleksandr Ostapenko <aostapenko@google.com>"]
@@ -16,6 +16,7 @@ grpcio = "^1.68.0"
 langchain-mistralai = "^0.2.2"
 anthropic = {extras = ["vertexai"], version = "^0.39.0"}
 beautifulsoup4 = "^4.12.3"
+langchain-openai = "^0.3.14"
 
 
 [build-system]

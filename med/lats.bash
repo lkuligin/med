@@ -14,6 +14,7 @@ do
     --output_file_name=experiment-lats-${MODEL_NAME}-${TEMP}.json \
     --temperature=${TEMP} \
     --config_path=${CONFIG} \
+    --max_output_tokens=8192 \
     --input_file=oncology2.json \
     --sample_size=1 \
     --callback \
