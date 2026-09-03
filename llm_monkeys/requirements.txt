@@ -1,0 +1,4 @@
+datasets==5.0.1
+google-adk==2.8.0
+litellm==1.99.0
+google-cloud-aiplatform==2.0.1
