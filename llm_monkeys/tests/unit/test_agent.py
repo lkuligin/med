@@ -21,18 +21,18 @@ def test_create_medqa_agent_default():
     assert agent.name == "medqa_evaluator"
 
 
-def test_create_medqa_agent_gpt_oss():
-    config = InferenceConfig(model_name="gpt-oss")
-    agent = create_medqa_agent(config)
-    assert isinstance(agent, Agent)
-    assert agent.model.model == "vertex_ai/openai/gpt-oss-120b-maas"
-
-
 def test_create_medqa_agent_gpt_oss_20b():
     config = InferenceConfig(model_name="gpt-oss-20b")
     agent = create_medqa_agent(config)
     assert isinstance(agent, Agent)
     assert agent.model.model == "vertex_ai/openai/gpt-oss-20b-maas"
+
+
+def test_create_medqa_agent_gemini_3_8_flash():
+    config = InferenceConfig(model_name="vertex_ai/gemini-3.8-flash")
+    agent = create_medqa_agent(config)
+    assert isinstance(agent, Agent)
+    assert agent.model.model == "vertex_ai/gemini-3.8-flash"
 
 
 def test_create_runner():

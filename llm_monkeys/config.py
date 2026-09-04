@@ -10,6 +10,7 @@ DEFAULT_MODEL = "vertex_ai/google/gemma-4-26b-a4b-it-maas"
 SUPPORTED_MODELS: dict[str, str] = {
     "gemma-4-26b": "vertex_ai/google/gemma-4-26b-a4b-it-maas",
     "gpt-oss-20b": "vertex_ai/openai/gpt-oss-20b-maas",
+    "gemini-3.8-flash": "vertex_ai/gemini-3.8-flash",
 }
 
 

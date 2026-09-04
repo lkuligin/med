@@ -342,6 +342,7 @@ class OneShotInferenceWorkflow:
         self.config = config or InferenceConfig()
         self.config.model_name = resolve_model_name(self.config.model_name)
 
+        os.environ.setdefault("ADK_SUPPRESS_GEMINI_LITELLM_WARNINGS", "true")
         if self.config.project_id:
             os.environ.setdefault("VERTEXAI_PROJECT", self.config.project_id)
             os.environ.setdefault("GOOGLE_CLOUD_PROJECT", self.config.project_id)
