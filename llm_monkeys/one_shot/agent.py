@@ -7,15 +7,23 @@ from google.adk.models.lite_llm import LiteLlm
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 
-from config import InferenceConfig
+from config import InferenceConfig, register_litellm_model_pricing, resolve_model_name
 
 
 def create_medqa_agent(config: InferenceConfig | None = None) -> Agent:
     """Create a Google ADK Agent configured with LiteLLM for Vertex AI MAAS."""
+    register_litellm_model_pricing()
     cfg = config or InferenceConfig()
+    try:
+        import litellm
+
+        litellm.num_retries = getattr(cfg, "litellm_num_retries", 3)
+    except Exception:
+        pass
+    model_identifier = resolve_model_name(cfg.model_name)
     return Agent(
         name="medqa_evaluator",
-        model=LiteLlm(model=cfg.model_name),
+        model=LiteLlm(model=model_identifier),
         instruction=cfg.system_instruction,
     )
 

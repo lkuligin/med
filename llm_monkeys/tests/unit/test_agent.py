@@ -2,8 +2,9 @@
 
 from google.adk.agents import Agent
 from google.adk.runners import Runner
-from one_shot.agent import create_medqa_agent, create_runner
+
 from config import InferenceConfig
+from one_shot.agent import create_medqa_agent, create_runner
 
 
 def test_create_medqa_agent():
@@ -18,6 +19,20 @@ def test_create_medqa_agent_default():
     agent = create_medqa_agent()
     assert isinstance(agent, Agent)
     assert agent.name == "medqa_evaluator"
+
+
+def test_create_medqa_agent_gpt_oss():
+    config = InferenceConfig(model_name="gpt-oss")
+    agent = create_medqa_agent(config)
+    assert isinstance(agent, Agent)
+    assert agent.model.model == "vertex_ai/openai/gpt-oss-120b-maas"
+
+
+def test_create_medqa_agent_gpt_oss_20b():
+    config = InferenceConfig(model_name="gpt-oss-20b")
+    agent = create_medqa_agent(config)
+    assert isinstance(agent, Agent)
+    assert agent.model.model == "vertex_ai/openai/gpt-oss-20b-maas"
 
 
 def test_create_runner():

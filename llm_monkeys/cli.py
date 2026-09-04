@@ -6,7 +6,6 @@ import argparse
 import asyncio
 import logging
 import sys
-from typing import Any
 
 from config import InferenceConfig
 from one_shot.workflow import OneShotInferenceWorkflow, WorkflowSummary
@@ -31,12 +30,27 @@ def add_common_arguments(
 ) -> argparse.ArgumentParser:
     """Add standard arguments used across MedQA evaluation workflows."""
     parser.add_argument("--model", default=default_model, help="Model identifier")
-    parser.add_argument("--dataset", default="bigbio/med_qa", help="HuggingFace dataset name")
-    parser.add_argument("--dataset-config", default="med_qa_en_source", help="Dataset configuration name")
+    parser.add_argument(
+        "--dataset", default="bigbio/med_qa", help="HuggingFace dataset name"
+    )
+    parser.add_argument(
+        "--dataset-config",
+        default="med_qa_en_source",
+        help="Dataset configuration name",
+    )
     parser.add_argument("--split", default="test", help="Dataset split")
-    parser.add_argument("--limit", type=int, default=None, help="Maximum number of questions to evaluate")
-    parser.add_argument("--offset", type=int, default=0, help="Starting index offset in dataset")
-    parser.add_argument("--output", default=default_output, help="Output JSON file path")
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Maximum number of questions to evaluate",
+    )
+    parser.add_argument(
+        "--offset", type=int, default=0, help="Starting index offset in dataset"
+    )
+    parser.add_argument(
+        "--output", default=default_output, help="Output JSON file path"
+    )
     parser.add_argument(
         "--n-attempts",
         "-n",
@@ -44,13 +58,41 @@ def add_common_arguments(
         default=3,
         help="Number of inference attempts per question (default: 3)",
     )
-    parser.add_argument("--concurrency", type=int, default=2, help="Maximum concurrent model requests")
-    parser.add_argument("--max-parse-retries", type=int, default=3, help="Maximum retries if predicted option is not parsed")
-    parser.add_argument("--temperature", type=float, default=0.0, help="Sampling temperature")
-    parser.add_argument("--max-tokens", type=int, default=1024, help="Max output tokens")
+    parser.add_argument(
+        "--concurrency", type=int, default=2, help="Maximum concurrent model requests"
+    )
+    parser.add_argument(
+        "--max-parse-retries",
+        type=int,
+        default=3,
+        help="Maximum retries if predicted option is not parsed",
+    )
+    parser.add_argument(
+        "--temperature", type=float, default=0.0, help="Sampling temperature"
+    )
+    parser.add_argument(
+        "--max-tokens", type=int, default=1024, help="Max output tokens"
+    )
     parser.add_argument("--project", default=None, help="GCP Project ID")
     parser.add_argument("--location", default=None, help="Vertex AI location")
-    parser.add_argument("--save-every-n", type=int, default=10, help="Dump results every N completed questions")
+    parser.add_argument(
+        "--save-every-n",
+        type=int,
+        default=10,
+        help="Dump results every N completed questions",
+    )
+    parser.add_argument(
+        "--max-retries",
+        type=int,
+        default=5,
+        help="Maximum retries for model invocation errors (default: 5)",
+    )
+    parser.add_argument(
+        "--rate-limit-max-retries",
+        type=int,
+        default=10,
+        help="Maximum retries specifically for 429 / RESOURCE_EXHAUSTED rate limit errors (default: 10)",
+    )
     parser.add_argument(
         "--log-level",
         default="INFO",
@@ -84,6 +126,8 @@ def build_config(args: argparse.Namespace) -> InferenceConfig:
         "concurrency": args.concurrency,
         "max_parse_retries": args.max_parse_retries,
         "save_every_n": getattr(args, "save_every_n", 10),
+        "max_retries": getattr(args, "max_retries", 5),
+        "rate_limit_max_retries": getattr(args, "rate_limit_max_retries", 10),
         "temperature": args.temperature,
         "max_tokens": args.max_tokens,
     }
@@ -117,10 +161,18 @@ def format_summary(summary: WorkflowSummary, output_path: str) -> str:
 
 def setup_logging(log_level: str = "INFO") -> None:
     """Configure basic logging for CLI workflows."""
+    level = getattr(logging, log_level.upper(), logging.INFO)
     logging.basicConfig(
-        level=getattr(logging, log_level.upper(), logging.INFO),
+        level=level,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
+    if level == logging.DEBUG:
+        try:
+            import litellm
+
+            litellm.set_verbose = True
+        except ImportError:
+            pass
 
 
 async def async_main(args: argparse.Namespace) -> int:

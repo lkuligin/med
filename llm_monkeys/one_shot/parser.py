@@ -11,6 +11,8 @@ _PATTERNS = [
     r"(?:Correct\s+)?\*{0,2}Answer\*{0,2}\s*:\*{0,2}\s*(?:Option\s+)?[\*\[\(]?([A-E])[\*\]\)]?",
     r"(?:Therefore|Hence|Thus|In conclusion),?\s+(?:the\s+correct\s+answer\s+is\s+)?(?:Option\s+)?[\*\[\(]?([A-E])[\*\]\)]?",
     r"Option\s+([A-E])\s+is\s+(?:the\s+)?(?:most\s+appropriate|correct)",
+    r"###\s*(?:Final\s+)?(?:Answer|Option)\s*:?\s*(?:Option\s+)?[\*\[\(]?([A-E])[\*\]\)]?",
+    r"(?:The\s+)?Answer\s+is\s+(?:Option\s+)?[\*\[\(]?([A-E])[\*\]\)]?",
     r"^\(?([A-E])\)?(?:\.|\:|\n|\s|$)",
 ]
 
@@ -24,19 +26,24 @@ def extract_predicted_option(
         return None
 
     text = response_text.strip()
+    # Strip <think>...</think> reasoning blocks if present to avoid matching internal deliberation
+    cleaned_text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+    search_text = cleaned_text if cleaned_text else text
 
     for pattern in _PATTERNS:
-        match = re.search(pattern, text, re.IGNORECASE)
+        match = re.search(pattern, search_text, re.IGNORECASE)
         if match:
             return match.group(1).upper()
 
     if isinstance(options, dict):
-        tail = "\n".join(text.splitlines()[-5:]).lower()
+        tail = "\n".join(search_text.splitlines()[-5:]).lower()
         for opt_key, opt_val in options.items():
             if opt_val.strip() and opt_val.strip().lower() in tail:
                 return opt_key.upper()
 
-    bold_matches = re.findall(r"\*\*(?:Option\s+)?([A-E])\*\*", text, re.IGNORECASE)
+    bold_matches = re.findall(
+        r"\*\*(?:Option\s+)?([A-E])\*\*", search_text, re.IGNORECASE
+    )
     return bold_matches[-1].upper() if bold_matches else None
 
 
@@ -48,4 +55,3 @@ def evaluate_prediction(
     if not prediction or not ground_truth_idx:
         return False
     return prediction.strip().upper() == ground_truth_idx.strip().upper()
-

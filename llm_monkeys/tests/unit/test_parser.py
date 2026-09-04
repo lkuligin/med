@@ -37,6 +37,26 @@ from one_shot.parser import evaluate_prediction, extract_predicted_option
             },
             "C",
         ),
+        (
+            "<think>\nLet us analyze Option A and Option B.\nOption A is incorrect.\nOption B is correct.\n</think>\nFinal Answer: Option B",
+            ["A", "B", "C", "D"],
+            "B",
+        ),
+        (
+            "<think>\nConsider A vs C.\n</think>\n### Answer\nOption C",
+            ["A", "B", "C", "D"],
+            "C",
+        ),
+        (
+            "### Final Answer: D",
+            ["A", "B", "C", "D"],
+            "D",
+        ),
+        (
+            "The answer is Option A",
+            ["A", "B", "C", "D"],
+            "A",
+        ),
         ("", ["A", "B", "C"], None),
         ("I cannot answer this question.", ["A", "B", "C"], None),
     ],
