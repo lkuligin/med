@@ -1,9 +1,17 @@
-"""Configuration module for MedQA inference experiments."""
+"""Configuration module for MedQA inference experiments and workflows."""
 
 from __future__ import annotations
 
+import dataclasses
 import os
 from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Self
+
+from inference._prompts import (
+    DEFAULT_ANSWER_SYSTEM_INSTRUCTION,
+    DEFAULT_FACT_SYSTEM_INSTRUCTION,
+)
 
 DEFAULT_MODEL = "vertex_ai/google/gemma-4-26b-a4b-it-maas"
 
@@ -12,6 +20,11 @@ SUPPORTED_MODELS: dict[str, str] = {
     "gpt-oss-20b": "vertex_ai/openai/gpt-oss-20b-maas",
     "gemini-3.8-flash": "vertex_ai/gemini-3.8-flash",
 }
+
+DEFAULT_ONE_SHOT_INSTRUCTION = (
+    "You are an expert physician taking a medical licensing board examination. "
+    "Answer all questions accurately with careful clinical reasoning."
+)
 
 
 def register_litellm_model_pricing() -> None:
@@ -58,17 +71,20 @@ def resolve_model_name(model_name: str | None) -> str:
     return cleaned
 
 
+class WorkloadType(str, Enum):
+    """Supported inference workload types."""
+
+    ONE_SHOT = "one_shot"
+    CANDIDATE = "candidate"
+
+
 @dataclass
-class InferenceConfig:
-    """Configuration for running one-shot LLM inference on MedQA."""
+class BaseInferenceConfig:
+    """Base configuration for MedQA inference experiments and workflows."""
 
     model_name: str = DEFAULT_MODEL
     temperature: float = 0.8
     max_tokens: int = 1024
-    system_instruction: str = (
-        "You are an expert physician taking a medical licensing board examination. "
-        "Answer all questions accurately with careful clinical reasoning."
-    )
 
     project_id: str | None = field(
         default_factory=lambda: (
@@ -85,7 +101,6 @@ class InferenceConfig:
     limit: int | None = None
     offset: int = 0
 
-    n_attempts: int = 3
     concurrency: int = 2
     max_retries: int = 5
     rate_limit_max_retries: int = 10
@@ -95,4 +110,154 @@ class InferenceConfig:
     litellm_num_retries: int = 3
 
     output_filepath: str = "results_one_shot_gemma4.json"
+
+    @property
+    def resolved_model_name(self) -> str:
+        """Resolve this configuration's model name to its canonical identifier."""
+        return resolve_model_name(self.model_name)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert configuration to a dictionary."""
+        return dataclasses.asdict(self)
+
+    @classmethod
+    def from_dict(
+        cls: type[Self], data: dict[str, Any], ignore_unknown: bool = True
+    ) -> Self:
+        """Instantiate configuration from a dictionary.
+
+        Args:
+            data: Key-value mapping of configuration fields.
+            ignore_unknown: If True, ignore keys that are not recognized fields.
+
+        Returns:
+            Instance of the configuration class.
+        """
+        valid_fields = {f.name for f in dataclasses.fields(cls)}
+        if ignore_unknown:
+            filtered = {k: v for k, v in data.items() if k in valid_fields}
+        else:
+            unknown = set(data) - valid_fields
+            if unknown:
+                raise ValueError(
+                    f"Unknown configuration keys for {cls.__name__}: {sorted(unknown)}"
+                )
+            filtered = data
+        return cls(**filtered)
+
+    def copy_with(self: Self, **overrides: Any) -> Self:
+        """Create a new instance with the specified field overrides."""
+        return dataclasses.replace(self, **overrides)
+
+    def validate(self) -> None:
+        """Validate configuration parameters."""
+        if self.concurrency < 1:
+            raise ValueError(f"concurrency must be >= 1, got {self.concurrency}")
+        if self.temperature < 0.0:
+            raise ValueError(f"temperature must be >= 0.0, got {self.temperature}")
+        if self.max_tokens < 1:
+            raise ValueError(f"max_tokens must be >= 1, got {self.max_tokens}")
+        if self.max_retries < 0:
+            raise ValueError(f"max_retries must be >= 0, got {self.max_retries}")
+        if self.rate_limit_max_retries < 0:
+            raise ValueError(
+                f"rate_limit_max_retries must be >= 0, got {self.rate_limit_max_retries}"
+            )
+
+
+@dataclass
+class OneShotInferenceConfig(BaseInferenceConfig):
+    """Configuration for running one-shot LLM inference on MedQA (Step 1)."""
+
+    system_instruction: str = DEFAULT_ONE_SHOT_INSTRUCTION
+    n_attempts: int = 3
+    concurrency: int = 2
+    output_filepath: str = "results_one_shot_gemma4.json"
     save_every_n: int = 10
+
+    def validate(self) -> None:
+        """Validate one-shot specific parameters."""
+        super().validate()
+        if self.n_attempts < 1:
+            raise ValueError(f"n_attempts must be >= 1, got {self.n_attempts}")
+        if self.save_every_n < 1:
+            raise ValueError(f"save_every_n must be >= 1, got {self.save_every_n}")
+
+
+# Backward-compatibility alias for Step 1
+InferenceConfig = OneShotInferenceConfig
+
+
+@dataclass
+class CandidateInferenceConfig(BaseInferenceConfig):
+    """Configuration for running candidate-based multi-step MedQA inference (Step 2)."""
+
+    concurrency: int = 4
+    output_filepath: str = "results_step2_gemma4_candidates.json"
+
+    fact_system_instruction: str = DEFAULT_FACT_SYSTEM_INSTRUCTION
+    answer_system_instruction: str = DEFAULT_ANSWER_SYSTEM_INSTRUCTION
+    difficult_questions_path: str = "difficult_questions.csv"
+
+    n_candidates: int = 1000
+    save_every_n_candidates: int = 25
+    save_every_n_questions: int = 1
+
+    def validate(self) -> None:
+        """Validate candidate-specific parameters."""
+        super().validate()
+        if self.n_candidates < 1:
+            raise ValueError(f"n_candidates must be >= 1, got {self.n_candidates}")
+        if self.save_every_n_candidates < 1:
+            raise ValueError(
+                f"save_every_n_candidates must be >= 1, got {self.save_every_n_candidates}"
+            )
+        if self.save_every_n_questions < 1:
+            raise ValueError(
+                f"save_every_n_questions must be >= 1, got {self.save_every_n_questions}"
+            )
+
+
+def create_config(
+    workload: str | WorkloadType = WorkloadType.ONE_SHOT,
+    **kwargs: Any,
+) -> BaseInferenceConfig:
+    """Create an inference configuration for the specified workload type.
+
+    Args:
+        workload: Workload type ('one_shot', 'candidate', 'step1', 'step2').
+        **kwargs: Configuration overrides passed to constructor.
+
+    Returns:
+        OneShotInferenceConfig or CandidateInferenceConfig instance.
+    """
+    key = (
+        str(workload.value if isinstance(workload, WorkloadType) else workload)
+        .lower()
+        .strip()
+    )
+    if key in ("one_shot", "oneshot", "step1"):
+        return OneShotInferenceConfig(**kwargs)
+    elif key in ("candidate", "candidates", "candidate_inference", "step2"):
+        return CandidateInferenceConfig(**kwargs)
+    else:
+        raise ValueError(
+            f"Unknown workload type: {workload!r}. Supported types: 'one_shot', 'candidate'"
+        )
+
+
+__all__ = [
+    "DEFAULT_MODEL",
+    "SUPPORTED_MODELS",
+    "DEFAULT_ONE_SHOT_INSTRUCTION",
+    "DEFAULT_FACT_SYSTEM_INSTRUCTION",
+    "DEFAULT_ANSWER_SYSTEM_INSTRUCTION",
+    "WorkloadType",
+    "BaseInferenceConfig",
+    "OneShotInferenceConfig",
+    "InferenceConfig",
+    "CandidateInferenceConfig",
+    "create_config",
+    "register_litellm_model_pricing",
+    "resolve_model_name",
+]

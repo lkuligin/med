@@ -25,7 +25,7 @@ def natural_sort_key(s: str) -> list[int | str]:
     ]
 
 
-def _is_item_all_correct(item: dict[str, Any]) -> bool:
+def is_item_all_correct(item: dict[str, Any]) -> bool:
     if item.get("error"):
         return False
 
@@ -73,7 +73,7 @@ def load_results_file(
     )
 
 
-def _analyze_file_results(file_path: str | Path) -> dict[str, Any]:
+def analyze_file_results(file_path: str | Path) -> dict[str, Any]:
     summary, results = load_results_file(file_path)
     model_name = summary.get("model") if summary else None
 
@@ -85,7 +85,7 @@ def _analyze_file_results(file_path: str | Path) -> dict[str, Any]:
             continue
         qid = str(item.get("question_id"))
         all_qids.add(qid)
-        if _is_item_all_correct(item):
+        if is_item_all_correct(item):
             all_correct_ids.add(qid)
 
     return {
@@ -111,7 +111,7 @@ def separate_results(
     metadata_by_id: dict[str, dict[str, str]] = {}
 
     for fp in file_paths:
-        analysis = _analyze_file_results(fp)
+        analysis = analyze_file_results(fp)
         results.append(analysis)
 
         for item in analysis["_raw_results"]:

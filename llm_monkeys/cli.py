@@ -7,13 +7,13 @@ import asyncio
 import logging
 import sys
 
-from config import InferenceConfig
+from config import DEFAULT_MODEL, InferenceConfig
 from one_shot.workflow import OneShotInferenceWorkflow, WorkflowSummary
 
 
 def create_base_parser(
     description: str = "Run MedQA inference experiments using Vertex MAAS with ADK and LiteLLM.",
-    default_model: str = "vertex_ai/google/gemma-4-26b-a4b-it-maas",
+    default_model: str = DEFAULT_MODEL,
     default_output: str = "results_one_shot_gemma4.json",
 ) -> argparse.ArgumentParser:
     """Create a base argument parser with common arguments reusable across workflows."""
@@ -25,8 +25,11 @@ def create_base_parser(
 
 def add_common_arguments(
     parser: argparse.ArgumentParser,
-    default_model: str = "vertex_ai/google/gemma-4-26b-a4b-it-maas",
+    default_model: str = DEFAULT_MODEL,
     default_output: str = "results_one_shot_gemma4.json",
+    default_temperature: float = 0.0,
+    default_concurrency: int = 2,
+    include_attempts: bool = True,
 ) -> argparse.ArgumentParser:
     """Add standard arguments used across MedQA evaluation workflows."""
     parser.add_argument("--model", default=default_model, help="Model identifier")
@@ -51,36 +54,43 @@ def add_common_arguments(
     parser.add_argument(
         "--output", default=default_output, help="Output JSON file path"
     )
+    if include_attempts:
+        parser.add_argument(
+            "--n-attempts",
+            "-n",
+            type=int,
+            default=3,
+            help="Number of inference attempts per question (default: 3)",
+        )
+        parser.add_argument(
+            "--max-parse-retries",
+            type=int,
+            default=3,
+            help="Maximum retries if predicted option is not parsed",
+        )
+        parser.add_argument(
+            "--save-every-n",
+            type=int,
+            default=10,
+            help="Dump results every N completed questions",
+        )
     parser.add_argument(
-        "--n-attempts",
-        "-n",
+        "--concurrency",
         type=int,
-        default=3,
-        help="Number of inference attempts per question (default: 3)",
+        default=default_concurrency,
+        help="Maximum concurrent model requests",
     )
     parser.add_argument(
-        "--concurrency", type=int, default=2, help="Maximum concurrent model requests"
-    )
-    parser.add_argument(
-        "--max-parse-retries",
-        type=int,
-        default=3,
-        help="Maximum retries if predicted option is not parsed",
-    )
-    parser.add_argument(
-        "--temperature", type=float, default=0.0, help="Sampling temperature"
+        "--temperature",
+        type=float,
+        default=default_temperature,
+        help="Sampling temperature",
     )
     parser.add_argument(
         "--max-tokens", type=int, default=1024, help="Max output tokens"
     )
     parser.add_argument("--project", default=None, help="GCP Project ID")
     parser.add_argument("--location", default=None, help="Vertex AI location")
-    parser.add_argument(
-        "--save-every-n",
-        type=int,
-        default=10,
-        help="Dump results every N completed questions",
-    )
     parser.add_argument(
         "--max-retries",
         type=int,

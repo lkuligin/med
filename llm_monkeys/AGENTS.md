@@ -10,5 +10,8 @@ Candidates should be written into a json file, and metadata like tokens and exec
 
 
 Key requirements for the code:
-1. Use ADK for agent development.
-2. When consuming LLM from Vertex, use ADK lite-llm adapter if possible.
+1. Use `google-adk` for agent development.
+2. When consuming LLM from Vertex, use lite-llm adapter if possible (`google.adk.models.lite_llm.LiteLlm`).
+3. Run worflows with asynchronous concurrency management (`asyncio.Semaphore`) and exponential backoff with jitter on 429 rate limits.
+4. Collect rich metata such as prompt tokens, candidate tokens, total tokens, execution latency, raw responses, parsed option choices, and correctness checks against ground truth.
+5. Simplify implementation and re-use common elements without code duplication.
