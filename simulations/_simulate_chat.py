@@ -4,6 +4,7 @@ import csv
 import json
 import os
 import random
+import re
 import uuid
 from typing import Any
 
@@ -14,7 +15,10 @@ from google.genai import types
 from _ehr import create_ehr_hint
 from _prompts import _PROMPT_SIMULATE_STEP1, _PROMPT_SIMULATE_STEP2
 
-_MAX_LENGTH = 20
+_MAX_LENGTH = 1000
+_REPLICA_THRESHOLD = 300
+_DEFAULT_MODEL = "gemini-3.8-flash"
+_MAX_TURNS = 50
 
 
 def _get_ehr_suffix(ehr_path: str) -> str:
@@ -166,12 +170,144 @@ def load_questions(
     return []
 
 
+def _clean_replica(raw_text: str) -> str:
+    """Cleans speaker prefixes, markdown artifacts, and quotation marks from patient replicas."""
+    cleaned = (raw_text or "").strip()
+    cleaned = re.sub(
+        r"^(?:\*\*|\*|#)*\s*patient\s*(?:\*\*|\*|#)*\s*:\s*(?:\*\*|\*)*\s*",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    cleaned = cleaned.strip()
+    if cleaned.startswith(":"):
+        cleaned = cleaned.lstrip(":* \t")
+    if (cleaned.startswith('"') and cleaned.endswith('"')) or (
+        cleaned.startswith("'") and cleaned.endswith("'")
+    ):
+        cleaned = cleaned[1:-1].strip()
+    return cleaned
+
+
+def _is_replica_too_long(replica: str, threshold: int = _REPLICA_THRESHOLD) -> bool:
+    """Checks whether a synthetic patient replica exceeds the specified length threshold."""
+    norm = replica.lower().strip().strip(".\"'!?:; \t\n\r")
+    if (
+        norm == "fertig"
+        or norm.endswith("\nfertig")
+        or norm.endswith(" fertig")
+        or norm.startswith("fertig ")
+    ):
+        return False
+    return len(replica) > threshold
+
+
+def _build_regeneration_prompt(
+    history_str: str,
+    previous_replica: str,
+    threshold: int,
+    language: str = "de",
+) -> str:
+    """Builds a prompt instructing the LLM to re-generate a shorter synthetic patient replica."""
+    if language == "en":
+        return (
+            f"Conversation history:\n{history_str}\n\n"
+            f"Your previous response as the patient was too long ({len(previous_replica)} characters, limit is {threshold} characters):\n"
+            f'"{previous_replica}"\n\n'
+            f"Please re-generate your response as the patient to be much shorter (1–3 short sentences in chat style, under {threshold} characters).\n"
+            f"Rules:\n"
+            f"- Keep it concise, natural, and in character.\n"
+            f"- Do NOT summarize or repeat the chatbot's words.\n"
+            f"- If finished, reply only with 'fertig'.\n\n"
+            f"Your shortened patient response:"
+        )
+    elif language == "ru":
+        return (
+            f"История диалога:\n{history_str}\n\n"
+            f"Твой предыдущий ответ как пациента был слишком длинным ({len(previous_replica)} символов, лимит {threshold} символов):\n"
+            f'"{previous_replica}"\n\n'
+            f"Пожалуйста, перегенерируй свой ответ как пациент значительно короче (1–3 коротких предложения в стиле чата, до {threshold} символов).\n"
+            f"Правила:\n"
+            f"- Коротко, естественно и в соответствии с ролью пациента.\n"
+            f"- НЕ повторяй и не пересказывай слова чат-бота.\n"
+            f"- Если диалог окончен, ответь только 'fertig'.\n\n"
+            f"Твой сокращенный ответ как пациента:"
+        )
+    else:  # default 'de'
+        return (
+            f"Bisheriger Gesprächsverlauf:\n{history_str}\n\n"
+            f"Deine vorherige Antwort als Patient war zu lang ({len(previous_replica)} Zeichen, das Limit liegt bei {threshold} Zeichen):\n"
+            f'"{previous_replica}"\n\n'
+            f"Bitte formuliere deine Antwort als Patient neu, sodass sie deutlich kürzer ist (1–3 kurze Sätze im Chat-Stil, maximal {threshold} Zeichen).\n"
+            f"Regeln:\n"
+            f"- Sehr kurz, alltagssprachlich und authentisch aus Patientensicht.\n"
+            f"- Wiederhole oder fasse keinesfalls zusammen, was der Chatbot gesagt hat.\n"
+            f"- Wenn für dich alles geklärt ist, antworte nur mit 'fertig'.\n\n"
+            f"Deine neu formulierte, kürzere Antwort als Patient:"
+        )
+
+
+async def _regenerate_replica(
+    client: genai.Client,
+    previous_replica: str,
+    history_str: str,
+    system_instruction: str,
+    threshold: int = _REPLICA_THRESHOLD,
+    language: str = "de",
+    model: str = _DEFAULT_MODEL,
+    max_output_tokens: int = _MAX_LENGTH,
+    max_retries: int = 3,
+) -> str:
+    """Asks the LLM to re-generate a synthetic patient replica that exceeded the length threshold."""
+    current_replica = previous_replica
+    config = types.GenerateContentConfig(
+        system_instruction=system_instruction,
+        temperature=0.7,
+        max_output_tokens=max_output_tokens,
+    )
+
+    for attempt in range(max_retries):
+        if not _is_replica_too_long(current_replica, threshold):
+            break
+
+        print(
+            f"Patient replica exceeded threshold ({len(current_replica)} > {threshold} chars, "
+            f"retry {attempt + 1}/{max_retries}). Asking LLM to re-generate synthetic patient replica..."
+        )
+
+        prompt_text = _build_regeneration_prompt(
+            history_str=history_str,
+            previous_replica=current_replica,
+            threshold=threshold,
+            language=language,
+        )
+
+        response = await client.aio.models.generate_content(
+            model=model,
+            contents=prompt_text,
+            config=config,
+        )
+        cand = _clean_replica(response.text or "")
+        if cand:
+            current_replica = cand
+            if not _is_replica_too_long(current_replica, threshold):
+                print(
+                    f"Re-generated patient replica within threshold ({len(current_replica)} chars)."
+                )
+                break
+
+    return current_replica
+
+
 async def _generate_response(
     profile: str,
     ehr: str,
     client: genai.Client,
     history: str | None = None,
-    model: str = "gemini-3.7-flash",
+    language: str = "de",
+    model: str = _DEFAULT_MODEL,
+    max_length: int = _MAX_LENGTH,
+    threshold: int = _REPLICA_THRESHOLD,
 ) -> str:
     system_instruction = _PROMPT_SIMULATE_STEP1.format(profile=profile, ehr=ehr)
     history_str = history if history else "START A NEW CHAT"
@@ -179,7 +315,8 @@ async def _generate_response(
 
     config = types.GenerateContentConfig(
         system_instruction=system_instruction,
-        temperature=0.2,
+        temperature=0.7,
+        max_output_tokens=max_length,
     )
 
     response = await client.aio.models.generate_content(
@@ -187,7 +324,21 @@ async def _generate_response(
         contents=prompt_text,
         config=config,
     )
-    return (response.text or "").strip()
+    cleaned = _clean_replica(response.text or "")
+
+    if _is_replica_too_long(cleaned, threshold):
+        cleaned = await _regenerate_replica(
+            client=client,
+            previous_replica=cleaned,
+            history_str=history_str,
+            system_instruction=system_instruction,
+            threshold=threshold,
+            language=language,
+            model=model,
+            max_output_tokens=max_length,
+        )
+
+    return cleaned
 
 
 def _merge_history(messages: list[dict[str, str]]) -> str:
@@ -227,8 +378,10 @@ async def _generate(
     genai_client: genai.Client,
     questions: list[str] | None = None,
     language: str = "de",
-    model: str = "gemini-3.7-flash",
+    model: str = _DEFAULT_MODEL,
     max_length: int = _MAX_LENGTH,
+    threshold: int = _REPLICA_THRESHOLD,
+    max_turns: int = _MAX_TURNS,
 ) -> dict[str, Any]:
     """Executes a single simulation dialogue loop between patient model and backend chatbot."""
     profile_id = random.randint(0, len(profiles) - 1)
@@ -250,9 +403,19 @@ async def _generate(
                 ehr=ehr_hint,
                 history=_merge_history(chat_history),
                 client=genai_client,
+                language=language,
                 model=model,
+                max_length=max_length,
+                threshold=threshold,
             )
-        if new_message.lower().strip() == "fertig":
+
+        norm_msg = new_message.lower().strip().strip(".\"'!?:; \t\n\r")
+        if (
+            norm_msg == "fertig"
+            or norm_msg.endswith("\nfertig")
+            or norm_msg.endswith(" fertig")
+            or norm_msg.startswith("fertig ")
+        ):
             break
 
         api_history = (
@@ -315,7 +478,8 @@ async def _generate(
 
         is_first_interaction = False
 
-        if len(chat_history) >= max_length:
+        turn_limit = max_turns if max_length >= 100 else max_length
+        if len(chat_history) >= turn_limit:
             break
 
     return {
@@ -371,7 +535,9 @@ async def run(
     questions: list[str] | None = None,
     output_dir: str = "./results",
     language: str = "de",
-    model: str = "gemini-3.7-flash",
+    model: str = _DEFAULT_MODEL,
+    max_length: int = _MAX_LENGTH,
+    threshold: int = _REPLICA_THRESHOLD,
 ) -> dict[str, Any]:
     """Runs a single chat simulation and records the output to JSON and CSV files."""
     os.makedirs(output_dir, exist_ok=True)
@@ -388,6 +554,8 @@ async def run(
         questions=questions,
         language=language,
         model=model,
+        max_length=max_length,
+        threshold=threshold,
     )
     simulations.append(simulation)
 
@@ -409,11 +577,13 @@ async def main(
     password: str | None = None,
     language: str = "de",
     num_simulations: int = 20,
-    model: str = "gemini-3.7-flash",
+    model: str = _DEFAULT_MODEL,
     project: str = "kuligin-sandbox-502813",
     profiles_path: str | None = None,
     questions_path: str | None = None,
     output_dir: str = "./results",
+    max_length: int = _MAX_LENGTH,
+    threshold: int = _REPLICA_THRESHOLD,
 ):
     """Main orchestration function to run patient chat simulations in batch."""
     username = (
@@ -464,6 +634,8 @@ async def main(
                 output_dir=output_dir,
                 language=language,
                 model=model,
+                max_length=max_length,
+                threshold=threshold,
             )
 
 
@@ -510,11 +682,25 @@ if __name__ == "__main__":
         default=20,
         help="Number of simulations to execute",
     )
-    parser.add_argument("--model", default="gemini-3.7-flash", help="Gemini model name")
+    parser.add_argument("--model", default=_DEFAULT_MODEL, help="Gemini model name")
     parser.add_argument(
         "--project",
         default=os.getenv("GCP_PROJECT", "kuligin-sandbox-502813"),
         help="GCP project ID",
+    )
+    parser.add_argument(
+        "--max_length",
+        type=int,
+        default=_MAX_LENGTH,
+        help="Maximum generation token length for patient simulator",
+    )
+    parser.add_argument(
+        "--threshold",
+        "--replica_threshold",
+        dest="threshold",
+        type=int,
+        default=_REPLICA_THRESHOLD,
+        help="Length threshold in characters above which a patient replica is re-generated by LLM",
     )
     args = parser.parse_args()
 
@@ -531,5 +717,7 @@ if __name__ == "__main__":
             num_simulations=args.num_simulations,
             model=args.model,
             project=args.project,
+            max_length=args.max_length,
+            threshold=args.threshold,
         )
     )
