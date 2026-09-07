@@ -236,6 +236,7 @@ class VerifierConfig(BaseInferenceConfig):
     save_every_n_questions: int = 1
     max_candidates_per_question: int | None = None
     early_stop_facts: bool = False
+    early_stop_candidates: bool = True
 
     def validate(self) -> None:
         """Validate verifier-specific parameters."""
