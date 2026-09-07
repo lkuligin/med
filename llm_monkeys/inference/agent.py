@@ -8,6 +8,7 @@ from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
+from google.genai import types
 
 from config import CandidateInferenceConfig, register_litellm_model_pricing
 from inference._schemas import MedicalFacts
@@ -34,6 +35,11 @@ def _build_agent(
         model=LiteLlm(model=cfg.resolved_model_name),
         instruction=instruction,
         output_schema=output_schema,
+        generate_content_config=types.GenerateContentConfig(
+            temperature=cfg.temperature,
+            max_output_tokens=cfg.max_tokens,
+            response_mime_type="application/json" if output_schema else None,
+        ),
     )
 
 

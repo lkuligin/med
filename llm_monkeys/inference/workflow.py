@@ -7,6 +7,7 @@ import json
 import logging
 import os
 import random
+import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -19,6 +20,11 @@ from google.genai import types
 
 from config import CandidateInferenceConfig
 from dataset import MedQAQuestion
+from inference._dataset import (
+    format_answer_generation_prompt,
+    format_fact_generation_prompt,
+    load_difficult_questions,
+)
 from inference._schemas import (
     CandidateQuestionResult,
     CandidateResult,
@@ -29,11 +35,6 @@ from inference.agent import (
     create_answer_generation_agent,
     create_fact_generation_agent,
     create_runner,
-)
-from inference.dataset import (
-    format_answer_generation_prompt,
-    format_fact_generation_prompt,
-    load_difficult_questions,
 )
 from inference.parser import (
     evaluate_prediction,
@@ -115,6 +116,7 @@ class CandidateInferenceWorkflow:
         session_service: InMemorySessionService | None = None,
     ) -> None:
         self.config = config or CandidateInferenceConfig()
+        self._save_lock = threading.Lock()
 
         os.environ.setdefault("ADK_SUPPRESS_GEMINI_LITELLM_WARNINGS", "true")
         if self.config.project_id:
@@ -357,41 +359,56 @@ class CandidateInferenceWorkflow:
             Callable[[CandidateResult, CandidateQuestionResult], None] | None
         ) = None,
     ) -> CandidateQuestionResult:
-        """Generate N candidate reasoning paths for a single question."""
+        """Generate N candidate reasoning paths for a single question, reusing existing valid candidates."""
         candidates_by_index: dict[int, CandidateResult] = {}
         if existing_question_result:
+            used_indices: set[int] = set()
             for c in existing_question_result.candidates:
                 if not c.error:
-                    candidates_by_index[c.candidate_index] = c
+                    idx = c.candidate_index
+                    if idx is None or idx < 0 or idx in used_indices:
+                        idx = 0
+                        while idx in used_indices:
+                            idx += 1
+                        c.candidate_index = idx
+                    used_indices.add(idx)
+                    candidates_by_index[idx] = c
 
-        needed_indices = [
-            i for i in range(n_candidates) if i not in candidates_by_index
-        ]
+        needed_indices: list[int] = []
+        next_idx = 0
+        while len(candidates_by_index) + len(needed_indices) < n_candidates:
+            if next_idx not in candidates_by_index:
+                needed_indices.append(next_idx)
+            next_idx += 1
 
         question_res = CandidateQuestionResult(
-            question_id=question.question_id,
+            question_id=str(question.question_id),
             meta_info=question.meta_info,
             question=question.question,
             options=question.options,
             ground_truth=question.answer_idx,
             ground_truth_answer=question.answer,
-            candidates=list(candidates_by_index.values()),
+            candidates=[
+                candidates_by_index[i] for i in sorted(candidates_by_index.keys())
+            ],
         )
         question_res.update_aggregates()
 
         if not needed_indices:
             logger.info(
-                "Question %s already has all %d candidates completed. Skipping.",
+                "Question %s already has all %d candidates completed (valid=%d). Skipping.",
                 question.question_id,
                 n_candidates,
+                len(candidates_by_index),
             )
             return question_res
 
         logger.info(
-            "Generating %d remaining candidates for Question %s (existing=%d)...",
+            "Generating %d missing candidates for Question %s (existing_valid=%d, target=%d)...",
             len(needed_indices),
             question.question_id,
             len(candidates_by_index),
+            n_candidates,
         )
 
         async def _run_candidate_task(idx: int) -> CandidateResult:
@@ -420,9 +437,12 @@ class CandidateInferenceWorkflow:
         return question_res
 
     def load_existing_results(
-        self, filepath: str | Path
+        self, filepath: str | Path | None
     ) -> dict[str, CandidateQuestionResult]:
         """Load previously saved results from output JSON file if it exists."""
+        if not filepath:
+            return {}
+
         path = Path(filepath)
         if not path.is_file():
             return {}
@@ -430,12 +450,19 @@ class CandidateInferenceWorkflow:
         try:
             with open(path, mode="r", encoding="utf-8") as f:
                 data = json.load(f)
-            raw_results = data.get("results") or []
-            existing = {
-                item["question_id"]: CandidateQuestionResult.from_dict(item)
-                for item in raw_results
-                if isinstance(item, dict) and "question_id" in item
-            }
+            raw_results: list[dict[str, Any]] = []
+            if isinstance(data, dict) and "results" in data:
+                if isinstance(data["results"], list):
+                    raw_results = data["results"]
+            elif isinstance(data, list):
+                raw_results = data
+
+            existing: dict[str, CandidateQuestionResult] = {}
+            for item in raw_results:
+                if isinstance(item, dict) and "question_id" in item:
+                    q_res = CandidateQuestionResult.from_dict(item)
+                    existing[str(q_res.question_id)] = q_res
+
             logger.info(
                 "Loaded %d existing question results from %s", len(existing), path
             )
@@ -446,32 +473,37 @@ class CandidateInferenceWorkflow:
 
     def save_results(
         self,
-        filepath: str | Path,
+        filepath: str | Path | None,
         results: list[CandidateQuestionResult],
         summary: CandidateWorkflowSummary | None = None,
     ) -> None:
         """Persist results and summary atomically to output JSON file."""
+        if not filepath:
+            return
         path = Path(filepath)
         if not str(path):
             return
 
         path.parent.mkdir(parents=True, exist_ok=True)
-        temp_path = path.with_suffix(f".tmp_{int(time.time() * 1000)}")
+        temp_path = path.with_suffix(
+            f".tmp_{int(time.time() * 1000)}_{random.randint(1000, 9999)}"
+        )
         payload: dict[str, Any] = {
             "summary": summary.to_dict() if summary else None,
             "results": [r.to_dict() for r in results],
         }
 
-        try:
-            with open(temp_path, mode="w", encoding="utf-8") as f:
-                json.dump(payload, f, indent=2, ensure_ascii=False)
-            temp_path.replace(path)
-            logger.debug("Successfully saved %d results to %s", len(results), path)
-        except Exception as e:
-            if temp_path.exists():
-                temp_path.unlink()
-            logger.error("Failed to save results to %s: %s", path, e)
-            raise
+        with self._save_lock:
+            try:
+                with open(temp_path, mode="w", encoding="utf-8") as f:
+                    json.dump(payload, f, indent=2, ensure_ascii=False)
+                temp_path.replace(path)
+                logger.debug("Successfully saved %d results to %s", len(results), path)
+            except Exception as e:
+                if temp_path.exists():
+                    temp_path.unlink()
+                logger.error("Failed to save results to %s: %s", path, e)
+                raise
 
     async def run(
         self,
@@ -503,15 +535,45 @@ class CandidateInferenceWorkflow:
             )
             return empty_summary, []
 
+        existing_results = self.load_existing_results(self.config.output_filepath)
+        all_results_map: dict[str, CandidateQuestionResult] = dict(existing_results)
+
+        # Overview of what exists in destination file
+        completed_count = 0
+        partial_count = 0
+        new_count = 0
+        for q in questions:
+            qid = str(q.question_id)
+            if qid in existing_results:
+                valid_count = sum(
+                    1 for c in existing_results[qid].candidates if not c.error
+                )
+                if valid_count >= self.config.n_candidates:
+                    completed_count += 1
+                else:
+                    partial_count += 1
+            else:
+                new_count += 1
+
         logger.info(
-            "Starting CandidateInferenceWorkflow: %d questions, N=%d candidates each, concurrency=%d, model=%s",
+            "Starting CandidateInferenceWorkflow: %d questions in run, target N=%d candidates each, concurrency=%d, model=%s",
             len(questions),
             self.config.n_candidates,
             self.config.concurrency,
             self.config.model_name,
         )
+        if existing_results:
+            logger.info(
+                "Destination file '%s' exists (%d total stored questions). "
+                "Current run breakdown: %d already completed (will skip), "
+                "%d need additional candidates, %d are completely new.",
+                self.config.output_filepath,
+                len(existing_results),
+                completed_count,
+                partial_count,
+                new_count,
+            )
 
-        existing_results = self.load_existing_results(self.config.output_filepath)
         results: list[CandidateQuestionResult] = []
         semaphore = asyncio.Semaphore(self.config.concurrency)
         candidate_save_counter = 0
@@ -521,23 +583,53 @@ class CandidateInferenceWorkflow:
         ) -> None:
             nonlocal candidate_save_counter
             candidate_save_counter += 1
+            all_results_map[str(_qres.question_id)] = _qres
             if (
                 self.config.save_every_n_candidates > 0
                 and candidate_save_counter % self.config.save_every_n_candidates == 0
             ):
-                current_results = list(results)
-                if _qres not in current_results:
-                    current_results.append(_qres)
-                self.save_results(self.config.output_filepath, current_results)
+                checkpoint_summary = CandidateWorkflowSummary.from_results(
+                    results=list(all_results_map.values()),
+                    model=self.config.model_name,
+                    dataset=self.config.dataset_name,
+                    config=self.config.dataset_config,
+                    split=self.config.dataset_split,
+                    n_candidates=self.config.n_candidates,
+                    total_time_seconds=round(time.perf_counter() - start_time, 2),
+                )
+                self.save_results(
+                    self.config.output_filepath,
+                    list(all_results_map.values()),
+                    checkpoint_summary,
+                )
 
         for q_idx, question in enumerate(questions):
+            qid = str(question.question_id)
+            existing_q = existing_results.get(qid)
+
+            # Fast path check: if question already has enough valid candidates, skip completely
+            if existing_q is not None:
+                valid_count = sum(1 for c in existing_q.candidates if not c.error)
+                if valid_count >= self.config.n_candidates:
+                    logger.info(
+                        "Question %d/%d (ID: %s) already has %d/%d candidates completed. Skipping.",
+                        q_idx + 1,
+                        len(questions),
+                        qid,
+                        valid_count,
+                        self.config.n_candidates,
+                    )
+                    existing_q.update_aggregates()
+                    results.append(existing_q)
+                    all_results_map[qid] = existing_q
+                    continue
+
             logger.info(
                 "Processing Question %d/%d (ID: %s)...",
                 q_idx + 1,
                 len(questions),
-                question.question_id,
+                qid,
             )
-            existing_q = existing_results.get(question.question_id)
 
             q_res = await self.run_question_candidates(
                 question=question,
@@ -547,16 +639,31 @@ class CandidateInferenceWorkflow:
                 on_candidate_complete=_on_candidate_done,
             )
             results.append(q_res)
+            all_results_map[qid] = q_res
 
             if (
                 self.config.save_every_n_questions > 0
                 and len(results) % self.config.save_every_n_questions == 0
             ):
-                self.save_results(self.config.output_filepath, results)
+                checkpoint_summary = CandidateWorkflowSummary.from_results(
+                    results=list(all_results_map.values()),
+                    model=self.config.model_name,
+                    dataset=self.config.dataset_name,
+                    config=self.config.dataset_config,
+                    split=self.config.dataset_split,
+                    n_candidates=self.config.n_candidates,
+                    total_time_seconds=round(time.perf_counter() - start_time, 2),
+                )
+                self.save_results(
+                    self.config.output_filepath,
+                    list(all_results_map.values()),
+                    checkpoint_summary,
+                )
 
-        total_time = time.perf_counter() - start_time
+        total_time = round(time.perf_counter() - start_time, 2)
+        all_results_list = list(all_results_map.values())
         summary = CandidateWorkflowSummary.from_results(
-            results=results,
+            results=all_results_list,
             model=self.config.model_name,
             dataset=self.config.dataset_name,
             config=self.config.dataset_config,
@@ -565,10 +672,11 @@ class CandidateInferenceWorkflow:
             total_time_seconds=total_time,
         )
 
-        self.save_results(self.config.output_filepath, results, summary)
+        self.save_results(self.config.output_filepath, all_results_list, summary)
         logger.info(
-            "Workflow complete: %d questions, %d candidates, overall accuracy: %.2f%%, time: %.2fs",
+            "Workflow complete: %d total questions saved (%d in current run), %d total candidates, overall accuracy: %.2f%%, time: %.2fs",
             summary.total_questions,
+            len(results),
             summary.total_candidates_generated,
             summary.overall_accuracy * 100,
             summary.total_time_seconds,

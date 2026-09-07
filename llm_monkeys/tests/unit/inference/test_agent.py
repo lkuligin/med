@@ -16,22 +16,34 @@ from inference.agent import (
 
 def test_create_fact_generation_agent():
     config = CandidateInferenceConfig(
-        model_name="vertex_ai/google/gemma-4-26b-a4b-it-maas"
+        model_name="vertex_ai/google/gemma-4-26b-a4b-it-maas",
+        temperature=0.7,
+        max_tokens=512,
     )
     agent = create_fact_generation_agent(config)
     assert isinstance(agent, Agent)
     assert agent.name == "medqa_fact_generator"
     assert agent.output_schema == MedicalFacts
+    assert agent.generate_content_config is not None
+    assert agent.generate_content_config.temperature == 0.7
+    assert agent.generate_content_config.max_output_tokens == 512
+    assert agent.generate_content_config.response_mime_type == "application/json"
 
 
 def test_create_answer_generation_agent():
     config = CandidateInferenceConfig(
-        model_name="vertex_ai/google/gemma-4-26b-a4b-it-maas"
+        model_name="vertex_ai/google/gemma-4-26b-a4b-it-maas",
+        temperature=0.5,
+        max_tokens=2048,
     )
     agent = create_answer_generation_agent(config)
     assert isinstance(agent, Agent)
     assert agent.name == "medqa_answer_generator"
     assert agent.output_schema is None
+    assert agent.generate_content_config is not None
+    assert agent.generate_content_config.temperature == 0.5
+    assert agent.generate_content_config.max_output_tokens == 2048
+    assert agent.generate_content_config.response_mime_type is None
 
 
 def test_create_runner():

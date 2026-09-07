@@ -12,13 +12,16 @@ from inference._prompts import (
     DEFAULT_ANSWER_SYSTEM_INSTRUCTION,
     DEFAULT_FACT_SYSTEM_INSTRUCTION,
 )
+from verifier._prompts import DEFAULT_VERIFIER_SYSTEM_INSTRUCTION
 
 DEFAULT_MODEL = "vertex_ai/google/gemma-4-26b-a4b-it-maas"
+DEFAULT_VERIFIER_MODEL = "gemini-3.8-flash"
 
 SUPPORTED_MODELS: dict[str, str] = {
     "gemma-4-26b": "vertex_ai/google/gemma-4-26b-a4b-it-maas",
     "gpt-oss-20b": "vertex_ai/openai/gpt-oss-20b-maas",
     "gemini-3.8-flash": "vertex_ai/gemini-3.8-flash",
+    "gemini-3-flash-preview": "vertex_ai/gemini-3-flash-preview",
 }
 
 DEFAULT_ONE_SHOT_INSTRUCTION = (
@@ -76,6 +79,7 @@ class WorkloadType(str, Enum):
 
     ONE_SHOT = "one_shot"
     CANDIDATE = "candidate"
+    VERIFIER = "verifier"
 
 
 @dataclass
@@ -218,6 +222,37 @@ class CandidateInferenceConfig(BaseInferenceConfig):
             )
 
 
+@dataclass
+class VerifierConfig(BaseInferenceConfig):
+    """Configuration for running fact verification on step 2 candidates (Step 3)."""
+
+    model_name: str = DEFAULT_VERIFIER_MODEL
+    temperature: float = 0.0
+    max_tokens: int = 512
+    concurrency: int = 4
+    input_filepath: str = "results_step2_gemma4_candidates.json"
+    output_filepath: str = "results_step3_verified.json"
+    system_instruction: str = DEFAULT_VERIFIER_SYSTEM_INSTRUCTION
+    save_every_n_questions: int = 1
+    max_candidates_per_question: int | None = None
+    early_stop_facts: bool = False
+
+    def validate(self) -> None:
+        """Validate verifier-specific parameters."""
+        super().validate()
+        if self.save_every_n_questions < 1:
+            raise ValueError(
+                f"save_every_n_questions must be >= 1, got {self.save_every_n_questions}"
+            )
+        if (
+            self.max_candidates_per_question is not None
+            and self.max_candidates_per_question < 1
+        ):
+            raise ValueError(
+                f"max_candidates_per_question must be >= 1, got {self.max_candidates_per_question}"
+            )
+
+
 def create_config(
     workload: str | WorkloadType = WorkloadType.ONE_SHOT,
     **kwargs: Any,
@@ -225,11 +260,11 @@ def create_config(
     """Create an inference configuration for the specified workload type.
 
     Args:
-        workload: Workload type ('one_shot', 'candidate', 'step1', 'step2').
+        workload: Workload type ('one_shot', 'candidate', 'verifier', 'step1', 'step2', 'step3').
         **kwargs: Configuration overrides passed to constructor.
 
     Returns:
-        OneShotInferenceConfig or CandidateInferenceConfig instance.
+        OneShotInferenceConfig, CandidateInferenceConfig, or VerifierConfig instance.
     """
     key = (
         str(workload.value if isinstance(workload, WorkloadType) else workload)
@@ -240,23 +275,28 @@ def create_config(
         return OneShotInferenceConfig(**kwargs)
     elif key in ("candidate", "candidates", "candidate_inference", "step2"):
         return CandidateInferenceConfig(**kwargs)
+    elif key in ("verifier", "verify", "step3"):
+        return VerifierConfig(**kwargs)
     else:
         raise ValueError(
-            f"Unknown workload type: {workload!r}. Supported types: 'one_shot', 'candidate'"
+            f"Unknown workload type: {workload!r}. Supported types: 'one_shot', 'candidate', 'verifier'"
         )
 
 
 __all__ = [
     "DEFAULT_MODEL",
+    "DEFAULT_VERIFIER_MODEL",
     "SUPPORTED_MODELS",
     "DEFAULT_ONE_SHOT_INSTRUCTION",
     "DEFAULT_FACT_SYSTEM_INSTRUCTION",
     "DEFAULT_ANSWER_SYSTEM_INSTRUCTION",
+    "DEFAULT_VERIFIER_SYSTEM_INSTRUCTION",
     "WorkloadType",
     "BaseInferenceConfig",
     "OneShotInferenceConfig",
     "InferenceConfig",
     "CandidateInferenceConfig",
+    "VerifierConfig",
     "create_config",
     "register_litellm_model_pricing",
     "resolve_model_name",
