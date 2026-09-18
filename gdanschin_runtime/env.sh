@@ -11,7 +11,10 @@
 # Promote with ./gdanschin_runtime/promote_difficult_questions.sh
 export MEDQA_DIFFICULT_CANDIDATE="data/difficult_questions.candidate.csv"
 
-# Redirect model construction to our own client instead of the stock LiteLlm
-# adapter. Commented out until adapters/factory.py exists: an unimportable spec
-# fails loudly by design, which would break the stock CLIs.
-# export MEDQA_MODEL_FACTORY="gdanschin_runtime.adapters.factory:build"
+# Serve every agent through the LLM gateway instead of Vertex AI. Without this
+# the stock CLIs reach for Vertex credentials we do not have.
+export MEDQA_MODEL_FACTORY="gdanschin_runtime.adapters.factory:build"
+
+# ADK suggests its native Gemini integration whenever a gemini model goes
+# through LiteLLM. Here it has to: the gateway speaks the LiteLLM dialect.
+export ADK_SUPPRESS_GEMINI_LITELLM_WARNINGS=true
