@@ -408,6 +408,8 @@ def plot_verifier_curve(
     dpi: int = 300,
     log_scale_x: bool = False,
     show_grid: bool = True,
+    single_shot_accuracy: float | None = None,
+    single_shot_label: str | None = None,
 ) -> Path:
     """Generate and save the accuracy vs candidate generation plot.
 
@@ -422,6 +424,9 @@ def plot_verifier_curve(
         dpi: Image resolution in dots per inch.
         log_scale_x: Whether to use logarithmic scale on the x-axis.
         show_grid: Whether to show gridlines.
+        single_shot_accuracy: Optional single-shot baseline accuracy percentage (0-100)
+            to draw as a dotted horizontal line across the candidate scale.
+        single_shot_label: Optional custom label for the single-shot dotted line.
 
     Returns:
         Path to the saved figure file.
@@ -481,6 +486,22 @@ def plot_verifier_curve(
             zorder=2,
         )
 
+    # 3. Single-Shot Reasoning Baseline (First Attempt Only)
+    if single_shot_accuracy is not None:
+        ss_label = (
+            single_shot_label
+            or f"Single-Shot Baseline (First Attempt: {single_shot_accuracy:.1f}%)"
+        )
+        ax.axhline(
+            y=single_shot_accuracy,
+            color="#d62728",
+            linestyle=":",
+            linewidth=2.0,
+            label=ss_label,
+            alpha=0.9,
+            zorder=3,
+        )
+
     # Axes styling
     ax.set_xlabel(
         "Number of Candidate Generations ($k$)", fontsize=12, fontweight="medium"
@@ -494,9 +515,11 @@ def plot_verifier_curve(
     all_y = list(curve_data.first_valid_correct_pct)
     if strategy_clean in ("all", "unverified"):
         all_y.extend(curve_data.unverified_correct_pct)
+    if single_shot_accuracy is not None:
+        all_y.append(single_shot_accuracy)
 
     max_y = max(all_y) if all_y else 100.0
-    y_upper = min(105.0, max(20.0, math.ceil(max_y / 10.0) * 10 + 5))
+    y_upper = min(105.0, max(20.0, math.ceil(max_y / 10.0) * 10 + 10))
     ax.set_ylim(-2.0, y_upper)
 
     # X-axis configuration
@@ -535,9 +558,12 @@ def plot_verifier_curve(
         f"Accuracy @ k={first_k}: {initial_acc:.1f}%\n"
         f"Accuracy @ k={last_k}: {final_acc:.1f}%"
     )
+    if single_shot_accuracy is not None:
+        info_text += f"\nSingle-Shot Baseline: {single_shot_accuracy:.1f}%"
+
     ax.text(
         0.02,
-        0.95,
+        0.98,
         info_text,
         transform=ax.transAxes,
         fontsize=9,
@@ -844,7 +870,7 @@ def resolve_step1_file(
 def load_step1_single_shot_results(
     step1_path: str | Path,
 ) -> dict[str, dict[str, Any]]:
-    """Load Step 1 results and extract the first candidate (attempt 0) of the single-shot prompt.
+    """Load single-shot results and extract the first candidate (attempt 0) of the single-shot prompt.
 
     Returns a mapping of question_id -> {
         "question_id": str,
@@ -855,13 +881,16 @@ def load_step1_single_shot_results(
     """
     path = Path(step1_path)
     if not path.is_file():
-        raise FileNotFoundError(f"Step 1 results file not found: {path}")
+        raise FileNotFoundError(f"Single-shot results file not found: {path}")
 
     with path.open(mode="r", encoding="utf-8") as f:
         data = json.load(f)
 
-    items = data.get("results") if isinstance(data, dict) else data
-    if not isinstance(items, list):
+    if isinstance(data, dict):
+        items = data.get("results") or data.get("data") or []
+    elif isinstance(data, list):
+        items = data
+    else:
         items = []
 
     step1_map: dict[str, dict[str, Any]] = {}
@@ -873,12 +902,24 @@ def load_step1_single_shot_results(
             continue
 
         raw_attempts = item.get("attempts") or []
-        first_attempt = (
-            raw_attempts[0]
-            if raw_attempts and isinstance(raw_attempts[0], dict)
-            else {}
-        )
+        first_attempt: dict[str, Any] = {}
+        if isinstance(raw_attempts, list) and raw_attempts:
+            # Use the first attempt only (prefer attempt_index == 0 or minimum index)
+            attempts_with_idx = [
+                a for a in raw_attempts if isinstance(a, dict) and "attempt_index" in a
+            ]
+            if attempts_with_idx:
+                first_attempt = min(
+                    attempts_with_idx, key=lambda a: a.get("attempt_index", 0)
+                )
+            elif isinstance(raw_attempts[0], dict):
+                first_attempt = raw_attempts[0]
 
+        gt = (
+            item.get("ground_truth")
+            or item.get("ground_truth_answer")
+            or first_attempt.get("ground_truth")
+        )
         is_corr = first_attempt.get("is_correct")
         if is_corr is None:
             is_corr = item.get("is_correct")
@@ -887,14 +928,64 @@ def load_step1_single_shot_results(
         if pred_opt is None:
             pred_opt = item.get("predicted_option")
 
+        if is_corr is None and pred_opt is not None and gt is not None:
+            is_corr = str(pred_opt).strip().upper() == str(gt).strip().upper()
+
         step1_map[qid] = {
             "question_id": qid,
             "predicted_option": pred_opt,
             "is_correct": bool(is_corr),
-            "ground_truth": item.get("ground_truth") or item.get("ground_truth_answer"),
+            "ground_truth": gt,
         }
 
     return step1_map
+
+
+load_single_shot_results = load_step1_single_shot_results
+resolve_single_shot_file = resolve_step1_file
+
+
+def compute_single_shot_accuracy(
+    single_shot_path: str | Path,
+    verifier_results: list[QuestionVerificationResult] | None = None,
+) -> tuple[float, int, int]:
+    """Compute model accuracy on single-shot reasoning using the first attempt only.
+
+    Args:
+        single_shot_path: Path to JSON file with single-shot inference results
+            (format similar to results_gemma4.json).
+        verifier_results: Optional list of verifier results to match questions against.
+            If provided and there is overlap in question IDs, computes accuracy on
+            the matching evaluated questions. Otherwise, computes accuracy across
+            all questions in the single-shot file.
+
+    Returns:
+        tuple of (accuracy_pct, correct_count, total_count).
+    """
+    step1_map = load_step1_single_shot_results(single_shot_path)
+    if not step1_map:
+        return 0.0, 0, 0
+
+    if verifier_results:
+        target_qids = [
+            str(r.question_id).strip()
+            for r in verifier_results
+            if str(r.question_id).strip()
+        ]
+        matching_qids = [qid for qid in target_qids if qid in step1_map]
+        if matching_qids:
+            correct = sum(1 for qid in matching_qids if step1_map[qid]["is_correct"])
+            total = len(matching_qids)
+            acc = (correct / total) * 100.0
+            return round(acc, 2), correct, total
+
+    correct = sum(1 for info in step1_map.values() if info.get("is_correct"))
+    total = len(step1_map)
+    acc = (correct / total) * 100.0 if total > 0 else 0.0
+    return round(acc, 2), correct, total
+
+
+SingleShotComparisonResult = Step1ComparisonResult
 
 
 def compare_verifier_to_step1(
@@ -1079,17 +1170,25 @@ def format_step1_comparison_summary(comparison: Step1ComparisonResult) -> str:
     return "\n".join(lines)
 
 
+class _SingleShotAction(argparse.Action):
+    """Custom action to populate both single_shot_file and step1_file."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, "single_shot_file", values)
+        setattr(namespace, "step1_file", values)
+
+
 def build_parser() -> argparse.ArgumentParser:
-    """Build command-line interface arguments parser."""
+    """Construct CLI argument parser for verifier analysis."""
     parser = argparse.ArgumentParser(
         description=(
-            "Analyze MedQA verifier outputs and plot % of questions answered "
-            "correctly after 1, 2, ..., k candidate generations."
+            "Analyze MedQA verifier outputs and plot % of questions answered correctly "
+            "after 1, 2, ..., k candidate generations."
         ),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    # Input file: either positional or --input / -i
+    # Input / Output
     parser.add_argument(
         "positional_input",
         nargs="?",
@@ -1100,23 +1199,24 @@ def build_parser() -> argparse.ArgumentParser:
         "--input",
         "-i",
         dest="input_file",
+        type=str,
         default="results_step3_verified.json",
         help="Path to verifier JSON results file.",
     )
-
-    # Plot output
     parser.add_argument(
         "--output",
         "-o",
         dest="output_file",
+        type=str,
         default="verifier_accuracy_curve.png",
         help="Path to save the output accuracy curve plot image (PNG/PDF/SVG).",
     )
 
-    # Strategy / metric selection
+    # Plotting & Analysis Strategy
     parser.add_argument(
         "--strategy",
         "-s",
+        type=str,
         choices=["first_valid", "all", "both", "verified"],
         default="first_valid",
         help=(
@@ -1124,8 +1224,6 @@ def build_parser() -> argparse.ArgumentParser:
             "or 'all' (first_valid + unverified generator baseline)."
         ),
     )
-
-    # Candidate range configuration
     parser.add_argument(
         "--max-candidates",
         "-k",
@@ -1186,24 +1284,30 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional path to export curve metrics to JSON.",
     )
 
-    # Step 1 Baseline comparison
+    # Single-shot baseline / Step 1 comparison
+    parser.set_defaults(single_shot_file=None, step1_file=None)
     parser.add_argument(
+        "--single-shot-file",
         "--step1-file",
         "--step1-results",
-        dest="step1_file",
+        dest="single_shot_file",
+        action=_SingleShotAction,
         type=str,
         default=None,
         help=(
-            "Optional path to Step 1 inference results JSON (e.g. results_gemma4.json) "
-            "to check whether verification yields better performance than Step 1 single-shot first candidate. "
-            "If omitted, automatically checks for matching Step 1 results in current directory."
+            "Optional path to single-shot inference results JSON (e.g. results_gemma4.json) "
+            "with single-shot reasoning attempts. Draws a dotted horizontal line with the "
+            "model's performance on single-shot reasoning (using first attempt only) and "
+            "compares against verification performance. If omitted, automatically checks "
+            "for matching single-shot results in current directory."
         ),
     )
     parser.add_argument(
         "--no-step1-comparison",
+        "--no-single-shot-comparison",
         action="store_true",
         default=False,
-        help="Disable Step 1 comparison check.",
+        help="Disable Step 1 / single-shot comparison check.",
     )
 
     # Pricing & model configuration
@@ -1292,25 +1396,43 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     print("-" * 50)
 
-    # Step 1 Baseline Comparison Check
+    # Single-Shot / Step 1 Baseline Comparison Check
+    single_shot_arg = getattr(args, "single_shot_file", None) or getattr(
+        args, "step1_file", None
+    )
+    resolved_single_shot = None
+    try:
+        resolved_single_shot = resolve_step1_file(
+            single_shot_arg, input_path=Path(input_path)
+        )
+    except Exception as e:
+        if single_shot_arg:
+            logger.warning("Single-shot file not found: %s (%s)", single_shot_arg, e)
+
     step1_comparison = None
-    if not args.no_step1_comparison:
+    if not args.no_step1_comparison and resolved_single_shot:
         try:
-            step1_path = resolve_step1_file(
-                args.step1_file, input_path=Path(input_path)
+            step1_comparison = compare_verifier_to_step1(
+                verifier_results=results,
+                step1_path=resolved_single_shot,
+                curve_data=curve_data,
+                max_k=args.max_candidates,
             )
-            if step1_path:
-                step1_comparison = compare_verifier_to_step1(
-                    verifier_results=results,
-                    step1_path=step1_path,
-                    curve_data=curve_data,
-                    max_k=args.max_candidates,
-                )
-                print("\n" + format_step1_comparison_summary(step1_comparison))
-            elif args.step1_file:
-                logger.warning("Step 1 file not found: %s", args.step1_file)
+            print("\n" + format_step1_comparison_summary(step1_comparison))
         except Exception as e:
             logger.warning("Could not execute Step 1 baseline comparison: %s", e)
+
+    # Determine single-shot accuracy for plotting (first attempt only)
+    single_shot_acc: float | None = None
+    if step1_comparison is not None:
+        single_shot_acc = step1_comparison.step1_accuracy_pct
+    elif resolved_single_shot:
+        try:
+            single_shot_acc, _, _ = compute_single_shot_accuracy(
+                resolved_single_shot, verifier_results=results
+            )
+        except Exception as e:
+            logger.warning("Could not compute single-shot accuracy: %s", e)
 
     # Plotting
     if not args.no_plot:
@@ -1321,6 +1443,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             title=args.title,
             dpi=args.dpi,
             log_scale_x=args.log_scale_x,
+            single_shot_accuracy=single_shot_acc,
         )
         print(f"\nPlot saved successfully to: {out_fig.resolve()}")
 
@@ -1338,6 +1461,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "token_summary": token_summary,
                 "step1_comparison": step1_comparison.to_dict()
                 if step1_comparison
+                else None,
+                "single_shot_accuracy": single_shot_acc,
+                "single_shot_file": str(resolved_single_shot)
+                if resolved_single_shot
                 else None,
                 "input_file": str(input_path),
             },

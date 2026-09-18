@@ -106,6 +106,26 @@ def _extract_item_metrics(item: dict[str, Any]) -> dict[str, Any]:
             for a in raw_attempts
             if isinstance(a, dict)
         )
+        dict_attempts = [a for a in raw_attempts if isinstance(a, dict)]
+        first_attempt = None
+        if dict_attempts:
+            for a in dict_attempts:
+                if a.get("attempt_index") == 0:
+                    first_attempt = a
+                    break
+            if first_attempt is None:
+                if any("attempt_index" in a for a in dict_attempts):
+                    first_attempt = min(
+                        dict_attempts,
+                        key=lambda a: a.get("attempt_index", 0),
+                    )
+                else:
+                    first_attempt = dict_attempts[0]
+        is_first_correct = (
+            bool(first_attempt.get("is_correct"))
+            if first_attempt is not None
+            else False
+        )
     else:
         total_attempts = int(item.get("total_attempts") or 1)
         correct_attempts = (
@@ -117,6 +137,14 @@ def _extract_item_metrics(item: dict[str, Any]) -> dict[str, Any]:
         candidate_tokens = int(item.get("candidate_tokens") or 0)
         cached_tokens = int(item.get("cached_tokens") or 0)
         latency_seconds = float(item.get("latency_seconds") or 0.0)
+        if item.get("is_first_correct") is not None:
+            is_first_correct = bool(item["is_first_correct"])
+        elif item.get("first_attempt_correct") is not None:
+            is_first_correct = bool(item["first_attempt_correct"])
+        elif item.get("is_correct") is not None:
+            is_first_correct = bool(item["is_correct"])
+        else:
+            is_first_correct = False
 
     # Fallback to top-level fields if attempts lacked them
     prompt_tokens = prompt_tokens or int(item.get("prompt_tokens") or 0)
@@ -141,6 +169,7 @@ def _extract_item_metrics(item: dict[str, Any]) -> dict[str, Any]:
         "correct_attempts": correct_attempts,
         "is_all_correct": is_all_correct,
         "is_any_correct": correct_attempts > 0,
+        "is_first_correct": is_first_correct,
         "is_majority_correct": correct_attempts > (total_attempts / 2.0)
         if total_attempts > 0
         else False,
@@ -190,6 +219,7 @@ def analyze_data(
     any_correct_q = sum(1 for q in items if q["is_any_correct"])
     all_3_correct_q = sum(1 for q in items if q["is_all_correct"])
     majority_correct_q = sum(1 for q in items if q["is_majority_correct"])
+    first_correct_q = sum(1 for q in items if q["is_first_correct"])
 
     total_prompt = sum(q["prompt_tokens"] for q in items)
     total_candidate = sum(q["candidate_tokens"] for q in items)
@@ -226,6 +256,14 @@ def analyze_data(
         else 0.0,
         "questions_any_correct": any_correct_q,
         "questions_any_correct_pct": (any_correct_q / total_q * 100.0)
+        if total_q > 0
+        else 0.0,
+        "questions_first_correct": first_correct_q,
+        "questions_first_correct_pct": (first_correct_q / total_q * 100.0)
+        if total_q > 0
+        else 0.0,
+        "questions_first_attempt_correct": first_correct_q,
+        "questions_first_attempt_correct_pct": (first_correct_q / total_q * 100.0)
         if total_q > 0
         else 0.0,
         "questions_all_3_correct": all_3_correct_q,
@@ -300,16 +338,22 @@ def analyze_data(
         diff_total = len(diff_items)
         diff_all_3 = sum(1 for q in diff_items if q["is_all_correct"])
         diff_any = sum(1 for q in diff_items if q["is_any_correct"])
+        diff_first = sum(1 for q in diff_items if q["is_first_correct"])
         diff_all_3_pct = (diff_all_3 / diff_total * 100.0) if diff_total > 0 else 0.0
         diff_any_pct = (diff_any / diff_total * 100.0) if diff_total > 0 else 0.0
+        diff_first_pct = (diff_first / diff_total * 100.0) if diff_total > 0 else 0.0
 
         other_total = len(other_items)
         other_all_3 = sum(1 for q in other_items if q["is_all_correct"])
         other_any = sum(1 for q in other_items if q["is_any_correct"])
+        other_first = sum(1 for q in other_items if q["is_first_correct"])
         other_all_3_pct = (
             (other_all_3 / other_total * 100.0) if other_total > 0 else 0.0
         )
         other_any_pct = (other_any / other_total * 100.0) if other_total > 0 else 0.0
+        other_first_pct = (
+            (other_first / other_total * 100.0) if other_total > 0 else 0.0
+        )
 
         diff_subset_dict = {
             "total_questions": diff_total,
@@ -317,6 +361,10 @@ def analyze_data(
             "questions_all_3_correct_pct": diff_all_3_pct,
             "questions_any_correct": diff_any,
             "questions_any_correct_pct": diff_any_pct,
+            "questions_first_correct": diff_first,
+            "questions_first_correct_pct": diff_first_pct,
+            "questions_first_attempt_correct": diff_first,
+            "questions_first_attempt_correct_pct": diff_first_pct,
         }
         other_subset_dict = {
             "total_questions": other_total,
@@ -324,6 +372,10 @@ def analyze_data(
             "questions_all_3_correct_pct": other_all_3_pct,
             "questions_any_correct": other_any,
             "questions_any_correct_pct": other_any_pct,
+            "questions_first_correct": other_first,
+            "questions_first_correct_pct": other_first_pct,
+            "questions_first_attempt_correct": other_first,
+            "questions_first_attempt_correct_pct": other_first_pct,
         }
 
         res["difficult_questions_csv"] = (
@@ -343,11 +395,19 @@ def analyze_data(
         res["difficult_subset_all_3_correct_pct"] = diff_all_3_pct
         res["difficult_subset_any_correct"] = diff_any
         res["difficult_subset_any_correct_pct"] = diff_any_pct
+        res["difficult_subset_first_correct"] = diff_first
+        res["difficult_subset_first_correct_pct"] = diff_first_pct
+        res["difficult_subset_first_attempt_correct"] = diff_first
+        res["difficult_subset_first_attempt_correct_pct"] = diff_first_pct
         res["other_subset_questions"] = other_total
         res["other_subset_all_3_correct"] = other_all_3
         res["other_subset_all_3_correct_pct"] = other_all_3_pct
         res["other_subset_any_correct"] = other_any
         res["other_subset_any_correct_pct"] = other_any_pct
+        res["other_subset_first_correct"] = other_first
+        res["other_subset_first_correct_pct"] = other_first_pct
+        res["other_subset_first_attempt_correct"] = other_first
+        res["other_subset_first_attempt_correct_pct"] = other_first_pct
 
     return res
 
@@ -466,9 +526,11 @@ def format_report(analysis: dict[str, Any]) -> str:
                 f"   • 'Difficult' questions subset ({diff['total_questions']} questions):",
                 f"     - % All 3 attempts correct:        {diff['questions_all_3_correct_pct']:.2f}% ({diff['questions_all_3_correct']}/{diff['total_questions']} questions)",
                 f"     - % At least 1 attempt correct:    {diff['questions_any_correct_pct']:.2f}% ({diff['questions_any_correct']}/{diff['total_questions']} questions)",
+                f"     - % First attempt correct:         {diff['questions_first_correct_pct']:.2f}% ({diff['questions_first_correct']}/{diff['total_questions']} questions)",
                 f"   • 'Other' questions subset ({other['total_questions']} questions):",
                 f"     - % All 3 attempts correct:        {other['questions_all_3_correct_pct']:.2f}% ({other['questions_all_3_correct']}/{other['total_questions']} questions)",
                 f"     - % At least 1 attempt correct:    {other['questions_any_correct_pct']:.2f}% ({other['questions_any_correct']}/{other['total_questions']} questions)",
+                f"     - % First attempt correct:         {other['questions_first_correct_pct']:.2f}% ({other['questions_first_correct']}/{other['total_questions']} questions)",
             ]
         )
 
