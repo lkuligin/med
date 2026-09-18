@@ -194,14 +194,34 @@ def completion_kwargs(model: str, **overrides) -> dict:
 
 
 def ask(model: str, prompt: str, max_tokens: int = 1024, **overrides):
-    """Send one prompt to any gateway model and return the litellm response."""
+    """Send one prompt to any gateway model and return the litellm response.
+
+    Warns when the reply was cut off at max_tokens. That is the one failure
+    here that looks like success: a reasoning model can spend the whole budget
+    thinking and return an empty string, with no error anywhere, so the only
+    signal is finish_reason.
+    """
+    import warnings
+
     import litellm
 
-    return litellm.completion(
+    response = litellm.completion(
         messages=[{"role": "user", "content": prompt}],
         max_tokens=max_tokens,
         **completion_kwargs(model, **overrides),
     )
+
+    choice = response.choices[0]
+    if getattr(choice, "finish_reason", None) == "length":
+        details = getattr(response.usage, "completion_tokens_details", None)
+        reasoning = getattr(details, "reasoning_tokens", None) or 0
+        spent = f", {reasoning} of them on reasoning" if reasoning else ""
+        warnings.warn(
+            f"{model} hit max_tokens={max_tokens}{spent}; the reply is truncated "
+            f"and may be empty. Raise max_tokens and re-run.",
+            stacklevel=2,
+        )
+    return response
 
 
 def list_models(provider: str) -> list[str]:
@@ -239,4 +259,37 @@ def list_providers(kind: str = "external") -> list[str]:
         return sorted(p["name"] for p in json.load(resp).get("providers", []))
 
 
-__all__ = ["ask", "completion_kwargs", "list_models", "list_providers", "load_gateway", "resolve"]
+def catalogue(kind: str = "internal") -> dict[str, list[str]]:
+    """Every provider on a gateway and the models it serves.
+
+    On the internal gateway one provider is one model, so this is the way to
+    see the open-weight catalogue; embedding and reranker providers appear here
+    too and are simply not chat models.
+
+    Providers that fail to answer are reported with an empty list rather than
+    raising, since one sulking provider should not hide the rest.
+    """
+    out: dict[str, list[str]] = {}
+    for provider in list_providers(kind):
+        try:
+            out[provider] = list_models(provider)
+        except Exception:
+            out[provider] = []
+    return out
+
+
+def aliases_for(model_id: str) -> list[str]:
+    """Short names that resolve to a given "provider/model" string."""
+    return sorted(k for k, v in ALIASES.items() if v == model_id)
+
+
+__all__ = [
+    "ask",
+    "aliases_for",
+    "catalogue",
+    "completion_kwargs",
+    "list_models",
+    "list_providers",
+    "load_gateway",
+    "resolve",
+]
