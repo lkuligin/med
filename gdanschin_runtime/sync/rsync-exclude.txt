@@ -1,0 +1,49 @@
+# Single source of truth for what never leaves this machine.
+# Used by lsyncd-med.lua (excludeFrom) and by sync.sh --dry-run (--exclude-from).
+# rsync pattern syntax: a leading "/" anchors to the sync root.
+
+# --- Experiment outputs: PRODUCED ON THE REMOTE, never push ours over theirs ---
+results_*.json
+simple_questions.csv
+verifier_accuracy_curve.png
+*.png
+results/
+data/
+*.log
+
+# NOTE: difficult_questions.csv is deliberately NOT excluded. It is tracked in
+# git and is the INPUT to step 2, even though separate_result.py can also write
+# it. Excluding *.csv wholesale would break the remote run.
+
+# --- Version control and editor state ---
+/.git/
+.gitignore
+.idea/
+.vscode/
+.DS_Store
+
+# --- Python build artefacts ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Environments: the remote builds its own against its own CUDA/driver stack ---
+.venv/
+venv/
+env/
+
+# --- Secrets and machine-local config ---
+.env
+*.pem
+*-credentials.json
+service-account*.json
+
+# --- Legacy sibling projects, not needed to run llm_monkeys (16 MB of the repo).
+# Comment these out if you do need them on the GPU box.
+/med/
+/clustering/
+/clusters/
+/simulations/
