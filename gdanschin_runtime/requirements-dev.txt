@@ -6,3 +6,10 @@
 # rather than failing, so the suite would look green while testing nothing.
 pytest
 pytest-asyncio
+
+# Notebooks for exploring results on either machine. Plain Notebook, not
+# JupyterHub: Hub needs configurable-http-proxy from npm, and neither machine
+# has Node, nor root on the GPU box to install it. Hub also buys multi-user
+# auth and spawning, which a single user on two of their own machines does not
+# need.
+notebook

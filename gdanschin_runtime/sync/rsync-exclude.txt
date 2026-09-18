@@ -29,6 +29,17 @@ cache/
 logs/
 # ad-hoc files made on the remote: debug scripts, notes, patched configs
 scratch/
+# notebooks written on the GPU box. Excluded so the mirror neither overwrites
+# them (a run fills a .ipynb with outputs, the local copy has none) nor deletes
+# them. Bring one back with: sync.sh --pull notebooks/
+notebooks/
+
+# ============================================================
+# LOCAL-ONLY. Internal infrastructure material that must never
+# leave this laptop: not committed, not transferred. Unanchored,
+# so a supplementary/ at any depth is covered.
+# ============================================================
+supplementary/
 # the remote builds its own against its own CUDA stack
 .venv/
 venv/
@@ -83,6 +94,14 @@ core
 *.pem
 *-credentials.json
 service-account*.json
+
+# Machine-local configuration: hostnames, key paths, gateway tokens. Unanchored
+# filenames, so they are caught at any depth. The .example templates beside them
+# do not match and are committed and synced on purpose.
+remote.conf
+gateway.conf
+jupyter-password.conf
+jupyter_server_config.generated.py
 
 # ============================================================
 # Legacy sibling projects, not needed to run llm_monkeys

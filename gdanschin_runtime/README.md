@@ -25,6 +25,7 @@ frozen reference implementation.
     adapters/       ADK BaseLlm wrappers over providers
     cli/            entrypoints for steps 1-3 that wire workflows together
     configs/        run configurations
+    supplementary/  internal infrastructure material - local only
     _bootstrap.py   puts llm_monkeys on sys.path (the only place that does)
 
 ## Two ways to plug in
@@ -220,3 +221,17 @@ opt-ins in one place:
 - `MEDQA_MODEL_FACTORY` - build models with our own client instead of the stock
   `LiteLlm` adapter. Left commented out until `adapters/factory.py` exists,
   since an unimportable spec fails loudly on purpose.
+
+## supplementary/
+
+Drop internal infrastructure write-ups here to work from. The directory is
+protected twice over and both protections are needed, because either one alone
+leaves a way out:
+
+- `.gitignore` keeps it out of commits;
+- `sync/rsync-exclude.txt` keeps it off the GPU box. Note that gitignore has no
+  effect on rsync, so being untracked would not have stopped it being copied.
+
+Nothing in here is ever committed, so do not put anything here that the code
+needs to run. Extract what the implementation requires into real files under
+version control, and leave the source material as reference.

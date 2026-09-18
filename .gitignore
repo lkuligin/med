@@ -174,3 +174,13 @@ scratch/
 
 # Machine-specific remote settings (see configs/remote.conf.example)
 gdanschin_runtime/configs/remote.conf
+gdanschin_runtime/configs/gateway.conf
+gdanschin_runtime/configs/jupyter-password.conf
+gdanschin_runtime/configs/jupyter_server_config.generated.py
+
+# Internal infrastructure material: never committed, never synced
+# (also excluded in gdanschin_runtime/sync/rsync-exclude.txt)
+gdanschin_runtime/supplementary/
+
+# macOS directory metadata
+.DS_Store

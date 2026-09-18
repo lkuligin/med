@@ -1,0 +1,18 @@
+# Copy to gateway.conf and paste your token in, then keep it out of git:
+#
+#   cp gdanschin_runtime/configs/gateway.conf.example gdanschin_runtime/configs/gateway.conf
+#
+# gateway.conf is gitignored AND excluded from the mirror, so it never reaches
+# the GPU box by itself. Place it there once by hand; excluded paths are also
+# protected from the mirror's --delete, so it stays put.
+#
+# Any LLM_GATEWAY_* environment variable overrides the value here.
+
+# Which gateway. There are two, with separate tokens:
+#   https://gateway.example.com      external providers (openai, anthropic, google, ...)
+#   https://gateway-internal.example.com   internally hosted models
+LLM_GATEWAY_URL="https://gateway.example.com"
+
+# Token from the gateway UI. See
+# your deployment's docs
+LLM_GATEWAY_TOKEN="paste-token-here"
