@@ -1,18 +1,24 @@
-# Copy to gateway.conf and paste your token in, then keep it out of git:
+# Copy to gateway.conf and fill in, then keep it out of git:
 #
 #   cp gdanschin_runtime/configs/gateway.conf.example gdanschin_runtime/configs/gateway.conf
 #
 # gateway.conf is gitignored AND excluded from the mirror, so it never reaches
-# the GPU box by itself. Place it there once by hand; excluded paths are also
-# protected from the mirror's --delete, so it stays put.
+# the GPU box by itself. Push it with sync.sh --push-secrets; excluded paths are
+# also protected from the mirror's --delete, so it stays put.
+#
+# There are TWO gateways with SEPARATE tokens. Same UI, same instructions, only
+# the URL differs - see
+# your deployment's docs
 #
 # Any LLM_GATEWAY_* environment variable overrides the value here.
 
-# Which gateway. There are two, with separate tokens:
-#   https://gateway.example.com      external providers (openai, anthropic, google, ...)
-#   https://gateway-internal.example.com   internally hosted models
+# External vendors: openai, anthropic, google, deepseek, xai, plus the sglang
+# provider that serves google/gemma-4-26B-A4B-it.
 LLM_GATEWAY_URL="https://gateway.example.com"
-
-# Token from the gateway UI. See
-# your deployment's docs
 LLM_GATEWAY_TOKEN="paste-token-here"
+
+# Open-weight models, each its own provider at /proxy/<name>/v1:
+# deepseek-v4-flash-0731, gpt-oss-120b, qwen36-27b-fp8, qwen38-27b-fp8,
+# glm5-fp8. Optional - leave the token as-is if you only need the external one.
+LLM_GATEWAY_INTERNAL_URL="https://gateway-internal.example.com"
+LLM_GATEWAY_INTERNAL_TOKEN="paste-token-here"

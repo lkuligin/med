@@ -7,8 +7,14 @@
     ask("claude-opus-5",    "...")
     list_models("anthropic")          # what this token can actually reach
 
-External vendor models only. Internal providers the gateway also fronts are
-left out on purpose - see PROVIDERS.
+Open-weight models are reachable too, under short aliases:
+
+    ask("gemma-4-26b", "...")         # google/gemma-4-26B-A4B-it, via sglang
+    list_models("sglang")             # everything that provider serves
+
+gemma-4-26b matters in particular: it is llm_monkeys' DEFAULT_MODEL, so step 2
+can run the original experiment's model through the gateway, with no SGLang to
+stand up and no Vertex credentials.
 
 The provider is inferred from the model name and can be given explicitly as
 "provider/model" when a name is ambiguous or new.
@@ -43,47 +49,106 @@ CONFIG = Path(__file__).resolve().parent / "configs" / "gateway.conf"
 # openrouter and yandex are left out too: their model endpoints did not answer
 # in a usable shape, and claiming support without a passing call would be worse
 # than a clear "unknown provider" error.
-PROVIDERS: dict[str, tuple[str, str]] = {
-    "openai": ("openai", "/proxy/openai"),
-    "anthropic": ("anthropic", "/proxy/anthropic"),
-    "google": ("gemini", "/proxy/google/v1beta"),
-    "deepseek": ("openai", "/proxy/deepseek"),
-    "xai": ("openai", "/proxy/xai"),
+# provider -> (litellm prefix, path under the gateway, which gateway)
+PROVIDERS: dict[str, tuple[str, str, str]] = {
+    "openai": ("openai", "/proxy/openai", "external"),
+    "anthropic": ("anthropic", "/proxy/anthropic", "external"),
+    "google": ("gemini", "/proxy/google/v1beta", "external"),
+    "deepseek": ("openai", "/proxy/deepseek", "external"),
+    "xai": ("openai", "/proxy/xai", "external"),
+    # Note the "/v1": path conventions differ per provider, and
+    # /proxy/sglang/models 404s where /proxy/sglang/v1/models works.
+    "sglang": ("openai", "/proxy/sglang/v1", "external"),
+}
+
+# On the internal gateway every open-weight model is its own provider, reached
+# at /proxy/<provider>/v1 and OpenAI-compatible. Rather than freeze a list that
+# will drift, any provider not named above is assumed to follow that shape.
+# Known ones at the time of writing: deepseek-v4-flash-0731, gpt-oss-120b,
+# qwen36-27b-fp8, qwen38-27b-fp8, glm5-fp8.
+def _internal(provider: str) -> tuple[str, str, str]:
+    return ("openai", f"/proxy/{provider}/v1", "internal")
+
+# Short names for models whose real id is awkward. Two reasons they are needed
+# rather than nice to have: the sglang ids contain a slash, which would other-
+# wise be read as a provider prefix and route "google/gemma-..." to the Gemini
+# proxy; and "gemma-4-26b" is the same alias llm_monkeys already uses for this
+# model, so one name works in both places.
+ALIASES: dict[str, str] = {
+    # External gateway, via the sglang provider.
+    "gemma-4-26b": "sglang/google/gemma-4-26B-A4B-it",
+    "gemma-4-26b-a4b-it": "sglang/google/gemma-4-26B-A4B-it",
+    "minimax-m2.7": "sglang/MiniMaxAI/MiniMax-M2.7",
+    "qwen3-reranker-4b": "sglang/Qwen/Qwen3-Reranker-4B",
+    # Internal gateway. Every id here was read from the provider itself rather
+    # than copied from a list, since the wiki's tables have already gone stale
+    # once. The gemma provider there reports its model as "unknown" and accepts
+    # exactly that string - hence the odd-looking value.
+    "deepseek-v4-flash": "deepseek-v4-flash-0731/deepseek-ai/DeepSeek-V4-Flash-0731",
+    "glm5.3-flash": "glm5-fp8/zai-org/GLM-5.3-Flash",
+    "gpt-oss-120b": "gpt-oss-120b/openai/gpt-oss-120b",
+    "qwen3.6-27b": "qwen36-27b-fp8/Qwen/Qwen3.6-27B-FP8",
+    "qwen3.8-27b": "qwen38-27b-fp8/Qwen/Qwen3.8-27B-FP8",
+    "gemma-4-26b-internal": "gemma-4-26b-a4b-it/unknown",
+}
+
+# Model list endpoints, where they deviate from "<provider path>/models".
+_MODEL_LIST_PATHS = {
+    "google": "/proxy/google/v1beta/models",
+    "anthropic": "/proxy/anthropic/v1/models",
+    "sglang": "/proxy/sglang/v1/models",
 }
 
 # Matched in order against a bare model name.
 _INFER = [
     (r"^(gpt|o\d|chatgpt|text-embedding|dall-e|whisper|tts|sora|codex|babbage|davinci)", "openai"),
     (r"^claude", "anthropic"),
+    # Before the gemini rule: "gemma" and "gemini" share a prefix to the eye but
+    # live on different providers, and gemma is not served by the Google proxy.
+    (r"^gemma", "sglang"),
     (r"^gemini", "google"),
     (r"^deepseek", "deepseek"),
     (r"^grok", "xai"),
 ]
 
 
-def load_gateway() -> tuple[str, str]:
-    """Return (url, token) from the environment, falling back to configs/gateway.conf."""
-    url = os.getenv("LLM_GATEWAY_URL", "")
-    token = os.getenv("LLM_GATEWAY_TOKEN", "")
-
-    if (not url or not token) and CONFIG.is_file():
+def _config_values() -> dict[str, str]:
+    """Read LLM_GATEWAY_* settings from configs/gateway.conf."""
+    values: dict[str, str] = {}
+    if CONFIG.is_file():
         for line in CONFIG.read_text().splitlines():
             if line.lstrip().startswith("#"):
                 continue
             m = re.match(r'\s*(LLM_GATEWAY_\w+)\s*=\s*[\'"]?(.*?)[\'"]?\s*$', line)
             if m:
-                key, value = m.groups()
-                if key == "LLM_GATEWAY_URL" and not url:
-                    url = value
-                elif key == "LLM_GATEWAY_TOKEN" and not token:
-                    token = value
+                values[m.group(1)] = m.group(2)
+    return values
+
+
+def load_gateway(kind: str = "external") -> tuple[str, str]:
+    """Return (url, token) for the "external" or "internal" gateway.
+
+    They are separate deployments with separate tokens: gateway.example.com fronts
+    the vendors, gateway-internal.example.com the open-weight models.
+    """
+    if kind not in ("external", "internal"):
+        raise ValueError(f"unknown gateway {kind!r}")
+    suffix = "" if kind == "external" else "INTERNAL_"
+    url_key, token_key = f"LLM_GATEWAY_{suffix}URL", f"LLM_GATEWAY_{suffix}TOKEN"
+
+    url = os.getenv(url_key, "")
+    token = os.getenv(token_key, "")
+    if not url or not token:
+        values = _config_values()
+        url = url or values.get(url_key, "")
+        token = token or values.get(token_key, "")
 
     if not url or not token or token == "paste-token-here":
         raise RuntimeError(
-            "LLM gateway is not configured.\n"
+            f"the {kind} LLM gateway is not configured ({url_key}, {token_key}).\n"
             "  cp gdanschin_runtime/configs/gateway.conf.example "
             "gdanschin_runtime/configs/gateway.conf\n"
-            "  then paste the token, or set LLM_GATEWAY_URL / LLM_GATEWAY_TOKEN"
+            f"  then paste the token. The two gateways use different ones."
         )
     return url.rstrip("/"), token
 
@@ -93,12 +158,10 @@ def resolve(model: str) -> tuple[str, str]:
 
     Accepts "provider/model" or a bare name whose provider is inferred.
     """
+    model = ALIASES.get(model.lower(), model)
+
     if "/" in model:
         provider, _, bare = model.partition("/")
-        if provider not in PROVIDERS:
-            raise ValueError(
-                f"unknown provider {provider!r}; known: {', '.join(sorted(PROVIDERS))}"
-            )
         return provider, bare
 
     for pattern, provider in _INFER:
@@ -115,8 +178,8 @@ def resolve(model: str) -> tuple[str, str]:
 def completion_kwargs(model: str, **overrides) -> dict:
     """Build the litellm.completion keyword arguments for a gateway model."""
     provider, bare = resolve(model)
-    prefix, path = PROVIDERS[provider]
-    url, token = load_gateway()
+    prefix, path, kind = PROVIDERS.get(provider) or _internal(provider)
+    url, token = load_gateway(kind)
 
     kwargs = {
         "model": f"{prefix}/{bare}",
@@ -150,13 +213,9 @@ def list_models(provider: str) -> list[str]:
     import json
     import urllib.request
 
-    if provider not in PROVIDERS:
-        raise ValueError(f"unknown provider {provider!r}")
-    url, token = load_gateway()
-    path = {
-        "google": "/proxy/google/v1beta/models",
-        "anthropic": "/proxy/anthropic/v1/models",
-    }.get(provider, f"{PROVIDERS[provider][1]}/models")
+    base, kind = (PROVIDERS.get(provider) or _internal(provider))[1:]
+    url, token = load_gateway(kind)
+    path = _MODEL_LIST_PATHS.get(provider, f"{base}/models")
 
     req = urllib.request.Request(url + path, headers={"Authorization": f"Bearer {token}"})
     with urllib.request.urlopen(req, timeout=60) as resp:
@@ -167,12 +226,12 @@ def list_models(provider: str) -> list[str]:
     return sorted(m["id"] for m in data.get("data", []))
 
 
-def list_providers() -> list[str]:
-    """Return the provider names the gateway itself reports."""
+def list_providers(kind: str = "external") -> list[str]:
+    """Return the provider names a gateway reports."""
     import json
     import urllib.request
 
-    url, token = load_gateway()
+    url, token = load_gateway(kind)
     req = urllib.request.Request(
         f"{url}/api/providers/list", headers={"Authorization": f"Bearer {token}"}
     )

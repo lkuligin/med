@@ -25,6 +25,7 @@ set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VENV="$REPO/.venv"
+VENV_PROMPT="monkeys_env"   # what the shell shows after `source .venv/bin/activate`
 REQ="$REPO/llm_monkeys/requirements.txt"
 REQ_DEV="$REPO/gdanschin_runtime/requirements-dev.txt"
 REQ_GPU="$REPO/gdanschin_runtime/requirements-gpu.txt"
@@ -111,10 +112,10 @@ if [[ $VERIFY_ONLY -eq 0 ]]; then
         echo "reusing existing $VENV"
     elif "$PY" -c 'import ensurepip' 2>/dev/null; then
         echo "creating $VENV"
-        "$PY" -m venv "$VENV"
+        "$PY" -m venv --prompt "$VENV_PROMPT" "$VENV"
     else
         echo "creating $VENV (without pip)"
-        "$PY" -m venv --without-pip "$VENV"
+        "$PY" -m venv --prompt "$VENV_PROMPT" --without-pip "$VENV"
         bootstrap_pip
     fi
 
@@ -141,6 +142,64 @@ if [[ $VERIFY_ONLY -eq 0 ]]; then
 fi
 
 [[ -x "$VENV/bin/python" ]] || { echo "no environment at $VENV" >&2; exit 1; }
+
+# Fix the prompt on an environment that already exists. venv bakes the label
+# into every activate flavour at creation time, so --prompt alone would only
+# help a fresh venv - and recreating one to relabel it means reinstalling a
+# hundred packages over a slow mirror.
+if grep -q '(\.venv)' "$VENV/bin/activate" 2>/dev/null; then
+    for f in activate activate.csh activate.fish Activate.ps1; do
+        [[ -f "$VENV/bin/$f" ]] && sed -i.bak "s/(\.venv)/($VENV_PROMPT)/g" "$VENV/bin/$f" && rm -f "$VENV/bin/$f.bak"
+    done
+    grep -q "^prompt" "$VENV/pyvenv.cfg" || echo "prompt = $VENV_PROMPT" >> "$VENV/pyvenv.cfg"
+    echo "activation prompt relabelled to ($VENV_PROMPT)"
+fi
+
+# Undo venv's own doubled parentheses. Its bash template reads
+#   PS1="("'(name) '") ${PS1:-}"
+# which wraps a value that already carries its own brackets, rendering
+# ((name) ). This is not something --prompt avoids: a venv created with the
+# flag shows the same thing, so it is a quirk of the template in this Python
+# build rather than anything we did. csh and fish get it right already.
+if grep -q "PS1=\"(\"'($VENV_PROMPT) '\")" "$VENV/bin/activate" 2>/dev/null; then
+    "$VENV/bin/python" - "$VENV/bin/activate" "$VENV_PROMPT" <<'FIX_EOF'
+import sys
+
+path, name = sys.argv[1], sys.argv[2]
+text = open(path).read()
+# Built by concatenation rather than an f-string: the fragments are themselves
+# full of quotes, and nesting them inside one would be unreadable at best.
+bad = 'PS1="("' + "'(" + name + ") '" + '") ${PS1:-}"'
+good = "PS1='(" + name + ") '" + '"${PS1:-}"'
+if bad in text:
+    open(path, "w").write(text.replace(bad, good))
+    print("  fixed")
+else:
+    print("  prompt line not in the expected shape; left alone")
+FIX_EOF
+    echo "removed the doubled brackets from the bash prompt"
+fi
+
+# Put the repository root on sys.path for every process in this venv, so
+# notebooks and scripts can "from gdanschin_runtime... import" with no per-file
+# path juggling. A .pth in site-packages is the standard way to do this without
+# packaging the project; only the repo root goes in, not llm_monkeys, whose
+# module names (config, cli, dataset) are generic enough to shadow real
+# packages. Reach those through gdanschin_runtime._bootstrap, which appends.
+"$VENV/bin/python" - "$REPO" <<'PTH_EOF'
+import sys, sysconfig
+from pathlib import Path
+repo = Path(sys.argv[1])
+pth = Path(sysconfig.get_paths()["purelib"]) / "med_repo.pth"
+# Line one is added to sys.path; a line starting with "import" is executed.
+# _bootstrap then APPENDS llm_monkeys, so its generic module names (config,
+# cli, dataset) sit behind real packages rather than in front of them, while
+# "from dataset import ..." still works with no preamble in the notebook.
+want = f"{repo}\nimport gdanschin_runtime._bootstrap\n"
+if not pth.is_file() or pth.read_text() != want:
+    pth.write_text(want)
+    print(f"sys.path entry written to {pth}")
+PTH_EOF
 
 # --- verify: report what imports and what does not --------------------------
 # Worth doing every time. A missing module in llm_monkeys shows up here as one
