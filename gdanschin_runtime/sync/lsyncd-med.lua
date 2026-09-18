@@ -1,7 +1,13 @@
 -- lsyncd configuration: mirror this repository to the GPU box.
 --
 --   lsyncd gdanschin_runtime/sync/lsyncd-med.lua
---   (or use ./gdanschin_runtime/sync/sync.sh, which preflights first)
+--
+-- NOT usable unprivileged on macOS: lsyncd's fsevents backend opens
+-- /dev/fsevents directly, which is root-only, and fails with
+--   Error: Cannot access /dev/fsevents monitor! (1:Operation not permitted)
+-- Run it under sudo, or on a Linux host where the inotify backend applies.
+-- On macOS use sync.sh instead, which watches via fswatch and shares this
+-- file's exclude list.
 --
 -- One-way only: local -> remote. Files created on the remote by running the
 -- project are protected by two independent mechanisms:

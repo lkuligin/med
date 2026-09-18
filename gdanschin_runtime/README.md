@@ -118,20 +118,61 @@ therefore required, but the gcloud CLI is not - a service-account JSON key via
 
 ## Syncing to the GPU box
 
-`sync/` mirrors this repository to `gpu.example.com:/home/gdanschin/Projects/med`
-with lsyncd, one way only.
+`sync/` mirrors this repository to `gpu.example.com:/home/gdanschin/Projects/med`,
+one way only.
 
     ./gdanschin_runtime/sync/sync.sh --dry-run   # show what would be sent
+    ./gdanschin_runtime/sync/sync.sh --once      # sync once and exit
     ./gdanschin_runtime/sync/sync.sh             # watch and sync until Ctrl-C
 
-lsyncd is not installed by default on macOS: `brew install lsyncd`.
+Watching needs fswatch: `brew install fswatch`.
 
-Files produced by running the project on the remote are protected two ways,
-and both are needed:
+lsyncd was the original plan and `sync/lsyncd-med.lua` is still here, but its
+macOS backend opens `/dev/fsevents` directly, which is root-only, so it fails
+with `Cannot access /dev/fsevents monitor! (1:Operation not permitted)` unless
+run under sudo. fswatch uses the public FSEvents API and needs no privileges.
+The lua config remains valid for a Linux host, and shares the same exclude
+list.
 
-- `delete = false` - rsync never removes remote-only files;
-- `sync/rsync-exclude.txt` - output paths are never transferred at all, so a
-  stale local `results_*.json` cannot overwrite a fresh remote one.
+The sync is a true mirror: `--delete` removes remote files that no longer
+exist locally, so a module deleted here cannot linger there and get imported.
+
+Remote-generated data is protected by `sync/rsync-exclude.txt` alone. Excluded
+paths are neither transferred nor deleted - that is standard rsync behaviour,
+since excluded receiver files are shielded from `--delete` (only
+`--delete-excluded` would remove them, and we never pass it).
+
+**On the GPU box, write only into these directories.** Anything created
+outside them does not exist locally and WILL be deleted on the next sync:
+
+| Directory  | For |
+|---|---|
+| `data/`    | datasets and downloaded inputs |
+| `results/` | experiment outputs: json, csv, plots |
+| `cache/`   | model and dataset caches - point `HF_HOME` here |
+| `logs/`    | run logs |
+| `scratch/` | ad-hoc files made on the remote: debug scripts, notes, patched configs |
+| `.venv/`   | the remote's own environment |
+
+Runtime leftovers a run drops outside those directories are excluded too, so
+they survive as well: `__pycache__/`, `*.pyc`, `.pytest_cache/`,
+`.ipynb_checkpoints/`, `wandb/`, `nohup.out`, `.coverage`, `*.tmp`, `*.swp`.
+
+Stale bytecode is not a concern: CPython compares the exact mtime recorded in
+a `.pyc` against its source, and `rsync -a` preserves mtimes, so any mismatch
+forces a recompile - including after checking out an older revision locally.
+
+**Stop the watcher before a long run.** The sync is live, so editing a file
+here while a multi-hour job runs there changes its code mid-flight. Modules
+already imported keep their loaded version, but anything imported later picks
+up the new code, and the results silently mix two revisions. Push once with
+`--once` and leave the watcher off for the duration.
+
+They are unanchored patterns, so `llm_monkeys/results/` is covered as well as
+a top-level `results/`. As a safety net, the default output filenames the code
+writes into its working directory (`results_*.json`, `simple_questions.csv`,
+`*.png`, `*.log`) are excluded too, so a run left on default paths is still
+protected.
 
 `rsync-exclude.txt` is the single source of truth, shared by the lsyncd config
 and by `--dry-run`. Two things to keep in mind when editing it:
