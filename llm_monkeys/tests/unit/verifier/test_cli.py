@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from config import DEFAULT_VERIFIER_MODEL
+from config import DEFAULT_VERIFIER_MODEL, VerifierConfig
 from verifier._schemas import VerifierWorkflowSummary
 from verifier.cli import (
     async_main,
@@ -26,7 +26,9 @@ def test_create_parser_defaults():
     assert args.model == DEFAULT_VERIFIER_MODEL
     assert args.input == "results_step2_gemma4_candidates.json"
     assert args.output == "results_step3_verified.json"
-    assert args.temperature == 0.0
+    # Tied to the config rather than a literal: the two defaults must agree,
+    # and a literal here silently went stale when the default moved to 1.0.
+    assert args.temperature == VerifierConfig().temperature
     assert args.concurrency == 4
     assert args.max_candidates_per_question is None
     assert args.early_stop_facts is False
