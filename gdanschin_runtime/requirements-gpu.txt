@@ -1,0 +1,10 @@
+# GPU-only dependencies, installed by setup_env.sh --gpu and never on a laptop.
+#
+# Empty on purpose for now: the serving stack (SGLang and its CUDA torch build)
+# has not been pinned yet, and guessing a version here would be worse than
+# leaving it out - a wrong torch/CUDA pair is a slow, confusing failure.
+#
+# When it is pinned, note that SGLang's wheels are served from its own index,
+# not plain PyPI, so this file will likely need a --extra-index-url line.
+#
+# sglang[all]==<pinned>

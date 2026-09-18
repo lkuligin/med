@@ -166,3 +166,8 @@ cython_debug/
 config-*.json
 results/
 data/ 
+
+# Remote-owned working directories (see gdanschin_runtime/sync/rsync-exclude.txt)
+cache/
+logs/
+scratch/
