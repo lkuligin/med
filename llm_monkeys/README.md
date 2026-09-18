@@ -132,9 +132,110 @@ python3 -m inference.cli --help
 | `--rate-limit-max-retries` | int | `10` | Maximum retries with exponential backoff on 429 rate limits |
 | `--log-level` | str | `INFO` | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
 
+## Step 3: Fact Verification Workflow (`verifier/cli.py`)
+
+This workflow implements Step 3 of the research flow: fact verification of candidate reasoning paths generated in Step 2 using an LLM-as-a-judge (`gemini-3-flash-preview` on Vertex AI via Google ADK).
+
+For each complex question, the verifier evaluates candidate reasoning paths one-by-one:
+1. **Fact Verification**: Each atomic medical fact in the candidate is verified for clinical correctness against the question context.
+2. **First-Valid Selection (Rejection Sampling)**: The first candidate where **all** facts are verified as correct is selected as the final answer. If a candidate contains any incorrect fact, the workflow advances to the next candidate.
+
+The workflow executes asynchronously with semaphore-managed concurrency (`asyncio.Semaphore`), exponential backoff with jitter on 429 rate limits, and resumes cleanly from previously saved runs.
+
+### Usage
+
+Run fact verification on Step 2 candidates:
+
+```bash
+# Quick smoke test on 1 question with candidate limit and early stopping
+python3 verifier/cli.py \
+      --input results_step2_gemma4_candidates.json \
+      --limit 1 \
+      --max-candidates-per-question 5 \
+      --early-stop-facts \
+      --output test_verified.json
+
+# Full Step 3 verification run with Gemini Flash on Vertex AI
+python3 verifier/cli.py \
+      --project "kuligin-sandbox1" \
+      --location "global" \
+      --input results_step2_gemma4_candidates.json \
+      --concurrency 4 \
+      --early-stop-facts \
+      --output results_step3_verified.json
+
+# Run verification with custom model
+python3 verifier/cli.py \
+      --model "gemini-3-flash-preview" \
+      --input results_step2_gemma4_candidates.json \
+      --output results_step3_verified.json
+```
+
+You can also run the CLI as a Python module:
+
+```bash
+python3 -m verifier.cli --help
+```
+
+### CLI Arguments
+
+| Argument | Type | Default | Description |
+|---|---|---|---|
+| `--input`, `-i` | str | `results_step2_gemma4_candidates.json` | Path to Step 2 JSON candidate output file |
+| `--output` | str | `results_step3_verified.json` | Path to save output JSON |
+| `--model` | str | `gemini-3-flash-preview` | Verifier LLM-as-a-judge model identifier |
+| `--concurrency` | int | `4` | Maximum concurrent verification requests (`asyncio.Semaphore`) |
+| `--early-stop-facts` | bool | `False` | Stop evaluating remaining facts for a candidate upon the first incorrect fact |
+| `--max-candidates-per-question` | int | `None` | Maximum candidates to evaluate per question before stopping (default: evaluate all until first valid) |
+| `--save-every-n-questions` | int | `1` | Persist intermediate results after every N questions |
+| `--limit` | int | `None` | Maximum number of questions to evaluate |
+| `--offset` | int | `0` | Starting index offset in questions list |
+| `--temperature` | float | `1.0` | Sampling temperature for verifier |
+| `--max-tokens` | int | `512` | Maximum output tokens per verification call |
+| `--project` | str | `None` | GCP Project ID (or set `GOOGLE_CLOUD_PROJECT` env var) |
+| `--location` | str | `global` | Vertex AI location (or set `VERTEXAI_LOCATION` env var) |
+| `--max-retries` | int | `5` | Maximum retries for model invocation errors |
+| `--rate-limit-max-retries` | int | `10` | Maximum retries with exponential backoff on 429 rate limits |
+### Verifier Analysis & Scaling Curves (`analyze_verifier.py`)
+
+Analyze verifier output files and plot the percentage of questions answered correctly after $k = 1, 2, \dots$ candidate generations. A question is counted as correctly answered when it has passed all verification checks AND the candidate's answer matches ground truth.
+
+```bash
+# Analyze results and generate plot
+python3 analyze_verifier.py --input results_step3_verified.json --output verifier_accuracy_curve.png
+
+# Compare Verified & Correct against Rejection Sampling (First Valid) and Unverified Baseline
+python3 analyze_verifier.py --input results_step3_verified.json --strategy all --output verifier_comparison.png
+
+# Export curve data to CSV and metrics to JSON
+python3 analyze_verifier.py --input results_step3_verified.json \
+      --export-csv verifier_curve.csv \
+      --export-json verifier_metrics.json
+
+# Analyze up to k=50 candidates with logarithmic scale
+python3 analyze_verifier.py --input results_step3_verified.json --max-candidates 50 --log-scale-x
+```
+
+### CLI Arguments for `analyze_verifier.py`
+
+| Argument | Type | Default | Description |
+|---|---|---|---|
+| `positional_input` / `--input`, `-i` | str | `results_step3_verified.json` | Path to verifier JSON results file |
+| `--output`, `-o` | str | `verifier_accuracy_curve.png` | Path to save accuracy curve plot (PNG/PDF/SVG) |
+| `--strategy`, `-s` | str | `both` | Plot mode: `verified` (primary metric), `first_valid` (rejection sampling), `both`, or `all` |
+| `--max-candidates`, `-k` | int | `None` | Max candidate count $k$ to analyze up to (default: all available) |
+| `--min-candidates` | int | `1` | Starting candidate count $k$ |
+| `--step` | int | `1` | Step size between candidate checkpoints |
+| `--log-scale-x` | flag | `False` | Use logarithmic scale for x-axis |
+| `--no-plot` | flag | `False` | Skip plot generation and print ASCII table & summary |
+| `--export-csv` | str | `None` | Optional path to export curve table to CSV |
+| `--export-json` | str | `None` | Optional path to export metrics and cost to JSON |
+| `--model` | str | `gemini-3-flash-preview` | Model name for verifier token cost calculation |
+
 ### Running Tests
 
 ```bash
 pytest
 ```
+
 

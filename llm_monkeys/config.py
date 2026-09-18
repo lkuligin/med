@@ -35,6 +35,8 @@ def register_litellm_model_pricing() -> None:
     try:
         import litellm
 
+        litellm.suppress_debug_info = True
+
         gpt_20b_info = {
             "input_cost_per_token": 0.075 / 1_000_000,
             "output_cost_per_token": 0.30 / 1_000_000,
@@ -50,6 +52,8 @@ def register_litellm_model_pricing() -> None:
         }
         pricing_entries = {
             "vertex_ai/openai/gpt-oss-20b-maas": gpt_20b_info,
+            "openai/gpt-oss-20b-maas": gpt_20b_info,
+            "gpt-oss-20b-maas": gpt_20b_info,
         }
         litellm.model_cost.update(pricing_entries)
     except Exception:

@@ -6,7 +6,7 @@ import argparse
 import asyncio
 import sys
 
-from cli import add_common_arguments, setup_logging
+from cli_utils import add_common_arguments, setup_logging
 from config import DEFAULT_VERIFIER_MODEL, VerifierConfig
 from verifier._schemas import VerifierWorkflowSummary
 from verifier.workflow import VerifierWorkflow
