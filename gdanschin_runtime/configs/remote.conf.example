@@ -1,0 +1,13 @@
+# Copy to remote.conf and fill in, then keep it out of git:
+#
+#   cp gdanschin_runtime/configs/remote.conf.example gdanschin_runtime/configs/remote.conf
+#
+# The host, account and key are specific to whoever runs this, so remote.conf
+# is gitignored while this template is committed. Any MED_REMOTE_* environment
+# variable overrides the value here, which is handy for a one-off run against a
+# different box without editing the file.
+
+REMOTE_USER="your-user"
+REMOTE_HOST="gpu.example.com"
+REMOTE_DIR="/home/your-user/Projects/med"
+REMOTE_IDENTITY="$HOME/.ssh/id_ed25519"

@@ -171,3 +171,6 @@ data/
 cache/
 logs/
 scratch/
+
+# Machine-specific remote settings (see configs/remote.conf.example)
+gdanschin_runtime/configs/remote.conf

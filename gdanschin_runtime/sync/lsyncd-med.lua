@@ -23,16 +23,29 @@ settings {
     insist     = true,   -- keep retrying instead of exiting if the box is down
 }
 
+-- Connection details are machine-specific and deliberately not in the
+-- repository: they live in gdanschin_runtime/configs/remote.conf, which
+-- sync.sh reads. lsyncd cannot source a shell file, so when running lsyncd
+-- directly, export these first.
 local home     = os.getenv( "HOME" )
 local here     = os.getenv( "MED_SYNC_CONF_DIR" ) or ( home .. "/Projects/med/gdanschin_runtime/sync" )
 local source   = os.getenv( "MED_SYNC_SOURCE" )   or ( home .. "/Projects/med" )
-local identity = os.getenv( "MED_SYNC_IDENTITY" ) or ( home .. "/.ssh/g.danschin" )
+local identity = os.getenv( "MED_REMOTE_IDENTITY" ) or os.getenv( "MED_SYNC_IDENTITY" )
+local user     = os.getenv( "MED_REMOTE_USER" )
+local host     = os.getenv( "MED_REMOTE_HOST" )
+local dir      = os.getenv( "MED_REMOTE_DIR" )
+
+if not ( identity and user and host and dir ) then
+    error( "set MED_REMOTE_USER, MED_REMOTE_HOST, MED_REMOTE_DIR and " ..
+           "MED_REMOTE_IDENTITY before running lsyncd directly " ..
+           "(see gdanschin_runtime/configs/remote.conf.example)" )
+end
 
 sync {
     default.rsync,
 
     source = source,
-    target = "gdanschin@gpu.example.com:/home/gdanschin/Projects/med/",
+    target = user .. "@" .. host .. ":" .. dir .. "/",
 
     delay  = 1,       -- seconds to batch edits before pushing
     delete = false,   -- never delete on the remote; see header

@@ -20,15 +20,13 @@
 # because anything created outside them WILL be deleted on the next sync.
 set -euo pipefail
 
-REMOTE_USER="gdanschin"
-REMOTE_HOST="gpu.example.com"
-REMOTE_DIR="/home/gdanschin/Projects/med"
-IDENTITY="${MED_SYNC_IDENTITY:-$HOME/.ssh/g.danschin}"
-
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../remote.sh
+source "$HERE/../remote.sh" || exit 1
+IDENTITY="$REMOTE_IDENTITY"
+
 SOURCE="${MED_SYNC_SOURCE:-$(cd "$HERE/../.." && pwd)}"
 EXCLUDES="$HERE/rsync-exclude.txt"
-REMOTE="$REMOTE_USER@$REMOTE_HOST"
 
 [[ -f "$IDENTITY" ]] || { echo "identity file not found: $IDENTITY" >&2; exit 1; }
 [[ -f "$EXCLUDES" ]] || { echo "exclude list not found: $EXCLUDES" >&2; exit 1; }

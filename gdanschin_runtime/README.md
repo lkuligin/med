@@ -118,8 +118,13 @@ therefore required, but the gcloud CLI is not - a service-account JSON key via
 
 ## Syncing to the GPU box
 
-`sync/` mirrors this repository to `gpu.example.com:/home/gdanschin/Projects/med`,
-one way only.
+`sync/` mirrors this repository to the GPU box, one way only. The host,
+account, remote path and key are machine-specific and stay out of git:
+
+    cp gdanschin_runtime/configs/remote.conf.example gdanschin_runtime/configs/remote.conf
+
+Then edit it. Any `MED_REMOTE_*` environment variable overrides the file, for a
+one-off run against a different box.
 
     ./gdanschin_runtime/sync/sync.sh --dry-run   # show what would be sent
     ./gdanschin_runtime/sync/sync.sh --once      # sync once and exit
@@ -197,9 +202,8 @@ The legacy sibling directories (`med/`, `clustering/`, `clusters/`,
 `simulations/`) are excluded; `med/` alone is 16 MB of the 21 MB repository and
 is not needed to run llm_monkeys. Uncomment them if that changes.
 
-Host, user and remote path are set at the top of `sync.sh`; the identity file
-and source root can be overridden with `MED_SYNC_IDENTITY` and
-`MED_SYNC_SOURCE`.
+Every script that talks to the box loads its settings through `remote.sh`, so
+there is one place to change them and nothing to keep in sync by hand.
 
 ## Opt-ins
 
