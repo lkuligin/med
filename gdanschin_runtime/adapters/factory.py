@@ -23,9 +23,15 @@ from gdanschin_runtime.gateway import completion_kwargs
 
 # llm_monkeys names models for Vertex AI. Map those onto gateway names so the
 # reference's own defaults and --model aliases keep working unchanged.
+# Candidate generation goes to the INTERNAL gateway. The rate limit is per
+# user, not per model or per backend, so sending step 2 through the external
+# gateway spends the same quota the judge needs - and the external gateway is
+# not the place for sustained parallel load in the first place. The same Gemma
+# is served internally; at temperature 0 both return identical answers and
+# token counts.
 MODEL_MAP: dict[str, str] = {
-    "vertex_ai/google/gemma-4-26b-a4b-it-maas": "gemma-4-26b",
-    "gemma-4-26b": "gemma-4-26b",
+    "vertex_ai/google/gemma-4-26b-a4b-it-maas": "gemma-4-26b-internal",
+    "gemma-4-26b": "gemma-4-26b-internal",
     "vertex_ai/openai/gpt-oss-20b-maas": "gpt-oss-120b",
     "gpt-oss-20b": "gpt-oss-120b",
     "vertex_ai/gemini-3.8-flash": "gemini-3.8-flash",
