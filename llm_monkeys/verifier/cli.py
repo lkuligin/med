@@ -5,12 +5,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 import sys
-from pathlib import Path
-
-# Ensure repository root is prioritized on sys.path to avoid shadowed imports
-_PROJECT_ROOT = str(Path(__file__).resolve().parents[1])
-if sys.path and sys.path[0] != _PROJECT_ROOT:
-    sys.path.insert(0, _PROJECT_ROOT)
 
 from cli import add_common_arguments, setup_logging
 from config import DEFAULT_VERIFIER_MODEL, VerifierConfig
@@ -36,7 +30,7 @@ def create_parser() -> argparse.ArgumentParser:
         parser,
         default_model=DEFAULT_VERIFIER_MODEL,
         default_output="results_step3_verified.json",
-        default_temperature=0.0,
+        default_temperature=1.0,
         default_concurrency=4,
         include_attempts=False,
     )

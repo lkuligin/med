@@ -227,7 +227,7 @@ class VerifierConfig(BaseInferenceConfig):
     """Configuration for running fact verification on step 2 candidates (Step 3)."""
 
     model_name: str = DEFAULT_VERIFIER_MODEL
-    temperature: float = 0.0
+    temperature: float = 1.0
     max_tokens: int = 512
     concurrency: int = 4
     input_filepath: str = "results_step2_gemma4_candidates.json"
