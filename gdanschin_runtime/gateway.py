@@ -90,6 +90,28 @@ ALIASES: dict[str, str] = {
     "qwen3.6-27b": "qwen36-27b-fp8/Qwen/Qwen3.6-27B-FP8",
     "qwen3.8-27b": "qwen38-27b-fp8/Qwen/Qwen3.8-27B-FP8",
     "gemma-4-26b-internal": "gemma-4-26b-a4b-it/unknown",
+    "qwen3.6-27b-noreasoning": "qwen36-27b-fp8/Qwen/Qwen3.6-27B-FP8",
+    "qwen3.8-27b-noreasoning": "qwen38-27b-fp8/Qwen/Qwen3.8-27B-FP8",
+}
+
+# Extra request options some aliases carry. Qwen3 thinks by default and will
+# spend the whole budget doing it: asked for medical facts it burned 4096
+# tokens on reasoning and returned an empty string, with finish_reason=length
+# and no error - which reads as "the model produced nothing" rather than "the
+# limit was too low". Turning thinking off cuts that to ~1000 tokens.
+#
+# The switch has to be chat_template_kwargs. Putting "/no_think" in the prompt
+# does nothing, because the gateway applies the chat template itself, and
+# litellm rejects reasoning_effort for an openai-dialect provider.
+#
+# It is not a free speedup: without thinking the model produces about half as
+# many facts, so -noreasoning is a different configuration rather than a faster
+# version of the same one.
+MODEL_EXTRAS: dict[str, dict] = {
+    "qwen3.6-27b-noreasoning": {
+        "extra_body": {"chat_template_kwargs": {"enable_thinking": False}}},
+    "qwen3.8-27b-noreasoning": {
+        "extra_body": {"chat_template_kwargs": {"enable_thinking": False}}},
 }
 
 # Model list endpoints, where they deviate from "<provider path>/models".
@@ -186,6 +208,7 @@ def completion_kwargs(model: str, **overrides) -> dict:
         "api_base": f"{url}{path}",
         "api_key": token,
     }
+    kwargs.update(MODEL_EXTRAS.get(model.lower(), {}))
     if provider == "google":
         # Without this the key would travel as ?key=, which the gateway ignores.
         kwargs["extra_headers"] = {"Authorization": f"Bearer {token}"}
@@ -287,6 +310,7 @@ __all__ = [
     "ask",
     "aliases_for",
     "catalogue",
+    "MODEL_EXTRAS",
     "completion_kwargs",
     "list_models",
     "list_providers",

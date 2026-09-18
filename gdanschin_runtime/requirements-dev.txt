@@ -13,3 +13,8 @@ pytest-asyncio
 # auth and spawning, which a single user on two of their own machines does not
 # need.
 notebook
+
+# Plotting. Not optional despite living here: llm_monkeys/analyze_verifier.py
+# imports matplotlib at module scope, so the reference's own analysis script
+# cannot run without it, yet requirements.txt does not list it.
+matplotlib
