@@ -44,6 +44,12 @@ python3 separate_result.py results_gemma4.json results_gemini.json results_gpt-o
       --output simple_questions.csv \
       --difficult-output difficult_questions.csv
 
+# Optional: set MEDQA_DIFFICULT_CANDIDATE to a path to make that path the
+# default output and refuse writes to the tracked difficult_questions.csv.
+# Useful when this repository is mirrored to another machine, where a write to
+# a synced file would be reverted by the next sync pass. Unset, the command
+# above writes difficult_questions.csv directly, as it always has.
+
 # Include question text and ground truth in CSVs
 python3 separate_result.py results_gemma4.json results_gemini.json results_gpt-oss-20b.json \
       --include-metadata \

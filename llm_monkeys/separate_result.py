@@ -11,10 +11,58 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import re
 import sys
 from pathlib import Path
 from typing import Any, Sequence
+
+
+_SCRIPT_DIR = Path(__file__).resolve().parent
+
+# Files that are tracked in git AND consumed as pipeline inputs.
+PROTECTED_OUTPUTS = frozenset({_SCRIPT_DIR / "difficult_questions.csv"})
+
+# Opt-in candidate workflow. Unset, this module behaves exactly as before:
+# --difficult-output writes nothing unless asked, and may target the tracked
+# file directly. Set to a path, it becomes the default output for difficult
+# question IDs and writing a PROTECTED_OUTPUTS path is refused instead.
+#
+# The workflow matters when this repository is mirrored to another machine: a
+# write to the tracked file there is silently reverted by the next sync pass,
+# and locally it mutates a step 2 input without review. Pointing the variable
+# at a gitignored, unsynced directory makes both impossible.
+DIFFICULT_CANDIDATE_ENV = "MEDQA_DIFFICULT_CANDIDATE"
+
+
+def difficult_candidate_path() -> str | None:
+    """Return the configured candidate path, or None when the opt-in is off."""
+    value = os.getenv(DIFFICULT_CANDIDATE_ENV)
+    return value.strip() if value and value.strip() else None
+
+
+def reject_protected_output(path: str | Path) -> None:
+    """Raise if path targets a tracked input, when the candidate workflow is on.
+
+    A no-op when DIFFICULT_CANDIDATE_ENV is unset, which is the upstream
+    behaviour: writing difficult_questions.csv directly is allowed.
+    """
+    candidate = difficult_candidate_path()
+    if candidate is None:
+        return
+    resolved = Path(path).expanduser().resolve()
+    if resolved not in PROTECTED_OUTPUTS:
+        return
+    name = resolved.name
+    raise ValueError(
+        f"refusing to write {resolved}\n"
+        f"  {name} is tracked in git and is the input to step 2, and "
+        f"{DIFFICULT_CANDIDATE_ENV} is set.\n"
+        f"  Write a candidate, review it, then promote it deliberately:\n"
+        f"    --difficult-output {candidate}\n"
+        f"    cp {candidate} {resolved}\n"
+        f"  Unset {DIFFICULT_CANDIDATE_ENV} to write {name} directly."
+    )
 
 
 def natural_sort_key(s: str) -> list[int | str]:
@@ -138,6 +186,7 @@ def separate_results(
     difficult_question_ids = sorted(difficult_set, key=natural_sort_key)
 
     def _write_csv(path: str | Path, qids: list[str]) -> None:
+        reject_protected_output(path)
         p = Path(path)
         p.parent.mkdir(parents=True, exist_ok=True)
         with p.open("w", encoding="utf-8", newline="") as f:
@@ -245,8 +294,12 @@ def main(argv: list[str] | None = None) -> int:
         "--difficult-output",
         "--difficult-csv",
         dest="difficult_output",
-        default=None,
-        help="Optional output CSV path for difficult question IDs",
+        default=difficult_candidate_path(),
+        help=(
+            "Output CSV path for difficult question IDs (default: none, unless "
+            f"{DIFFICULT_CANDIDATE_ENV} is set, which also refuses writes to the "
+            "tracked difficult_questions.csv)"
+        ),
     )
     parser.add_argument(
         "--include-metadata",
