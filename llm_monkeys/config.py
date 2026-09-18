@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import importlib
 import os
 from dataclasses import dataclass, field
 from enum import Enum
@@ -144,6 +145,51 @@ def is_medbullets_dataset(dataset_name: str | None) -> bool:
         or lower == MEDBULLETS_DATASET.lower()
     )
 
+MODEL_FACTORY_ENV = "MEDQA_MODEL_FACTORY"
+
+
+def resolve_model_factory() -> Any | None:
+    """Resolve the optional model-factory override declared via MEDQA_MODEL_FACTORY.
+
+    The environment variable holds an import spec ``"module.path:callable"``.
+    The callable receives the active configuration and must return an ADK
+    ``BaseLlm`` instance. When the variable is unset, None is returned and
+    callers fall back to the stock LiteLlm adapter, preserving default
+    behaviour exactly.
+
+    Raises:
+        RuntimeError: If the spec is malformed or cannot be imported. Failing
+            loudly is deliberate: silently falling back to Vertex AI would
+            route traffic (and cost) to the wrong backend unnoticed.
+    """
+    spec = os.getenv(MODEL_FACTORY_ENV)
+    if not spec or not spec.strip():
+        return None
+
+    cleaned = spec.strip()
+    module_name, sep, attr = cleaned.partition(":")
+    if not sep or not module_name.strip() or not attr.strip():
+        raise RuntimeError(
+            f"{MODEL_FACTORY_ENV} must look like 'module.path:callable', got {cleaned!r}"
+        )
+
+    try:
+        module = importlib.import_module(module_name.strip())
+    except Exception as exc:
+        raise RuntimeError(
+            f"{MODEL_FACTORY_ENV}: cannot import module {module_name.strip()!r}: {exc}"
+        ) from exc
+
+    try:
+        factory = getattr(module, attr.strip())
+    except AttributeError as exc:
+        raise RuntimeError(
+            f"{MODEL_FACTORY_ENV}: module {module_name.strip()!r} has no attribute {attr.strip()!r}"
+        ) from exc
+
+    if not callable(factory):
+        raise RuntimeError(f"{MODEL_FACTORY_ENV}: {cleaned!r} is not callable")
+    return factory
 
 class WorkloadType(str, Enum):
     """Supported inference workload types."""
@@ -380,4 +426,6 @@ __all__ = [
     "resolve_model_name",
     "resolve_dataset_name",
     "is_medbullets_dataset",
+    "resolve_model_factory",
+    "MODEL_FACTORY_ENV",
 ]
