@@ -41,7 +41,7 @@ def load_difficult_question_ids(
 def load_difficult_questions(
     csv_path: str | Path = "difficult_questions.csv",
     dataset_name: str = "bigbio/med_qa",
-    config_name: str = "med_qa_en_source",
+    config_name: str | None = "med_qa_en_source",
     split: str = "test",
     limit: int | None = None,
     offset: int = 0,
@@ -61,7 +61,14 @@ def load_difficult_questions(
         )
     }
 
-    matched = [all_questions[qid] for qid in difficult_ids if qid in all_questions]
+    matched = []
+    for qid in difficult_ids:
+        if qid in all_questions:
+            matched.append(all_questions[qid])
+        elif qid.lstrip("0") in all_questions:
+            matched.append(all_questions[qid.lstrip("0")])
+        elif qid.zfill(3) in all_questions:
+            matched.append(all_questions[qid.zfill(3)])
     start = max(0, offset)
     stop = start + limit if limit is not None else None
     selected = matched[start:stop]

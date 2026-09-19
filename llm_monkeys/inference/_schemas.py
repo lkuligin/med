@@ -234,7 +234,7 @@ class CandidateWorkflowSummary:
 
     model: str
     dataset: str
-    config: str
+    config: str | None
     split: str
     n_candidates: int
     total_questions: int
@@ -264,7 +264,7 @@ class CandidateWorkflowSummary:
         results: list[CandidateQuestionResult],
         model: str,
         dataset: str,
-        config: str,
+        config: str | None,
         split: str,
         n_candidates: int,
         total_time_seconds: float,

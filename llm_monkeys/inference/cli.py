@@ -1,4 +1,11 @@
-from inference.run import async_main, build_config, create_parser, format_summary, main
+from inference.run import (
+    async_main,
+    build_config,
+    create_parser,
+    format_summary,
+    main,
+    parse_args,
+)
 
 __all__ = [
     "async_main",
@@ -6,6 +13,7 @@ __all__ = [
     "create_parser",
     "format_summary",
     "main",
+    "parse_args",
 ]
 
 if __name__ == "__main__":

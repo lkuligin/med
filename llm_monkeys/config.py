@@ -19,9 +19,12 @@ DEFAULT_VERIFIER_MODEL = "gemini-3.8-flash"
 
 SUPPORTED_MODELS: dict[str, str] = {
     "gemma-4-26b": "vertex_ai/google/gemma-4-26b-a4b-it-maas",
+    "google/gemma-4-26b-a4b-it-maas": "vertex_ai/google/gemma-4-26b-a4b-it-maas",
     "gpt-oss-20b": "vertex_ai/openai/gpt-oss-20b-maas",
+    "gpt-oss-20b-maas": "vertex_ai/openai/gpt-oss-20b-maas",
+    "openai/gpt-oss-20b-maas": "vertex_ai/openai/gpt-oss-20b-maas",
     "gemini-3.8-flash": "vertex_ai/gemini-3.8-flash",
-    "gemini-3-flash-preview": "vertex_ai/gemini-3-flash-preview",
+    "gemini-flash-3.8": "vertex_ai/gemini-3.8-flash",
 }
 
 DEFAULT_DATASET = "bigbio/med_qa"
@@ -87,9 +90,34 @@ def resolve_model_name(model_name: str | None) -> str:
     lower = cleaned.lower()
     if lower in SUPPORTED_MODELS:
         return SUPPORTED_MODELS[lower]
+
+    if lower.startswith("vertex_ai/"):
+        unprefixed = lower[len("vertex_ai/") :]
+        if unprefixed in SUPPORTED_MODELS:
+            return SUPPORTED_MODELS[unprefixed]
+        if unprefixed.startswith("gemini-flash-"):
+            candidate = f"gemini-{unprefixed[len('gemini-flash-') :]}-flash"
+            if candidate in SUPPORTED_MODELS:
+                return SUPPORTED_MODELS[candidate]
+            return f"vertex_ai/{candidate}"
+        return cleaned
+
+    if lower.startswith("gemini-flash-"):
+        candidate = f"gemini-{lower[len('gemini-flash-') :]}-flash"
+        if candidate in SUPPORTED_MODELS:
+            return SUPPORTED_MODELS[candidate]
+        return f"vertex_ai/{candidate}"
+
     if lower.startswith("openai/gpt-oss"):
         return f"vertex_ai/{cleaned}"
     if lower.startswith("google/gemma"):
+        return f"vertex_ai/{cleaned}"
+    if lower.startswith("gpt-oss"):
+        model_part = cleaned if cleaned.endswith("-maas") else f"{cleaned}-maas"
+        return f"vertex_ai/openai/{model_part}"
+    if lower.startswith("gemma"):
+        return f"vertex_ai/google/{cleaned}"
+    if lower.startswith("gemini"):
         return f"vertex_ai/{cleaned}"
     return cleaned
 

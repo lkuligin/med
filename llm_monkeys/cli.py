@@ -16,6 +16,7 @@ from config import (
     InferenceConfig,
     is_medbullets_dataset,
     resolve_dataset_name,
+    resolve_model_name,
 )
 from one_shot.workflow import OneShotInferenceWorkflow, WorkflowSummary
 
@@ -43,10 +44,13 @@ def parse_args(
 
 def build_config(args: argparse.Namespace) -> InferenceConfig:
     """Construct an InferenceConfig instance from parsed CLI arguments."""
+    output_arg = getattr(args, "output", "") or ""
     is_medbullets = (
         getattr(args, "medbullets", False)
         or is_medbullets_dataset(getattr(args, "dataset", None))
         or getattr(args, "split", None) == MEDBULLETS_SPLIT
+        or "_mb" in output_arg.lower()
+        or "medbullets" in output_arg.lower()
     )
 
     if is_medbullets:
@@ -84,7 +88,7 @@ def build_config(args: argparse.Namespace) -> InferenceConfig:
         args.output = output_filepath
 
     kwargs = {
-        "model_name": args.model,
+        "model_name": resolve_model_name(args.model),
         "dataset_name": dataset_name,
         "dataset_config": dataset_config,
         "dataset_split": dataset_split,

@@ -6,6 +6,7 @@ from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
+from google.genai import types
 
 from config import InferenceConfig, register_litellm_model_pricing, resolve_model_name
 
@@ -25,6 +26,10 @@ def create_medqa_agent(config: InferenceConfig | None = None) -> Agent:
         name="medqa_evaluator",
         model=LiteLlm(model=model_identifier),
         instruction=cfg.system_instruction,
+        generate_content_config=types.GenerateContentConfig(
+            temperature=cfg.temperature,
+            max_output_tokens=cfg.max_tokens,
+        ),
     )
 
 

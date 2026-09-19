@@ -344,10 +344,10 @@ class OneShotInferenceWorkflow:
 
         os.environ.setdefault("ADK_SUPPRESS_GEMINI_LITELLM_WARNINGS", "true")
         if self.config.project_id:
-            os.environ.setdefault("VERTEXAI_PROJECT", self.config.project_id)
-            os.environ.setdefault("GOOGLE_CLOUD_PROJECT", self.config.project_id)
+            os.environ["VERTEXAI_PROJECT"] = self.config.project_id
+            os.environ["GOOGLE_CLOUD_PROJECT"] = self.config.project_id
         if self.config.location:
-            os.environ.setdefault("VERTEXAI_LOCATION", self.config.location)
+            os.environ["VERTEXAI_LOCATION"] = self.config.location
 
         self.session_service = session_service or InMemorySessionService()
         self.agent = agent or create_medqa_agent(self.config)
