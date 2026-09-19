@@ -220,7 +220,7 @@ class WorkflowSummary:
 
     model: str
     dataset: str
-    config: str
+    config: str | None
     split: str
     n_attempts: int
     total_questions: int
@@ -248,7 +248,7 @@ class WorkflowSummary:
         results: list[InferenceItemResult],
         model: str,
         dataset: str,
-        config: str,
+        config: str | None,
         split: str,
         n_attempts: int,
         total_time_seconds: float,

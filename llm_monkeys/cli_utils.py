@@ -35,14 +35,22 @@ def add_common_arguments(
     """Add standard arguments used across MedQA evaluation workflows."""
     parser.add_argument("--model", default=default_model, help="Model identifier")
     parser.add_argument(
-        "--dataset", default="bigbio/med_qa", help="HuggingFace dataset name"
+        "--dataset",
+        default="bigbio/med_qa",
+        help=(
+            "HuggingFace dataset name or alias (e.g., 'bigbio/med_qa', 'medbullets', 'mkieffer/Medbullets')"
+        ),
     )
     parser.add_argument(
         "--dataset-config",
         default="med_qa_en_source",
-        help="Dataset configuration name",
+        help="Dataset configuration name (default: 'med_qa_en_source' for MedQA; None for MedBullets)",
     )
-    parser.add_argument("--split", default="test", help="Dataset split")
+    parser.add_argument(
+        "--split",
+        default="test",
+        help="Dataset split (default: 'test' for MedQA; 'op5_test' for MedBullets)",
+    )
     parser.add_argument(
         "--limit",
         type=int,

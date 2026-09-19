@@ -24,6 +24,22 @@ SUPPORTED_MODELS: dict[str, str] = {
     "gemini-3-flash-preview": "vertex_ai/gemini-3-flash-preview",
 }
 
+DEFAULT_DATASET = "bigbio/med_qa"
+DEFAULT_DATASET_CONFIG = "med_qa_en_source"
+DEFAULT_DATASET_SPLIT = "test"
+
+MEDBULLETS_DATASET = "mkieffer/Medbullets"
+MEDBULLETS_SPLIT = "op5_test"
+
+SUPPORTED_DATASETS: dict[str, str] = {
+    "med_qa": "bigbio/med_qa",
+    "medqa": "bigbio/med_qa",
+    "bigbio/med_qa": "bigbio/med_qa",
+    "medbullets": "mkieffer/Medbullets",
+    "medbullets_op5": "mkieffer/Medbullets",
+    "mkieffer/medbullets": "mkieffer/Medbullets",
+}
+
 DEFAULT_ONE_SHOT_INSTRUCTION = (
     "You are an expert physician taking a medical licensing board examination. "
     "Answer all questions accurately with careful clinical reasoning."
@@ -78,6 +94,29 @@ def resolve_model_name(model_name: str | None) -> str:
     return cleaned
 
 
+def resolve_dataset_name(dataset_name: str | None) -> str:
+    """Resolve dataset name or alias to canonical Hugging Face dataset identifier."""
+    if not dataset_name or not dataset_name.strip():
+        return DEFAULT_DATASET
+    cleaned = dataset_name.strip()
+    lower = cleaned.lower()
+    if lower in SUPPORTED_DATASETS:
+        return SUPPORTED_DATASETS[lower]
+    return cleaned
+
+
+def is_medbullets_dataset(dataset_name: str | None) -> bool:
+    """Check if a dataset name or alias corresponds to the MedBullets dataset."""
+    if not dataset_name:
+        return False
+    lower = dataset_name.strip().lower()
+    return (
+        "medbullets" in lower
+        or lower == "mkieffer/medbullets"
+        or lower == MEDBULLETS_DATASET.lower()
+    )
+
+
 class WorkloadType(str, Enum):
     """Supported inference workload types."""
 
@@ -103,9 +142,9 @@ class BaseInferenceConfig:
         default_factory=lambda: os.getenv("VERTEXAI_LOCATION", "global")
     )
 
-    dataset_name: str = "bigbio/med_qa"
-    dataset_config: str = "med_qa_en_source"
-    dataset_split: str = "test"
+    dataset_name: str = DEFAULT_DATASET
+    dataset_config: str | None = DEFAULT_DATASET_CONFIG
+    dataset_split: str = DEFAULT_DATASET_SPLIT
     limit: int | None = None
     offset: int = 0
 
@@ -292,6 +331,12 @@ __all__ = [
     "DEFAULT_MODEL",
     "DEFAULT_VERIFIER_MODEL",
     "SUPPORTED_MODELS",
+    "DEFAULT_DATASET",
+    "DEFAULT_DATASET_CONFIG",
+    "DEFAULT_DATASET_SPLIT",
+    "MEDBULLETS_DATASET",
+    "MEDBULLETS_SPLIT",
+    "SUPPORTED_DATASETS",
     "DEFAULT_ONE_SHOT_INSTRUCTION",
     "DEFAULT_FACT_SYSTEM_INSTRUCTION",
     "DEFAULT_ANSWER_SYSTEM_INSTRUCTION",
@@ -305,4 +350,6 @@ __all__ = [
     "create_config",
     "register_litellm_model_pricing",
     "resolve_model_name",
+    "resolve_dataset_name",
+    "is_medbullets_dataset",
 ]

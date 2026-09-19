@@ -7,7 +7,16 @@ import asyncio
 import sys
 
 from cli_utils import add_common_arguments, create_base_parser, setup_logging
-from config import InferenceConfig
+from config import (
+    DEFAULT_DATASET,
+    DEFAULT_DATASET_CONFIG,
+    DEFAULT_DATASET_SPLIT,
+    MEDBULLETS_DATASET,
+    MEDBULLETS_SPLIT,
+    InferenceConfig,
+    is_medbullets_dataset,
+    resolve_dataset_name,
+)
 from one_shot.workflow import OneShotInferenceWorkflow, WorkflowSummary
 
 __all__ = [
@@ -34,14 +43,54 @@ def parse_args(
 
 def build_config(args: argparse.Namespace) -> InferenceConfig:
     """Construct an InferenceConfig instance from parsed CLI arguments."""
+    is_medbullets = (
+        getattr(args, "medbullets", False)
+        or is_medbullets_dataset(getattr(args, "dataset", None))
+        or getattr(args, "split", None) == MEDBULLETS_SPLIT
+    )
+
+    if is_medbullets:
+        dataset_name = (
+            MEDBULLETS_DATASET
+            if (
+                not getattr(args, "dataset", None)
+                or args.dataset == DEFAULT_DATASET
+                or is_medbullets_dataset(args.dataset)
+            )
+            else resolve_dataset_name(args.dataset)
+        )
+        dataset_config = (
+            None
+            if getattr(args, "dataset_config", None) == DEFAULT_DATASET_CONFIG
+            else getattr(args, "dataset_config", None)
+        )
+        dataset_split = (
+            MEDBULLETS_SPLIT
+            if (not getattr(args, "split", None) or args.split == "test")
+            else args.split
+        )
+        output_filepath = (
+            "results_one_shot_medbullets.json"
+            if getattr(args, "output", "") == "results_one_shot_gemma4.json"
+            else getattr(args, "output", "results_one_shot_medbullets.json")
+        )
+    else:
+        dataset_name = resolve_dataset_name(getattr(args, "dataset", None))
+        dataset_config = getattr(args, "dataset_config", DEFAULT_DATASET_CONFIG)
+        dataset_split = getattr(args, "split", DEFAULT_DATASET_SPLIT)
+        output_filepath = getattr(args, "output", "results_one_shot_gemma4.json")
+
+    if hasattr(args, "output"):
+        args.output = output_filepath
+
     kwargs = {
         "model_name": args.model,
-        "dataset_name": args.dataset,
-        "dataset_config": args.dataset_config,
-        "dataset_split": args.split,
+        "dataset_name": dataset_name,
+        "dataset_config": dataset_config,
+        "dataset_split": dataset_split,
         "limit": args.limit,
         "offset": args.offset,
-        "output_filepath": args.output,
+        "output_filepath": output_filepath,
         "n_attempts": getattr(args, "n_attempts", 3),
         "concurrency": args.concurrency,
         "max_parse_retries": args.max_parse_retries,
@@ -51,20 +100,21 @@ def build_config(args: argparse.Namespace) -> InferenceConfig:
         "temperature": args.temperature,
         "max_tokens": args.max_tokens,
     }
-    if args.project:
+    if getattr(args, "project", None):
         kwargs["project_id"] = args.project
-    if args.location:
+    if getattr(args, "location", None):
         kwargs["location"] = args.location
     return InferenceConfig(**kwargs)
 
 
 def format_summary(summary: WorkflowSummary, output_path: str) -> str:
     """Format workflow summary statistics into a printable string."""
+    config_str = f"{summary.config}, " if summary.config else ""
     return (
         f"\n{'=' * 60}\n"
         f"INFERENCE SUMMARY:\n"
         f"Model: {summary.model}\n"
-        f"Dataset: {summary.dataset} ({summary.config}, split={summary.split})\n"
+        f"Dataset: {summary.dataset} ({config_str}split={summary.split})\n"
         f"Attempts per Question (n): {summary.n_attempts}\n"
         f"Total Questions: {summary.total_questions}\n"
         f"Completed: {summary.completed}\n"
@@ -84,7 +134,7 @@ async def async_main(args: argparse.Namespace) -> int:
     setup_logging(args.log_level)
     config = build_config(args)
     summary, _ = await OneShotInferenceWorkflow(config=config).run()
-    print(format_summary(summary, args.output))
+    print(format_summary(summary, config.output_filepath))
     return 0 if summary.failed == 0 else 1
 
 
