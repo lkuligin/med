@@ -184,3 +184,8 @@ gdanschin_runtime/supplementary/
 
 # macOS directory metadata
 .DS_Store
+
+# The default store writes here when nothing says otherwise, so a run started
+# from the repository root leaves its output in the working tree.
+results_*.json
+llm_monkeys/results_*.json

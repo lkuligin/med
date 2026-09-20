@@ -15,6 +15,11 @@ export MEDQA_DIFFICULT_CANDIDATE="data/difficult_questions.candidate.csv"
 # the stock CLIs reach for Vertex credentials we do not have.
 export MEDQA_MODEL_FACTORY="gdanschin_runtime.adapters.factory:build"
 
+# Keep a directory per run, one file per record, instead of rewriting one big
+# JSON after every question. Unset, llm_monkeys writes the single file its
+# authors wrote, which is what anyone outside this runtime gets.
+export MEDQA_RESULTS_STORE="results_store:per_record"
+
 # ADK suggests its native Gemini integration whenever a gemini model goes
 # through LiteLLM. Here it has to: the gateway speaks the LiteLLM dialect.
 export ADK_SUPPRESS_GEMINI_LITELLM_WARNINGS=true
