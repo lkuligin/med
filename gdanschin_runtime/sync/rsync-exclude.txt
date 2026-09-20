@@ -23,6 +23,7 @@
 data/
 # experiment outputs: json, csv, plots
 results/
+exports/
 # model and dataset caches (point HF_HOME here)
 cache/
 # run logs

@@ -189,3 +189,6 @@ gdanschin_runtime/supplementary/
 # from the repository root leaves its output in the working tree.
 results_*.json
 llm_monkeys/results_*.json
+
+# Runs assembled back into the single-file layout, for reading elsewhere.
+exports/
