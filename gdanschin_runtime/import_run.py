@@ -52,6 +52,18 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     dataset = dataset_dir_for(args.dataset)
 
+    # The reference marks MedBullets in the file name, and that mark is the
+    # only thing saying which questions the records answer. Taking it as a
+    # correction would be guessing; disagreeing quietly would file them under
+    # the wrong dataset, which nothing later could detect.
+    named = [str(p) for p in (args.step1, args.step2, args.step3) if p]
+    looks_like_mb = any("_mb" in p.lower() or "medbullets" in p.lower() for p in named)
+    if looks_like_mb != (dataset == "medbullets"):
+        print(f"the file names say {'MedBullets' if looks_like_mb else 'MedQA'} "
+              f"but --dataset says {dataset}; name the dataset that matches",
+              file=sys.stderr)
+        return 2
+
     if args.step1:
         payload = _payload(args.step1)
         OneShotResults(args.results_dir, args.run, dataset).save(payload)

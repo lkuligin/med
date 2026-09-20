@@ -36,6 +36,18 @@ from results_store import (
 
 RESULTS = _bootstrap.LLM_MONKEYS_ROOT / "results"
 
+# The reference puts the dataset in the file name and reads it back out of
+# there - inference/run.py decides a run is MedBullets when "_mb" or
+# "medbullets" appears in the path it was given. So an export has to carry the
+# same mark, or the file we hand over is read as the wrong dataset; and two
+# runs of one model on two datasets would land on the same name.
+DATASET_SUFFIX = {"med_qa": "", "medbullets": "_mb"}
+
+
+def _suffix(dataset: str) -> str:
+    """What to append to an exported file name for this dataset."""
+    return DATASET_SUFFIX.get(dataset, f"_{dataset}")
+
 
 def _write(path: Path, payload: dict[str, Any]) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -124,11 +136,12 @@ def main(argv: list[str] | None = None) -> int:
         out_dir = _bootstrap.LLM_MONKEYS_ROOT / out_dir
 
     written: list[Path] = []
-    one_shot = export_one_shot(run, out_dir / f"results_one_shot_{run}.json", dataset)
+    mark = _suffix(dataset)
+    one_shot = export_one_shot(run, out_dir / f"results_one_shot_{run}{mark}.json", dataset)
     if one_shot:
         written.append(one_shot)
     candidates = export_candidates(
-        run, out_dir / f"results_step2_{run}_candidates.json", dataset)
+        run, out_dir / f"results_step2_{run}_candidates{mark}.json", dataset)
     if candidates:
         written.append(candidates)
 
@@ -136,7 +149,7 @@ def main(argv: list[str] | None = None) -> int:
               else VerificationResults(RESULTS, run, "", dataset).judges())
     for judge in judges:
         path = export_verdicts(
-            run, judge, out_dir / f"results_step3_{run}_{judge}.json", dataset)
+            run, judge, out_dir / f"results_step3_{run}_{judge}{mark}.json", dataset)
         if path:
             written.append(path)
 
