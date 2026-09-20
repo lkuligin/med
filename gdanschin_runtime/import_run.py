@@ -36,7 +36,11 @@ def _payload(path: str | Path) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--results-dir", default=DEFAULT_RESULTS_DIR)
+    # The same place every other tool here reads from. The store's own default
+    # is relative to the working directory, which quietly puts a run wherever
+    # the command happened to be typed.
+    parser.add_argument("--results-dir",
+                        default=str(_bootstrap.LLM_MONKEYS_ROOT / DEFAULT_RESULTS_DIR))
     parser.add_argument("--run", required=True, help="name to store the run under")
     parser.add_argument("--judge", help="name to store the verdicts under")
     parser.add_argument("--step1")
