@@ -1,11 +1,16 @@
-"""That each model is asked of the pool that serves it.
+"""That each model is asked of the gateway that serves it.
 
-The two gateways are not interchangeable. Generation goes to the internal one,
-which showed no rate limit and saturates around eight concurrent; judging goes
-to the external one, where Gemini lives behind a per-user limit on requests in
-flight. Sending step 2 to the external gateway spends the quota the judge
-needs, and the internal one does not serve Gemini at all - so a model that
-quietly moves pools either fails outright or starves the other step.
+The pool follows the provider a name resolves to, not the job the model is
+doing. Anything the internal gateway serves is reached at its own provider
+path; vendor models, and the sglang deployment, live on the external one. That
+today's base models all happen to sit on the internal gateway and today's
+judge is a vendor model is a fact about the current set, not a rule - a vendor
+model can be a base model and an open-weight one can judge.
+
+Getting it wrong is not cosmetic. The internal gateway does not serve Gemini
+at all, and the external one holds a per-user limit on requests in flight, so
+a model that quietly changes pools either fails outright or spends the quota
+another step is relying on.
 
 No credentials are read here: the pools are stubbed, and which one was asked
 for is what the tests assert.
@@ -24,6 +29,18 @@ from gdanschin_runtime.models import BASE_MODELS, JUDGE_MODELS  # noqa: E402
 POOLS = {"internal": ("https://internal.test", "token-internal"),
          "external": ("https://external.test", "token-external")}
 
+# Where each name we run today is served. Kept as data rather than derived, so
+# that a model moving pools has to be written down deliberately - which is the
+# only way anyone would notice it moved.
+EXPECTED_POOL = {
+    "gemma-4-26b-internal": "internal",
+    "gpt-oss-120b": "internal",
+    "deepseek-v4-flash": "internal",
+    "qwen3.6-27b-noreasoning": "internal",
+    "qwen3.8-27b-noreasoning": "internal",
+    "gemini-3.8-flash": "external",
+}
+
 
 @pytest.fixture(autouse=True)
 def stubbed_pools(monkeypatch):
@@ -38,36 +55,59 @@ def stubbed_pools(monkeypatch):
     return asked
 
 
-def pool_of(kwargs: dict) -> str:
-    """Which gateway a set of completion arguments points at."""
+def pool_of(model: str) -> str:
+    """Which gateway this model would be asked of."""
+    api_base = gateway.completion_kwargs(model)["api_base"]
     for kind, (url, _) in POOLS.items():
-        if kwargs["api_base"].startswith(url):
+        if api_base.startswith(url):
             return kind
-    raise AssertionError(f"neither pool: {kwargs['api_base']}")
+    raise AssertionError(f"neither pool: {api_base}")
 
 
-@pytest.mark.parametrize("entry", list(BASE_MODELS.values()), ids=lambda e: e.name)
-def test_every_base_model_is_generated_on_the_internal_pool(entry):
-    assert pool_of(gateway.completion_kwargs(entry.gateway_model)) == "internal"
+@pytest.mark.parametrize("model,expected", sorted(EXPECTED_POOL.items()))
+def test_each_model_is_served_by_the_pool_it_is_meant_to_be(model, expected):
+    assert pool_of(model) == expected
 
 
-@pytest.mark.parametrize("entry", list(JUDGE_MODELS.values()), ids=lambda e: e.name)
-def test_every_judge_is_asked_of_the_external_pool(entry):
-    """Gemini is only served there, and its limit is the reason judging is kept
-    apart from generation in the first place."""
-    assert pool_of(gateway.completion_kwargs(entry.gateway_model)) == "external"
+@pytest.mark.parametrize("entry", list(BASE_MODELS.values()) + list(JUDGE_MODELS.values()),
+                         ids=lambda e: e.name)
+def test_every_model_in_the_registry_has_a_pool_written_down(entry):
+    """A new entry has to say where it is served, rather than inherit whichever
+    pool the neighbouring models happen to use."""
+    assert entry.gateway_model in EXPECTED_POOL, (
+        f"{entry.name} is not in EXPECTED_POOL: say which gateway serves it"
+    )
+    assert pool_of(entry.gateway_model) == EXPECTED_POOL[entry.gateway_model]
+
+
+def test_the_pool_follows_the_provider_not_the_job():
+    """A vendor model judging and a vendor model answering are the same call to
+    the same gateway; so are an open-weight model in either role."""
+    assert pool_of("gemini-3.8-flash") == "external"      # vendor, whatever it does
+    assert pool_of("gpt-oss-120b") == "internal"          # open weights, likewise
+
+
+def test_a_provider_the_gateway_does_not_list_is_taken_to_be_internal():
+    """Open-weight models arrive on the internal gateway as their own provider,
+    at /proxy/<provider>/v1, and the list of them is expected to grow."""
+    kwargs = gateway.completion_kwargs("some-new-model/org/Some-New-Model")
+
+    assert kwargs["api_base"] == "https://internal.test/proxy/some-new-model/v1"
+    assert kwargs["model"] == "openai/org/Some-New-Model"
+
+
+@pytest.mark.parametrize("model", ["openai/gpt-4o", "anthropic/claude-3", "xai/grok"])
+def test_a_named_vendor_provider_is_external(model):
+    assert pool_of(model) == "external"
 
 
 def test_the_two_gemmas_are_different_models_on_different_pools():
-    """gemma-4-26b is served externally through sglang and
-    gemma-4-26b-internal by the internal gateway. models.py names the second
-    on purpose: the alias without the suffix would move generation onto the
-    judge's quota without changing a single visible name."""
-    external = gateway.completion_kwargs("gemma-4-26b")
-    internal = gateway.completion_kwargs("gemma-4-26b-internal")
-
-    assert pool_of(external) == "external"
-    assert pool_of(internal) == "internal"
+    """gemma-4-26b is the sglang deployment on the external gateway;
+    gemma-4-26b-internal is the internal one. models.py names the second on
+    purpose: the alias without the suffix would move generation onto the
+    external gateway's quota without changing a single visible name."""
+    assert pool_of("gemma-4-26b") == "external"
+    assert pool_of("gemma-4-26b-internal") == "internal"
     assert BASE_MODELS["gemma-4-26b"].gateway_model == "gemma-4-26b-internal"
 
 
