@@ -41,6 +41,31 @@ MODEL_MAP: dict[str, str] = {
 }
 
 
+def _register_gateway_names() -> None:
+    """Teach llm_monkeys that our gateway names are already canonical.
+
+    resolve_model_name() turns anything it does not recognise into a Vertex AI
+    identifier - "gpt-oss-120b" becomes "vertex_ai/openai/gpt-oss-120b-maas",
+    "gemma-4-26b-internal" becomes "vertex_ai/google/gemma-4-26b-internal" -
+    and then neither the gateway nor this map knows what to do with it. The
+    names we serve are not Vertex names, so they are registered as resolving to
+    themselves: routing stays right, and so does the model recorded in a run's
+    summary, which is the part nothing downstream could otherwise check.
+
+    Mutating the reference's table rather than editing it keeps this where it
+    belongs - the same thing register_litellm_model_pricing() does to litellm.
+    """
+    from config import SUPPORTED_MODELS
+
+    from gdanschin_runtime.models import BASE_MODELS, JUDGE_MODELS
+
+    for entry in list(BASE_MODELS.values()) + list(JUDGE_MODELS.values()):
+        SUPPORTED_MODELS.setdefault(entry.gateway_model.lower(), entry.gateway_model)
+
+
+_register_gateway_names()
+
+
 def gateway_name(model_name: str) -> str:
     """Translate an llm_monkeys model name into a gateway one."""
     if model_name in MODEL_MAP:
