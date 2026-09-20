@@ -31,6 +31,8 @@ PY="$REPO/.venv/bin/python"
 MONKEYS="$REPO/llm_monkeys"
 LOGS="$REPO/logs"
 
+# The dataset decides the questions and the directory the runs are kept in.
+DATASET_NAME="${MEDQA_DATASET:-bigbio/med_qa}"
 BASE="${MEDQA_BASE_MODEL:-gemma-4-26b}"
 JUDGE="${MEDQA_JUDGE_MODEL:-gemini-3.8-flash}"
 COMMAND=""
@@ -64,10 +66,11 @@ if [[ "$COMMAND" == "status" ]]; then
 import sys
 sys.path.insert(0, '$REPO')
 from gdanschin_runtime import _bootstrap
-from results_store import CandidateResults, OneShotResults, VerificationResults
-one_shot = OneShotResults('$MONKEYS/results', '$BASE')
-candidates = CandidateResults('$MONKEYS/results', '$BASE')
-verdicts = VerificationResults('$MONKEYS/results', '$BASE', '$JUDGE')
+from results_store import CandidateResults, OneShotResults, VerificationResults, dataset_dir_for
+dataset = dataset_dir_for('$DATASET_NAME')
+one_shot = OneShotResults('$MONKEYS/results', '$BASE', dataset)
+candidates = CandidateResults('$MONKEYS/results', '$BASE', dataset)
+verdicts = VerificationResults('$MONKEYS/results', '$BASE', '$JUDGE', dataset)
 qs = candidates.questions()
 answered = len(list(one_shot.directory.glob('question_*.json'))) if one_shot.directory.is_dir() else 0
 print(f'  answered   {answered} questions one shot')
@@ -89,11 +92,13 @@ source "$HERE/env.sh"
 export MEDQA_BASE_MODEL="$BASE" MEDQA_JUDGE_MODEL="$JUDGE"
 mkdir -p "$LOGS"
 
+echo "dataset    $DATASET_NAME"
 echo "base       $BASE   judge $JUDGE"
 echo "generation -> results/facts-pipeline/$BASE   internal gateway, concurrency $GEN_CONCURRENCY"
 cd "$MONKEYS"
 setsid nohup "$PY" -m inference.cli --concurrency "$GEN_CONCURRENCY" \
-    --run-name "$BASE" "${PASS[@]}" > "$LOGS/step2.log" 2>&1 < /dev/null &
+    --run-name "$BASE" --dataset "$DATASET_NAME" "${PASS[@]}" \
+    > "$LOGS/step2.log" 2>&1 < /dev/null &
 echo "  pid $!"
 
 # --judge-name only names the directory verdicts are stored in; the model and
@@ -115,6 +120,7 @@ setsid nohup bash -c '
     while true; do
         generating=$(pgrep -f "[i]nference.cli" >/dev/null && echo yes || echo no)
         "'"$PY"'" -m verifier.cli --run-name "'"$BASE"'" --judge-name "'"$JUDGE"'" \
+            --dataset "'"$DATASET_NAME"'" \
             --model "'"$JUDGE_MODEL"'" --temperature '"$JUDGE_TEMPERATURE"' \
             --max-tokens '"$JUDGE_MAX_TOKENS"' \
             --concurrency '"$JUDGE_CONCURRENCY"' >> "'"$LOGS"'/step3.log" 2>&1 || true

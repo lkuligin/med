@@ -40,12 +40,38 @@ from results_store import (
 WIDTH = 100
 RESULTS_DIR = _bootstrap.LLM_MONKEYS_ROOT / "results"
 
+# Which dataset's runs everything below reads. The layout keeps one directory
+# per dataset, because a question id means nothing without it, and comparing a
+# run on one against a run on the other would be comparing different questions.
+DATASET = "med_qa"
+
+
+def use_dataset(name: str) -> None:
+    """Read the runs stored for this dataset from here on.
+
+        use_dataset('medbullets')
+
+    catalogue() lists every dataset whatever this is set to.
+    """
+    global DATASET
+    from results_store import dataset_dir_for
+
+    DATASET = dataset_dir_for(name)
+    print(f"# reading runs stored under {DATASET}")
+
+
+def datasets() -> list[str]:
+    """Datasets that have runs stored."""
+    if not RESULTS_DIR.is_dir():
+        return []
+    return sorted(d.name for d in RESULTS_DIR.iterdir() if d.is_dir())
+
 
 def _resolve_base(base: str | None, section: str = FACTS_PIPELINE) -> str:
     """The run to look at: the only one stored, unless told which."""
     if base:
         return base
-    root = RESULTS_DIR / section
+    root = RESULTS_DIR / DATASET / section
     found = sorted(d.name for d in root.iterdir() if d.is_dir()) if root.is_dir() else []
     if len(found) == 1:
         return found[0]
@@ -66,7 +92,7 @@ def _resolve_run(base: str | None) -> str:
         return base
     found: set[str] = set()
     for section in (FACTS_PIPELINE, SINGLE_STEP):
-        root = RESULTS_DIR / section
+        root = RESULTS_DIR / DATASET / section
         if root.is_dir():
             found |= {d.name for d in root.iterdir() if d.is_dir()}
     if len(found) == 1:
@@ -79,7 +105,7 @@ def _resolve_run(base: str | None) -> str:
 def _resolve_judge(base: str, judge: str | None) -> str | None:
     if judge:
         return judge
-    found = VerificationResults(RESULTS_DIR, base, "").judges()
+    found = VerificationResults(RESULTS_DIR, base, "", DATASET).judges()
     if len(found) == 1:
         return found[0]
     if not found:
@@ -119,13 +145,13 @@ def load(base: str | None = None, judge: str | None = None,
         return data["results"] if isinstance(data, dict) and "results" in data else data
     base = _resolve_base(base)
     print(f"# {base}" + (f"   judged by {judge}" if judge else ""))
-    stored = CandidateResults(RESULTS_DIR, base).load()
+    stored = CandidateResults(RESULTS_DIR, base, DATASET).load()
     return Run((stored or {"results": []})["results"], base, judge)
 
 
 def load_step1(base: str | None = None) -> dict[str, dict[str, Any]]:
     """The one-shot run for a model, keyed by question id."""
-    return OneShotResults(RESULTS_DIR, _resolve_base(base, SINGLE_STEP)).read()
+    return OneShotResults(RESULTS_DIR, _resolve_base(base, SINGLE_STEP, DATASET)).read()
 
 
 def load_verified(base: str | None = None,
@@ -135,35 +161,36 @@ def load_verified(base: str | None = None,
     judge = _resolve_judge(base, judge)
     if judge is None:
         return []
-    stored = VerificationResults(RESULTS_DIR, base, judge).load()
+    stored = VerificationResults(RESULTS_DIR, base, judge, DATASET).load()
     return (stored or {"results": []})["results"]
 
 
 def judges(base: str | None = None) -> list[str]:
     """Judges that have verdicts stored for a run."""
-    return VerificationResults(RESULTS_DIR, _resolve_base(base), "").judges()
+    return VerificationResults(RESULTS_DIR, _resolve_base(base), "", DATASET).judges()
 
 
-def stored_runs() -> dict[str, dict[str, Any]]:
+def stored_runs(dataset: str | None = None) -> dict[str, dict[str, Any]]:
     """What is on disk, per run name: step 1, step 2 and who judged it.
 
     Keyed by run name rather than by model, because a name is what every
     function here takes - and because a run name need not be a model name: a
     model measured twice under different settings is two runs.
     """
+    dataset = dataset or DATASET
     found: dict[str, dict[str, Any]] = {}
-    one_shot_root = RESULTS_DIR / SINGLE_STEP
+    one_shot_root = RESULTS_DIR / dataset / SINGLE_STEP
     if one_shot_root.is_dir():
         for directory in sorted(one_shot_root.iterdir()):
             if directory.is_dir():
-                found.setdefault(directory.name, {})["one_shot"] = _one_shot_stored(
-                    directory.name)
-    candidates_root = RESULTS_DIR / FACTS_PIPELINE
+                found.setdefault(directory.name, {})["one_shot"] = sum(
+                    1 for _ in directory.glob("question_*.json"))
+    candidates_root = RESULTS_DIR / dataset / FACTS_PIPELINE
     if candidates_root.is_dir():
         for directory in sorted(candidates_root.iterdir()):
             if not directory.is_dir():
                 continue
-            store = CandidateResults(RESULTS_DIR, directory.name)
+            store = CandidateResults(RESULTS_DIR, directory.name, dataset)
             questions = store.questions()
             row = found.setdefault(directory.name, {})
             row["questions"] = len(questions)
@@ -172,7 +199,7 @@ def stored_runs() -> dict[str, dict[str, Any]]:
             row["judges"] = {
                 judge: sum(1 for q in questions
                            if (store.question_dir(q) / judge).is_dir())
-                for judge in VerificationResults(RESULTS_DIR, directory.name, "").judges()
+                for judge in VerificationResults(RESULTS_DIR, directory.name, "", dataset).judges()
             }
     return found
 
@@ -186,6 +213,12 @@ def catalogue() -> None:
     usually a run kept under a name of its own.
     """
     from gdanschin_runtime.models import BASE_MODELS, JUDGE_MODELS
+
+    for name in datasets():
+        runs = stored_runs(name)
+        mark = "  <- in force" if name == DATASET else ""
+        print(f"DATASET {name}{mark}: {', '.join(runs) if runs else 'nothing stored'}")
+    print("  use_dataset(<name>) to read another\n")
 
     stored = stored_runs()
 
@@ -363,7 +396,7 @@ def _one_shot(base: str | None, qids) -> tuple[float, int] | None:
     """
     if not base:
         return None
-    records = OneShotResults(RESULTS_DIR, base).read()
+    records = OneShotResults(RESULTS_DIR, base, DATASET).read()
     picked = [records[str(q)] for q in qids if str(q) in records]
     if not picked:
         return None
@@ -407,7 +440,7 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     # sets so they can be compared with each other; this one says how the model
     # does on its own, over the whole run.
     if base:
-        records = OneShotResults(RESULTS_DIR, base).read()
+        records = OneShotResults(RESULTS_DIR, base, DATASET).read()
         if records:
             whole = _one_shot(base, list(records))
             print(f"  STEP 1, WHOLE RUN ({whole[1]} questions answered once)")
@@ -484,7 +517,7 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
 def step1(base: str | None = None) -> None:
     """The one-shot baseline on its own: accuracy, and what went wrong."""
     base = _resolve_base(base, SINGLE_STEP)
-    records = OneShotResults(RESULTS_DIR, base).read()
+    records = OneShotResults(RESULTS_DIR, base, DATASET).read()
     if not records:
         print(f"  nothing stored for {base}")
         return
@@ -503,7 +536,7 @@ def step1(base: str | None = None) -> None:
 
 def one_shot_runs() -> list[str]:
     """Every model that has a step 1 run stored."""
-    root = RESULTS_DIR / SINGLE_STEP
+    root = RESULTS_DIR / DATASET / SINGLE_STEP
     if not root.is_dir():
         return []
     return sorted(d.name for d in root.iterdir() if d.is_dir())
@@ -517,7 +550,7 @@ def _one_shot_run(base: str) -> dict[str, Any]:
     question is measured the same way as a run with one. With one attempt the
     two agree, and the score is 0 or 1.
     """
-    store = OneShotResults(RESULTS_DIR, base)
+    store = OneShotResults(RESULTS_DIR, base, DATASET)
     records = store.read()
     summary = store.read_summary() or {}
     scores, tokens, seconds = {}, [], []
@@ -701,7 +734,9 @@ def _difficult_total(default: int = 483) -> int:
     """How many questions a run covers, from the list the pipeline works on."""
     from inference._dataset import load_difficult_question_ids
 
-    for name in ("difficult_questions.csv", "data/difficult_questions.candidate.csv"):
+    names = (("difficult_questions_mb.csv",) if DATASET == "medbullets"
+             else ("difficult_questions.csv", "data/difficult_questions.candidate.csv"))
+    for name in names:
         path = _bootstrap.LLM_MONKEYS_ROOT / name
         if path.is_file():
             return len(load_difficult_question_ids(path))
@@ -716,7 +751,7 @@ def _one_shot_stored(base: str) -> int:
     the slowest thing in it. A record is written once, whole, so its existence
     is enough.
     """
-    directory = OneShotResults(RESULTS_DIR, base).directory
+    directory = OneShotResults(RESULTS_DIR, base, DATASET).directory
     if not directory.is_dir():
         return 0
     return sum(1 for _ in directory.glob("question_*.json"))
@@ -747,9 +782,9 @@ def progress(base: str | None = None, judge: str | None = None,
     # Counting files and directories rather than parsing anything: this is
     # meant to be re-run every few seconds while a run is in flight.
     answered = _one_shot_stored(base)
-    attempts = (OneShotResults(RESULTS_DIR, base).read_summary()
+    attempts = (OneShotResults(RESULTS_DIR, base, DATASET).read_summary()
                 or {}).get("n_attempts") or 1
-    candidates = CandidateResults(RESULTS_DIR, base)
+    candidates = CandidateResults(RESULTS_DIR, base, DATASET)
     questions = candidates.questions()
     counts = [candidates.candidate_count(q) for q in questions]
     # A question's directory appears with its first candidate, so counting
@@ -825,8 +860,8 @@ def verified_curve(base: str | None = None, judge: str | None = None,
     if judge is None:
         raise FileNotFoundError(f"no verdicts stored for {base}")
 
-    candidates_store = CandidateResults(RESULTS_DIR, base)
-    verdicts_store = VerificationResults(RESULTS_DIR, base, judge)
+    candidates_store = CandidateResults(RESULTS_DIR, base, DATASET)
+    verdicts_store = VerificationResults(RESULTS_DIR, base, judge, DATASET)
 
     questions = []
     for qid in candidates_store.questions():
@@ -974,7 +1009,7 @@ def monkeys_curve(base: str | None = None, judge: str | None = None,
 
     base = _resolve_base(base)
     judge = _resolve_judge(base, judge)
-    candidates = CandidateResults(RESULTS_DIR, base)
+    candidates = CandidateResults(RESULTS_DIR, base, DATASET)
     one_shot = _one_shot(base, candidates.questions())
     counted = sum(1 for q in candidates.questions()
                   if (candidates.question_dir(q) / judge).is_dir())
@@ -1088,7 +1123,7 @@ def vote_curve(results: list[dict], max_k: int = 20, trials: int = 40,
             for i, k in enumerate(ks)}
 
 
-__all__ = ["load", "load_step1", "load_verified", "overview", "question",
+__all__ = ["use_dataset", "datasets", "load", "load_step1", "load_verified", "overview", "question",
            "candidate", "facts_stats", "step1", "compare_step1", "one_shot_runs",
            "catalogue", "judges", "stored_runs",
            "accuracy", "progress", "monkeys_curve", "verified_curve", "vote_curve"]

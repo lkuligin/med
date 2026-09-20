@@ -30,7 +30,12 @@ from typing import Callable
 from gdanschin_runtime import _bootstrap
 from gdanschin_runtime.models import BASE_MODELS, JUDGE_MODELS
 
-from results_store import CandidateResults, OneShotResults, VerificationResults
+from results_store import (
+    CandidateResults,
+    OneShotResults,
+    VerificationResults,
+    dataset_dir_for,
+)
 
 REPO = Path(__file__).resolve().parents[1]
 MONKEYS = REPO / "llm_monkeys"
@@ -41,6 +46,13 @@ LOG = REPO / "logs" / "plan.log"
 GEN_CONCURRENCY = int(os.getenv("GEN_CONCURRENCY", "8"))
 JUDGE_CONCURRENCY = int(os.getenv("JUDGE_CONCURRENCY", "32"))
 JUDGE = os.getenv("MEDQA_JUDGE_MODEL", "gemini-3.8-flash")
+# Which dataset the whole plan is about. It decides the questions, the list of
+# difficult ones, and the directory the runs are kept in - a plan cannot be
+# half one dataset and half another, so it is read once, here.
+DATASET_NAME = os.getenv("MEDQA_DATASET", "bigbio/med_qa")
+DATASET = dataset_dir_for(DATASET_NAME)
+DIFFICULT_QUESTIONS = ("difficult_questions_mb.csv" if DATASET == "medbullets"
+                       else "difficult_questions.csv")
 # Temperature comes from the judge's entry in models.py, and this overrides it
 # for one run without inventing a registry entry for a setting being tried out.
 # A judge run at a temperature other than its own is stored under a name of its
@@ -86,11 +98,14 @@ class Step:
         if self.kind == "one-shot":
             return [PYTHON, str(REPO / "gdanschin_runtime" / "run_step1.py"),
                     "--base", self.base, "--max-tokens", str(model.max_tokens),
+                    "--dataset", DATASET_NAME,
+                    "--difficult-questions", DIFFICULT_QUESTIONS,
                     "--concurrency", str(GEN_CONCURRENCY)]
         if self.kind == "candidates":
             return [PYTHON, "-m", "inference.cli",
                     "--model", model.gateway_model, "--run-name", self.base,
-                    "--difficult-questions", "difficult_questions.csv",
+                    "--difficult-questions", DIFFICULT_QUESTIONS,
+                    "--dataset", DATASET_NAME,
                     "--n-candidates", str(self.target),
                     "--concurrency", str(GEN_CONCURRENCY),
                     "--max-tokens", str(model.max_tokens)]
@@ -103,14 +118,15 @@ class Step:
                 "--model", judge.gateway_model,
                 "--temperature", str(judge_temperature()),
                 "--max-tokens", str(judge.max_tokens),
+                "--dataset", DATASET_NAME,
                 "--concurrency", str(JUDGE_CONCURRENCY)]
 
     def done_and_total(self, questions: int) -> tuple[float, float, str]:
         """(done, total, unit) for the progress line."""
         if self.kind == "one-shot":
-            store = OneShotResults(RESULTS, self.base)
+            store = OneShotResults(RESULTS, self.base, DATASET)
             return len(store.read()), questions, "questions"
-        candidates = CandidateResults(RESULTS, self.base)
+        candidates = CandidateResults(RESULTS, self.base, DATASET)
         ids = candidates.questions()
         if self.kind == "candidates":
             stored = sum(candidates.candidate_count(q) for q in ids)
@@ -142,7 +158,7 @@ def remaining_candidates(step: Step, questions: int) -> int:
     """How many candidates this step still has to generate."""
     if step.kind != "candidates":
         return 0
-    store = CandidateResults(RESULTS, step.base)
+    store = CandidateResults(RESULTS, step.base, DATASET)
     stored = {q: store.candidate_count(q) for q in store.questions()}
     return sum(max(step.target - stored.get(str(q), 0), 0)
                for q in _question_ids(questions))
@@ -151,7 +167,7 @@ def remaining_candidates(step: Step, questions: int) -> int:
 def _question_ids(questions: int) -> list[str]:
     from inference._dataset import load_difficult_question_ids
 
-    ids = load_difficult_question_ids(MONKEYS / "difficult_questions.csv")
+    ids = load_difficult_question_ids(MONKEYS / DIFFICULT_QUESTIONS)
     return list(ids)[:questions]
 
 
@@ -175,7 +191,7 @@ def forecast(steps: list[Step], questions: int,
         if step.kind == "verdicts":
             seconds = 0.0  # judged alongside generation, so it adds no wall clock
         elif step.kind == "one-shot":
-            stored = len(OneShotResults(RESULTS, step.base).read())
+            stored = len(OneShotResults(RESULTS, step.base, DATASET).read())
             seconds = max(questions - stored, 0) * SECONDS_PER_ONE_SHOT_QUESTION
         else:
             have = projected.get(step.base)
@@ -199,7 +215,7 @@ def log(message: str) -> None:
 def difficult_total() -> int:
     from inference._dataset import load_difficult_question_ids
 
-    return len(load_difficult_question_ids(MONKEYS / "difficult_questions.csv"))
+    return len(load_difficult_question_ids(MONKEYS / DIFFICULT_QUESTIONS))
 
 
 def watch(step: Step, questions: int, started: float, stop: threading.Event,
@@ -248,7 +264,7 @@ def spawn(step: Step) -> subprocess.Popen:
 
 def stored_candidates(base: str) -> int:
     """How many candidates are on disk for a run, right now."""
-    store = CandidateResults(RESULTS, base)
+    store = CandidateResults(RESULTS, base, DATASET)
     return sum(store.candidate_count(q) for q in store.questions())
 
 

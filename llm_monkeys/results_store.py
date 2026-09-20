@@ -1,8 +1,8 @@
 """On-disk layout for the results of the three workflow steps.
 
-    <results>/single-step/<run>/question_{n}.json
-    <results>/facts-pipeline/<run>/question_{n}/iteration_{i}.json
-    <results>/facts-pipeline/<run>/question_{n}/<judge>/iteration_{i}.json
+    <results>/<dataset>/single-step/<run>/question_{n}.json
+    <results>/<dataset>/facts-pipeline/<run>/question_{n}/iteration_{i}.json
+    <results>/<dataset>/facts-pipeline/<run>/question_{n}/<judge>/iteration_{i}.json
 
 One file per record rather than one file per run. A run used to rewrite its
 entire output after every question, so a long run rewrote a file of tens of
@@ -11,6 +11,10 @@ copy. Here a record is written once, atomically, and never touched again:
 resuming a run costs only the records that are new, extending one to more
 candidates adds files rather than rewriting everything, and a reader always
 sees whole records.
+
+`<dataset>` comes first because a question id means nothing without it: MedQA
+and MedBullets both number their questions from zero, and a run of one stored
+beside a run of the other would silently answer the wrong questions.
 
 `<run>` names the model whose answers these are, and `<judge>` the model that
 verified them, so several models can be measured on the same questions without
@@ -30,6 +34,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 DEFAULT_RESULTS_DIR = "results"
+DEFAULT_DATASET_DIR = "med_qa"
 DEFAULT_ONE_SHOT_FILE = "results_one_shot_gemma4.json"
 DEFAULT_CANDIDATES_FILE = "results_step2_gemma4_candidates.json"
 DEFAULT_VERIFIED_FILE = "results_step3_verified.json"
@@ -130,6 +135,31 @@ def build_store(config: Any) -> Any:
     return SingleFileResults(getattr(config, "output_filepath", ""))
 
 
+def _dataset_holding(results_dir: str | Path, run_name: str, fallback: str) -> str:
+    """Which dataset's copy of a run step 3 is being pointed at.
+
+    The verifier reads candidates out of the store rather than loading a
+    dataset, so its own dataset_name stays at whatever the default is - and
+    verdicts for a MedBullets run would be filed under MedQA, against a run
+    that is not there. Looking for the run says which dataset it belongs to
+    without anyone having to remember to say so.
+    """
+    root = Path(results_dir)
+    found = (
+        sorted(d.name for d in root.iterdir()
+               if d.is_dir() and (d / FACTS_PIPELINE / run_name).is_dir())
+        if root.is_dir() else []
+    )
+    if len(found) == 1:
+        return found[0]
+    if not found:
+        return fallback          # nothing generated yet; take the config at its word
+    raise RuntimeError(
+        f"{run_name!r} is stored under more than one dataset ({', '.join(found)}); "
+        f"name the one to verify with --dataset"
+    )
+
+
 def per_record(config: Any) -> Any:
     """A directory per run, told apart by what the configuration carries.
 
@@ -140,11 +170,29 @@ def per_record(config: Any) -> Any:
     """
     results_dir = config.results_dir
     run_name = config.resolved_run_name
+    dataset = dataset_dir_for(getattr(config, "dataset_name", None))
     if hasattr(config, "resolved_judge_name"):
-        return VerificationResults(results_dir, run_name, config.resolved_judge_name)
+        dataset = _dataset_holding(results_dir, run_name, dataset)
+        return VerificationResults(
+            results_dir, run_name, config.resolved_judge_name, dataset
+        )
     if hasattr(config, "n_candidates"):
-        return CandidateResults(results_dir, run_name)
-    return OneShotResults(results_dir, run_name)
+        return CandidateResults(results_dir, run_name, dataset)
+    return OneShotResults(results_dir, run_name, dataset)
+
+
+def dataset_dir_for(dataset_name: str | None) -> str:
+    """Derive the directory name for a dataset from its identifier.
+
+    Taken from the canonical identifier rather than from whichever alias was
+    typed, so that ``medbullets``, ``medbullets_op5`` and
+    ``mkieffer/Medbullets`` all land in one place - and so that adding an alias
+    tomorrow cannot quietly move a run somewhere else.
+    """
+    if not dataset_name or not str(dataset_name).strip():
+        return DEFAULT_DATASET_DIR
+    tail = str(dataset_name).strip().rstrip("/").split("/")[-1]
+    return _UNSAFE.sub("-", tail).strip("-").lower() or DEFAULT_DATASET_DIR
 
 
 def run_name_for(model_name: str) -> str:
@@ -164,8 +212,8 @@ def run_name_for(model_name: str) -> str:
     return _UNSAFE.sub("-", tail).strip("-") or "unnamed"
 
 
-def split_run_path(path: str | Path) -> tuple[Path, str]:
-    """Split ``<results>/<section>/<run>`` into its results dir and run name.
+def split_run_path(path: str | Path) -> tuple[Path, str, str]:
+    """Split ``<results>/<dataset>/<section>/<run>`` into its parts.
 
     Lets a command-line tool take the directory a user can see and tab-complete
     and still build the store that reads it.
@@ -174,10 +222,10 @@ def split_run_path(path: str | Path) -> tuple[Path, str]:
         path: Directory of one run, as the layout at the top of this module.
 
     Returns:
-        (results directory, run name).
+        (results directory, run name, dataset directory).
     """
     run_dir = Path(path)
-    return run_dir.parent.parent, run_dir.name
+    return run_dir.parent.parent.parent, run_dir.name, run_dir.parent.parent.name
 
 
 def _write_json(path: Path, payload: Any) -> Path:
@@ -212,9 +260,11 @@ class _Results:
 
     section: str = ""
 
-    def __init__(self, results_dir: str | Path, run_name: str) -> None:
+    def __init__(self, results_dir: str | Path, run_name: str,
+                 dataset: str = DEFAULT_DATASET_DIR) -> None:
         self.results_dir = Path(results_dir)
         self.run_name = run_name
+        self.dataset = dataset or DEFAULT_DATASET_DIR
         self._written: set[tuple[str, int]] = set()
 
     def __str__(self) -> str:
@@ -223,7 +273,7 @@ class _Results:
     @property
     def directory(self) -> Path:
         """The directory holding this run's records."""
-        return self.results_dir / self.section / self.run_name
+        return self.results_dir / self.dataset / self.section / self.run_name
 
     def _record_path(self, question_id: str, index: int) -> Path:
         raise NotImplementedError
@@ -276,8 +326,9 @@ class OneShotResults(_Results):
 
     section = SINGLE_STEP
 
-    def __init__(self, results_dir: str | Path, run_name: str) -> None:
-        super().__init__(results_dir, run_name)
+    def __init__(self, results_dir: str | Path, run_name: str,
+                 dataset: str = DEFAULT_DATASET_DIR) -> None:
+        super().__init__(results_dir, run_name, dataset)
         self._stored: dict[str, Any] = {}
 
     def question_path(self, question_id: int | str) -> Path:
@@ -427,10 +478,11 @@ class VerificationResults(_Results):
 
     section = FACTS_PIPELINE
 
-    def __init__(self, results_dir: str | Path, run_name: str, judge_name: str) -> None:
-        super().__init__(results_dir, run_name)
+    def __init__(self, results_dir: str | Path, run_name: str, judge_name: str,
+                 dataset: str = DEFAULT_DATASET_DIR) -> None:
+        super().__init__(results_dir, run_name, dataset)
         self.judge_name = judge_name
-        self.candidates = CandidateResults(results_dir, run_name)
+        self.candidates = CandidateResults(results_dir, run_name, dataset)
         self._outcomes: dict[str, Any] = {}
 
     def __str__(self) -> str:
@@ -540,6 +592,8 @@ class VerificationResults(_Results):
 
 __all__ = [
     "DEFAULT_RESULTS_DIR",
+    "DEFAULT_DATASET_DIR",
+    "dataset_dir_for",
     "DEFAULT_ONE_SHOT_FILE",
     "DEFAULT_CANDIDATES_FILE",
     "DEFAULT_VERIFIED_FILE",

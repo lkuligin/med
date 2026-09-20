@@ -31,6 +31,7 @@ from results_store import (
     CandidateResults,
     OneShotResults,
     VerificationResults,
+    dataset_dir_for,
 )
 
 RESULTS = _bootstrap.LLM_MONKEYS_ROOT / "results"
@@ -66,11 +67,11 @@ def _dataset_fields(question_ids: list[str], summary: dict[str, Any] | None) -> 
     }
 
 
-def export_candidates(run: str, out: Path) -> Path | None:
+def export_candidates(run: str, out: Path, dataset: str) -> Path | None:
     """Step 2, with the aggregates the single-file layout carries per question."""
     from inference._schemas import CandidateQuestionResult
 
-    stored = CandidateResults(RESULTS, run).load()
+    stored = CandidateResults(RESULTS, run, dataset).load()
     if stored is None:
         return None
 
@@ -93,15 +94,15 @@ def export_candidates(run: str, out: Path) -> Path | None:
     return _write(out, {"summary": stored.get("summary"), "results": assembled})
 
 
-def export_one_shot(run: str, out: Path) -> Path | None:
+def export_one_shot(run: str, out: Path, dataset: str) -> Path | None:
     """Step 1, which is stored whole and needs nothing added."""
-    stored = OneShotResults(RESULTS, run).load()
+    stored = OneShotResults(RESULTS, run, dataset).load()
     return None if stored is None else _write(out, stored)
 
 
-def export_verdicts(run: str, judge: str, out: Path) -> Path | None:
+def export_verdicts(run: str, judge: str, out: Path, dataset: str) -> Path | None:
     """Step 3, likewise stored whole, one file per judge."""
-    stored = VerificationResults(RESULTS, run, judge).load()
+    stored = VerificationResults(RESULTS, run, judge, dataset).load()
     return None if stored is None else _write(out, stored)
 
 
@@ -110,31 +111,37 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--run", required=True, help="the run to assemble")
     parser.add_argument("--judge", default=None,
                         help="which judge's verdicts to export (default: every one)")
+    parser.add_argument("--dataset", default=None,
+                        help="which dataset's copy of the run (default: med_qa)")
     parser.add_argument("--out-dir", default="exports",
                         help="where the files go (default: exports/)")
     args = parser.parse_args(argv)
 
     run = args.run
+    dataset = dataset_dir_for(args.dataset)
     out_dir = Path(args.out_dir)
     if not out_dir.is_absolute():
         out_dir = _bootstrap.LLM_MONKEYS_ROOT / out_dir
 
     written: list[Path] = []
-    one_shot = export_one_shot(run, out_dir / f"results_one_shot_{run}.json")
+    one_shot = export_one_shot(run, out_dir / f"results_one_shot_{run}.json", dataset)
     if one_shot:
         written.append(one_shot)
-    candidates = export_candidates(run, out_dir / f"results_step2_{run}_candidates.json")
+    candidates = export_candidates(
+        run, out_dir / f"results_step2_{run}_candidates.json", dataset)
     if candidates:
         written.append(candidates)
 
-    judges = [args.judge] if args.judge else VerificationResults(RESULTS, run, "").judges()
+    judges = ([args.judge] if args.judge
+              else VerificationResults(RESULTS, run, "", dataset).judges())
     for judge in judges:
-        path = export_verdicts(run, judge, out_dir / f"results_step3_{run}_{judge}.json")
+        path = export_verdicts(
+            run, judge, out_dir / f"results_step3_{run}_{judge}.json", dataset)
         if path:
             written.append(path)
 
     if not written:
-        print(f"nothing stored for {run} under {RESULTS}", file=sys.stderr)
+        print(f"nothing stored for {run} under {RESULTS / dataset}", file=sys.stderr)
         return 1
     for path in written:
         size = path.stat().st_size / 1_000_000

@@ -51,6 +51,43 @@ def test_default_is_one_file_per_run(unhooked):
     assert str(verdicts.candidates) == "b.json"
 
 
+def test_the_dataset_is_the_first_level(monkeypatch, tmp_path):
+    """Two datasets number their questions from zero, so they cannot share."""
+    monkeypatch.setenv("MEDQA_RESULTS_STORE", PER_RECORD)
+    medqa = build_store(CandidateInferenceConfig(run_name="r", results_dir=str(tmp_path)))
+    bullets = build_store(
+        CandidateInferenceConfig(
+            run_name="r", results_dir=str(tmp_path), dataset_name="mkieffer/Medbullets"
+        )
+    )
+    assert medqa.directory == tmp_path / "med_qa" / "facts-pipeline" / "r"
+    assert bullets.directory == tmp_path / "medbullets" / "facts-pipeline" / "r"
+
+
+def test_step_3_follows_the_run_it_verifies(monkeypatch, tmp_path):
+    """The verifier loads no dataset, so its own dataset_name says nothing
+    about the run it was pointed at; the run's own place does."""
+    monkeypatch.setenv("MEDQA_RESULTS_STORE", PER_RECORD)
+    (tmp_path / "medbullets" / "facts-pipeline" / "r").mkdir(parents=True)
+
+    store = build_store(
+        VerifierConfig(run_name="r", judge_name="j", results_dir=str(tmp_path))
+    )
+
+    assert store.directory == tmp_path / "medbullets" / "facts-pipeline" / "r"
+    assert store.candidates.directory == store.directory
+
+
+def test_a_run_under_two_datasets_has_to_be_named(monkeypatch, tmp_path):
+    monkeypatch.setenv("MEDQA_RESULTS_STORE", PER_RECORD)
+    for dataset in ("med_qa", "medbullets"):
+        (tmp_path / dataset / "facts-pipeline" / "r").mkdir(parents=True)
+
+    with pytest.raises(RuntimeError, match="more than one dataset"):
+        build_store(VerifierConfig(run_name="r", judge_name="j",
+                                   results_dir=str(tmp_path)))
+
+
 def test_the_hook_chooses_a_directory_per_run(monkeypatch):
     monkeypatch.setenv("MEDQA_RESULTS_STORE", PER_RECORD)
 
@@ -132,6 +169,9 @@ async def test_a_workflow_reads_back_what_it_wrote_either_way(
     assert {item["predicted_option"] for item in stored["results"]} == {"A"}
 
     wrote_a_file = (tmp_path / "run.json").is_file()
-    wrote_a_directory = (tmp_path / "results" / "single-step" / "test-run").is_dir()
+    # The dataset comes first: a question id means nothing without it.
+    wrote_a_directory = (
+        tmp_path / "results" / "med_qa" / "single-step" / "test-run"
+    ).is_dir()
     assert (wrote_a_file, wrote_a_directory) == (layout == "one file",
                                                  layout != "one file")

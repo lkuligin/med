@@ -21,7 +21,7 @@ from gdanschin_runtime import _bootstrap  # noqa: F401
 
 from gdanschin_runtime.models import BASE_MODELS
 
-from config import InferenceConfig
+from config import InferenceConfig, resolve_dataset_name
 from inference._dataset import load_difficult_questions
 from one_shot.workflow import OneShotInferenceWorkflow
 
@@ -31,6 +31,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--base", help="entry in models.py: the model called, "
                                        "and the directory results go in")
     parser.add_argument("--difficult-questions", default="difficult_questions.csv")
+    parser.add_argument("--dataset", default=None,
+                        help="dataset name or alias (default: MedQA)")
     parser.add_argument("--n-attempts", type=int, default=1)
     parser.add_argument("--concurrency", type=int, default=8)
     parser.add_argument("--max-tokens", type=int, default=None,
@@ -56,10 +58,14 @@ def main(argv: list[str] | None = None) -> int:
         concurrency=args.concurrency,
         max_tokens=args.max_tokens or (model.max_tokens if model else 1024),
         run_name=args.base,
+        **({"dataset_name": resolve_dataset_name(args.dataset)} if args.dataset else {}),
         **({"model_name": model.gateway_model} if model else {}),
     )
 
     questions = load_difficult_questions(csv_path=args.difficult_questions,
+                                         dataset_name=config.dataset_name,
+                                         config_name=config.dataset_config,
+                                         split=config.dataset_split,
                                          limit=args.limit)
     print(f"{len(questions)} difficult questions, {args.n_attempts} attempt(s) each, "
           f"model {config.resolved_model_name}, {config.max_tokens} tokens "

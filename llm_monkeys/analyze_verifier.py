@@ -128,11 +128,11 @@ def _verification_store(
         ValueError: If it holds several judges and none was named, since
             picking one silently would put an unlabelled curve on the plot.
     """
-    results_dir, run_name = split_run_path(run_dir)
+    results_dir, run_name, dataset = split_run_path(run_dir)
     if judge_name:
-        return VerificationResults(results_dir, run_name, judge_name)
+        return VerificationResults(results_dir, run_name, judge_name, dataset)
 
-    found = VerificationResults(results_dir, run_name, "").judges()
+    found = VerificationResults(results_dir, run_name, "", dataset).judges()
     if not found:
         raise FileNotFoundError(f"No verdicts stored in: {run_dir}")
     if len(found) > 1:
@@ -140,7 +140,7 @@ def _verification_store(
             f"{run_dir} holds verdicts by {', '.join(found)}; "
             "name one with --judge-name"
         )
-    return VerificationResults(results_dir, run_name, found[0])
+    return VerificationResults(results_dir, run_name, found[0], dataset)
 
 
 def load_verifier_results(
