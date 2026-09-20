@@ -41,7 +41,12 @@ if [[ $RUN_LOCAL -eq 1 ]]; then
     echo "=== local: $(uname -s) $(uname -m) ==="
     if [[ -x "$REPO/.venv/bin/python" ]]; then
         (cd "$REPO/llm_monkeys" && "$REPO/.venv/bin/python" -m pytest ${PYTEST_ARGS[@]+"${PYTEST_ARGS[@]}"})
-        if [[ $? -eq 0 ]]; then local_status="passed"; else local_status="FAILED"; failed=1; fi
+        monkeys=$?
+        # The runtime has tests of its own - what --base and --judge-name
+        # actually select - and they live outside llm_monkeys' testpaths.
+        (cd "$REPO" && "$REPO/.venv/bin/python" -m pytest gdanschin_runtime/tests \
+            ${PYTEST_ARGS[@]+"${PYTEST_ARGS[@]}"})
+        if [[ $monkeys -eq 0 && $? -eq 0 ]]; then local_status="passed"; else local_status="FAILED"; failed=1; fi
     else
         local_status="no .venv (run setup_env.sh --cpu)"; failed=1
         echo "  $local_status" >&2
@@ -63,7 +68,8 @@ fi
 if [[ $RUN_REMOTE -eq 1 ]]; then
     echo "=== remote: $REMOTE_HOST ==="
     ssh -i "$REMOTE_IDENTITY" -o BatchMode=yes -o ConnectTimeout=20 "$REMOTE" \
-        "cd '$REMOTE_DIR/llm_monkeys' && '$REMOTE_DIR/.venv/bin/python' -m pytest ${PYTEST_ARGS[*]+${PYTEST_ARGS[*]}}"
+        "cd '$REMOTE_DIR/llm_monkeys' && '$REMOTE_DIR/.venv/bin/python' -m pytest ${PYTEST_ARGS[*]+${PYTEST_ARGS[*]}} && \
+         cd '$REMOTE_DIR' && '$REMOTE_DIR/.venv/bin/python' -m pytest gdanschin_runtime/tests ${PYTEST_ARGS[*]+${PYTEST_ARGS[*]}}"
     if [[ $? -eq 0 ]]; then remote_status="passed"; else remote_status="FAILED"; failed=1; fi
     echo
 fi

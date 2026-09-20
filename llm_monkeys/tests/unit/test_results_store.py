@@ -184,6 +184,27 @@ def test_two_datasets_keep_their_own_records(monkeypatch, tmp_path):
         assert stores[dataset].read_summary() == {"dataset": dataset}
 
 
+def test_two_models_keep_their_own_records(monkeypatch, tmp_path):
+    """One dataset, two models: the run name is what keeps them apart, and a
+    run stored under the wrong name is a run answered by the wrong model."""
+    monkeypatch.setenv("MEDQA_RESULTS_STORE", PER_RECORD)
+    answers = {"gemma-4-26b": "A", "gpt-oss-120b": "B"}
+
+    for run, answer in answers.items():
+        build_store(
+            InferenceConfig(run_name=run, results_dir=str(tmp_path))
+        ).save({
+            "summary": {"model": run},
+            "results": [{"question_id": "0", "predicted_option": answer}],
+        })
+
+    for run, answer in answers.items():
+        store = build_store(InferenceConfig(run_name=run, results_dir=str(tmp_path)))
+        assert store.directory == tmp_path / "med_qa" / "single-step" / run
+        assert store.read()["0"]["predicted_option"] == answer
+        assert store.read_summary() == {"model": run}
+
+
 def test_two_datasets_keep_their_own_candidates_and_verdicts(monkeypatch, tmp_path):
     """The same, for the two steps that keep a directory per question."""
     monkeypatch.setenv("MEDQA_RESULTS_STORE", PER_RECORD)

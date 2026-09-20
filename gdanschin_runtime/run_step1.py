@@ -26,7 +26,7 @@ from inference._dataset import load_difficult_questions
 from one_shot.workflow import OneShotInferenceWorkflow
 
 
-def main(argv: list[str] | None = None) -> int:
+def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--base", help="entry in models.py: the model called, "
                                        "and the directory results go in")
@@ -38,8 +38,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-tokens", type=int, default=None,
                         help="default: the budget models.py records for --base")
     parser.add_argument("--limit", type=int, default=None)
-    args = parser.parse_args(argv)
+    return parser
 
+
+def build_config(args: argparse.Namespace) -> InferenceConfig:
+    """The configuration a run of these arguments uses.
+
+    Separate from main() so that what --base actually selects can be read
+    without calling a model: the one thing that went wrong here was invisible
+    until a run had finished and its summary was read.
+
+    Raises:
+        KeyError: If --base names no entry in models.py.
+    """
     # --base has to reach the model, not only the directory name. Setting the
     # run name alone left the config on its default model, so every base
     # measured the same Gemma and stored it under the requested name: a
@@ -47,13 +58,11 @@ def main(argv: list[str] | None = None) -> int:
     # one direction nothing downstream could detect.
     model = None
     if args.base:
-        model = BASE_MODELS.get(args.base)
-        if model is None:
-            print(f"unknown base model: {args.base}   "
-                  f"(known: {', '.join(BASE_MODELS)})", file=sys.stderr)
-            return 2
+        if args.base not in BASE_MODELS:
+            raise KeyError(args.base)
+        model = BASE_MODELS[args.base]
 
-    config = InferenceConfig(
+    return InferenceConfig(
         n_attempts=args.n_attempts,
         concurrency=args.concurrency,
         max_tokens=args.max_tokens or (model.max_tokens if model else 1024),
@@ -61,6 +70,16 @@ def main(argv: list[str] | None = None) -> int:
         **({"dataset_name": resolve_dataset_name(args.dataset)} if args.dataset else {}),
         **({"model_name": model.gateway_model} if model else {}),
     )
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = create_parser().parse_args(argv)
+    try:
+        config = build_config(args)
+    except KeyError as unknown:
+        print(f"unknown base model: {unknown.args[0]}   "
+              f"(known: {', '.join(BASE_MODELS)})", file=sys.stderr)
+        return 2
 
     questions = load_difficult_questions(csv_path=args.difficult_questions,
                                          dataset_name=config.dataset_name,

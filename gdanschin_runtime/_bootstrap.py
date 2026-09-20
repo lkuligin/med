@@ -36,6 +36,28 @@ def ensure_on_path() -> Path:
     return LLM_MONKEYS_ROOT
 
 
-ensure_on_path()
+def register_gateway_names() -> None:
+    """Teach llm_monkeys that our gateway names are already canonical.
 
-__all__ = ["LLM_MONKEYS_ROOT", "ensure_on_path"]
+    resolve_model_name() turns anything it does not recognise into a Vertex AI
+    identifier, so "gpt-oss-120b" would become
+    "vertex_ai/openai/gpt-oss-120b-maas" - an address the gateway does not
+    serve, and the wrong model in every summary.
+
+    Done here rather than where models are built, because the name is read
+    long before that: a script prints which model it is about to call, and
+    that line has to say the same thing the call does. Idempotent, and it
+    never overrides a name the reference already knows.
+    """
+    from config import SUPPORTED_MODELS
+
+    from gdanschin_runtime.models import BASE_MODELS, JUDGE_MODELS
+
+    for entry in list(BASE_MODELS.values()) + list(JUDGE_MODELS.values()):
+        SUPPORTED_MODELS.setdefault(entry.gateway_model.lower(), entry.gateway_model)
+
+
+ensure_on_path()
+register_gateway_names()
+
+__all__ = ["LLM_MONKEYS_ROOT", "ensure_on_path", "register_gateway_names"]
