@@ -78,12 +78,28 @@ def test_step_3_follows_the_run_it_verifies(monkeypatch, tmp_path):
     assert store.candidates.directory == store.directory
 
 
-def test_a_run_under_two_datasets_has_to_be_named(monkeypatch, tmp_path):
+def test_a_named_dataset_wins_when_several_hold_the_run(monkeypatch, tmp_path):
+    """Saying which dataset to verify is enough, even when the name is reused."""
     monkeypatch.setenv("MEDQA_RESULTS_STORE", PER_RECORD)
     for dataset in ("med_qa", "medbullets"):
         (tmp_path / dataset / "facts-pipeline" / "r").mkdir(parents=True)
 
-    with pytest.raises(RuntimeError, match="more than one dataset"):
+    store = build_store(
+        VerifierConfig(run_name="r", judge_name="j", results_dir=str(tmp_path),
+                       dataset_name="mkieffer/Medbullets")
+    )
+
+    assert store.directory == tmp_path / "medbullets" / "facts-pipeline" / "r"
+
+
+def test_a_run_under_datasets_that_were_not_named_is_refused(monkeypatch, tmp_path):
+    """Two datasets hold it, neither is the one asked for: guessing which the
+    verdicts belong to is exactly what must not happen quietly."""
+    monkeypatch.setenv("MEDQA_RESULTS_STORE", PER_RECORD)
+    for dataset in ("medbullets", "pubmedqa"):
+        (tmp_path / dataset / "facts-pipeline" / "r").mkdir(parents=True)
+
+    with pytest.raises(RuntimeError, match="none of those is"):
         build_store(VerifierConfig(run_name="r", judge_name="j",
                                    results_dir=str(tmp_path)))
 
@@ -140,6 +156,119 @@ def test_a_file_that_does_not_parse_reads_as_nothing(tmp_path):
     path = tmp_path / "run.json"
     path.write_text("{ truncated")
     assert SingleFileResults(path).load() is None
+
+
+def test_two_datasets_keep_their_own_records(monkeypatch, tmp_path):
+    """Question 0 of MedQA and question 0 of MedBullets are different
+    questions. One model, one run name, two datasets: neither may land on the
+    other, and each has to read back exactly what it wrote."""
+    monkeypatch.setenv("MEDQA_RESULTS_STORE", PER_RECORD)
+    answers = {"bigbio/med_qa": "A", "mkieffer/Medbullets": "B"}
+
+    stores = {}
+    for dataset, answer in answers.items():
+        stores[dataset] = build_store(
+            InferenceConfig(run_name="gemma", results_dir=str(tmp_path),
+                            dataset_name=dataset)
+        )
+        stores[dataset].save({
+            "summary": {"dataset": dataset},
+            "results": [{"question_id": "0", "predicted_option": answer},
+                        {"question_id": "1", "predicted_option": answer}],
+        })
+
+    for dataset, answer in answers.items():
+        records = stores[dataset].read()
+        assert sorted(records) == ["0", "1"]
+        assert {r["predicted_option"] for r in records.values()} == {answer}
+        assert stores[dataset].read_summary() == {"dataset": dataset}
+
+
+def test_two_datasets_keep_their_own_candidates_and_verdicts(monkeypatch, tmp_path):
+    """The same, for the two steps that keep a directory per question."""
+    monkeypatch.setenv("MEDQA_RESULTS_STORE", PER_RECORD)
+    for dataset, fact in (("bigbio/med_qa", "medqa fact"),
+                          ("mkieffer/Medbullets", "medbullets fact")):
+        candidates = build_store(
+            CandidateInferenceConfig(run_name="gemma", results_dir=str(tmp_path),
+                                     dataset_name=dataset)
+        )
+        candidates.save({
+            "summary": {"n_candidates": 1},
+            "results": [{"question_id": "0", "question": dataset,
+                         "candidates": [{"candidate_index": 0, "facts": [fact]}]}],
+        })
+        verdicts = build_store(
+            VerifierConfig(run_name="gemma", judge_name="judge",
+                           results_dir=str(tmp_path), dataset_name=dataset)
+        )
+        verdicts.save({
+            "summary": {},
+            "results": [{"question_id": "0", "found_valid_candidate": True,
+                         "candidate_verifications": [
+                             {"candidate_index": 0, "fact": fact}]}],
+        })
+
+    for dataset, fact in (("bigbio/med_qa", "medqa fact"),
+                          ("mkieffer/Medbullets", "medbullets fact")):
+        candidates = build_store(
+            CandidateInferenceConfig(run_name="gemma", results_dir=str(tmp_path),
+                                     dataset_name=dataset)
+        )
+        stored = candidates.load()["results"]
+        assert len(stored) == 1
+        assert stored[0]["question"] == dataset
+        assert stored[0]["candidates"][0]["facts"] == [fact]
+
+        verdicts = build_store(
+            VerifierConfig(run_name="gemma", judge_name="judge",
+                           results_dir=str(tmp_path), dataset_name=dataset)
+        )
+        judged = verdicts.load()["results"]
+        assert len(judged) == 1
+        assert judged[0]["candidate_verifications"][0]["fact"] == fact
+
+
+@pytest.mark.asyncio
+async def test_a_run_does_not_resume_from_another_dataset(
+    tmp_path, monkeypatch, sample_questions, workflow_factory
+):
+    """Resuming reads what is stored for this run - and a run of the same name
+    on another dataset answers other questions, so it must not count."""
+    monkeypatch.setenv("MEDQA_RESULTS_STORE", PER_RECORD)
+    already = build_store(
+        InferenceConfig(run_name="test-run", results_dir=str(tmp_path / "results"),
+                        dataset_name="bigbio/med_qa")
+    )
+    already.save({
+        "summary": None,
+        "results": [{"question_id": q.question_id, "predicted_option": "A",
+                     "is_correct": True, "correct_attempts": 1,
+                     "total_attempts": 1, "attempts": [{"attempt_index": 0,
+                     "predicted_option": "A", "is_correct": True}]}
+                    for q in sample_questions],
+    })
+
+    asked = 0
+
+    async def answer(user_id, session_id, new_message):
+        nonlocal asked
+        asked += 1
+        yield make_mock_event("Final Answer: Option C")
+
+    workflow = workflow_factory(
+        n_attempts=1,
+        results_dir=str(tmp_path / "results"),
+        run_name="test-run",
+        dataset_name="mkieffer/Medbullets",
+        runner=MagicMock(run_async=answer),
+    )
+    await workflow.run(questions=sample_questions)
+
+    assert asked == len(sample_questions), "the MedQA answers were taken for these"
+    assert {r["predicted_option"] for r in workflow.store.read().values()} == {"C"}
+    # and the questions it did not answer are where they were
+    assert {r["predicted_option"] for r in already.read().values()} == {"A"}
 
 
 @pytest.mark.asyncio

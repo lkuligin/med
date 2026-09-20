@@ -150,13 +150,15 @@ def _dataset_holding(results_dir: str | Path, run_name: str, fallback: str) -> s
                if d.is_dir() and (d / FACTS_PIPELINE / run_name).is_dir())
         if root.is_dir() else []
     )
+    if fallback in found:
+        return fallback          # asked for a dataset that has it: that one
     if len(found) == 1:
-        return found[0]
+        return found[0]          # only one has it, whatever the config says
     if not found:
         return fallback          # nothing generated yet; take the config at its word
     raise RuntimeError(
-        f"{run_name!r} is stored under more than one dataset ({', '.join(found)}); "
-        f"name the one to verify with --dataset"
+        f"{run_name!r} is stored under {', '.join(found)}, and none of those is "
+        f"{fallback!r}; name the dataset to verify with --dataset"
     )
 
 
