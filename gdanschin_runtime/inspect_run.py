@@ -9,6 +9,8 @@
     candidate(res, 0, 3)         # one candidate's facts and reasoning in full
     accuracy(res)                # baselines and the verified metric
     step1()                      # the one-shot baseline on its own
+    compare_step1()              # every model's one-shot run, side by side
+    catalogue()                  # every model and judge, and what is stored
     verified_curve()             # the method's accuracy as k grows
 
 Everything prints rather than returns, because the point is reading it.
@@ -18,6 +20,7 @@ The loaders return plain lists and dicts if you want to compute instead.
 from __future__ import annotations
 
 import json
+import math
 import statistics
 import textwrap
 from collections import Counter
@@ -51,6 +54,28 @@ def _resolve_base(base: str | None, section: str = FACTS_PIPELINE) -> str:
     raise ValueError(f"name the base model: {', '.join(found)}")
 
 
+def _resolve_run(base: str | None) -> str:
+    """The run to watch, named under either step's results.
+
+    _resolve_base looks in one section, which is right for reading a finished
+    run but wrong for watching one: a plan starts with step 1, so for the first
+    half hour the only directory the run has is under single-step, and
+    resolving against the candidates alone would refuse to report on it.
+    """
+    if base:
+        return base
+    found: set[str] = set()
+    for section in (FACTS_PIPELINE, SINGLE_STEP):
+        root = RESULTS_DIR / section
+        if root.is_dir():
+            found |= {d.name for d in root.iterdir() if d.is_dir()}
+    if len(found) == 1:
+        return found.pop()
+    if not found:
+        raise FileNotFoundError(f"no runs stored under {RESULTS_DIR}")
+    raise ValueError(f"name the base model: {', '.join(sorted(found))}")
+
+
 def _resolve_judge(base: str, judge: str | None) -> str | None:
     if judge:
         return judge
@@ -59,7 +84,8 @@ def _resolve_judge(base: str, judge: str | None) -> str | None:
         return found[0]
     if not found:
         return None
-    raise ValueError(f"name the judge: {', '.join(found)}")
+    raise ValueError(f"name the judge: {', '.join(found)}"
+                     "   (catalogue() lists what each one is)")
 
 
 class Run(list):
@@ -70,25 +96,31 @@ class Run(list):
     name twice in a notebook is how the wrong two halves get compared.
     """
 
-    def __init__(self, results, base: str) -> None:
+    def __init__(self, results, base: str, judge: str | None = None) -> None:
         super().__init__(results)
         self.base = base
+        self.judge = judge
 
 
-def load(base: str | None = None, path: str | Path | None = None) -> list[dict[str, Any]]:
+def load(base: str | None = None, judge: str | None = None,
+         path: str | Path | None = None) -> list[dict[str, Any]]:
     """A stored step 2 run, assembled from its per-candidate files.
 
     Safe to call while the run is still going: each file is written once and
     never revised, so a read mid-run sees a prefix of the run, not a half
     record. Pass `path` instead to read a single-file result from elsewhere.
+
+    Naming the judge here saves naming it again in every call that reads
+    verdicts: the run remembers it, and accuracy() and the curves use it unless
+    they are given another. With one judge stored it is found on its own.
     """
     if path is not None:
         data = json.loads(Path(path).read_text())
         return data["results"] if isinstance(data, dict) and "results" in data else data
     base = _resolve_base(base)
-    print(f"# {base}")
+    print(f"# {base}" + (f"   judged by {judge}" if judge else ""))
     stored = CandidateResults(RESULTS_DIR, base).load()
-    return Run((stored or {"results": []})["results"], base)
+    return Run((stored or {"results": []})["results"], base, judge)
 
 
 def load_step1(base: str | None = None) -> dict[str, dict[str, Any]]:
@@ -105,6 +137,103 @@ def load_verified(base: str | None = None,
         return []
     stored = VerificationResults(RESULTS_DIR, base, judge).load()
     return (stored or {"results": []})["results"]
+
+
+def judges(base: str | None = None) -> list[str]:
+    """Judges that have verdicts stored for a run."""
+    return VerificationResults(RESULTS_DIR, _resolve_base(base), "").judges()
+
+
+def stored_runs() -> dict[str, dict[str, Any]]:
+    """What is on disk, per run name: step 1, step 2 and who judged it.
+
+    Keyed by run name rather than by model, because a name is what every
+    function here takes - and because a run name need not be a model name: a
+    model measured twice under different settings is two runs.
+    """
+    found: dict[str, dict[str, Any]] = {}
+    one_shot_root = RESULTS_DIR / SINGLE_STEP
+    if one_shot_root.is_dir():
+        for directory in sorted(one_shot_root.iterdir()):
+            if directory.is_dir():
+                found.setdefault(directory.name, {})["one_shot"] = _one_shot_stored(
+                    directory.name)
+    candidates_root = RESULTS_DIR / FACTS_PIPELINE
+    if candidates_root.is_dir():
+        for directory in sorted(candidates_root.iterdir()):
+            if not directory.is_dir():
+                continue
+            store = CandidateResults(RESULTS_DIR, directory.name)
+            questions = store.questions()
+            row = found.setdefault(directory.name, {})
+            row["questions"] = len(questions)
+            row["candidates"] = sum(store.candidate_count(q) for q in questions)
+            row["k"] = (store.read_summary() or {}).get("n_candidates")
+            row["judges"] = {
+                judge: sum(1 for q in questions
+                           if (store.question_dir(q) / judge).is_dir())
+                for judge in VerificationResults(RESULTS_DIR, directory.name, "").judges()
+            }
+    return found
+
+
+def catalogue() -> None:
+    """Everything a call here can be pointed at: the registry, and what is stored.
+
+    Two different lists, on purpose. models.py says what may be run; the
+    results directory says what has been. A name in the first and not the
+    second has nothing to read yet; a name in the second and not the first is
+    usually a run kept under a name of its own.
+    """
+    from gdanschin_runtime.models import BASE_MODELS, JUDGE_MODELS
+
+    stored = stored_runs()
+
+    def summarise(name: str) -> str:
+        row = stored.get(name)
+        if not row:
+            return "nothing stored"
+        parts = []
+        if row.get("one_shot"):
+            parts.append(f"step 1: {row['one_shot']} questions")
+        if row.get("questions"):
+            k = f" at k={row['k']}" if row.get("k") else ""
+            parts.append(f"step 2: {row['questions']} questions, "
+                         f"{row['candidates']} candidates{k}")
+        for judge, judged in (row.get("judges") or {}).items():
+            parts.append(f"{judge}: {judged} judged")
+        return "   ".join(parts) or "nothing stored"
+
+    print("BASE MODELS (models.py)      gateway model              tokens")
+    for m in BASE_MODELS.values():
+        print(f"  {m.name:<24} {m.gateway_model:<26} {m.max_tokens:>6}")
+        print(f"      {summarise(m.name)}")
+
+    print("\nJUDGES (models.py)           gateway model              tokens    t")
+    judged_by: dict[str, list[str]] = {}
+    for row_name, row in stored.items():
+        for judge, count in (row.get("judges") or {}).items():
+            judged_by.setdefault(judge, []).append(f"{row_name} ({count})")
+    judged_by_all = list(judged_by)
+    for j in JUDGE_MODELS.values():
+        print(f"  {j.name:<24} {j.gateway_model:<26} {j.max_tokens:>6} {j.temperature:>4}")
+        where = judged_by.pop(j.name, None)
+        print(f"      verdicts for: {', '.join(where) if where else 'nothing stored'}")
+
+    loose = [name for name in stored
+             if name not in BASE_MODELS and name not in JUDGE_MODELS]
+    if loose:
+        print("\nSTORED UNDER A NAME OF ITS OWN (not in models.py)")
+        for name in loose:
+            print(f"  {name:<24} {summarise(name)}")
+    if judged_by:
+        print("\nJUDGES NOT IN models.py")
+        for judge, where in judged_by.items():
+            print(f"  {judge:<24} judged {', '.join(where)}")
+
+    first_judge = next(iter(judged_by_all), None) or "the judge above"
+    print(f"\n  pass any of these as base= or judge=, e.g. "
+          f"accuracy(load('gemma-4-26b'), judge='{first_judge}')")
 
 
 def _by_id(results: list[dict], qid: int | str) -> dict:
@@ -270,6 +399,7 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     both to the same questions.
     """
     base = base or getattr(results, "base", None)
+    judge = judge or getattr(results, "judge", None)
     all_ids = [q["question_id"] for q in results]
 
     # Step 1 over everything it has answered, not only the questions step 2 has
@@ -371,6 +501,202 @@ def step1(base: str | None = None) -> None:
         print(f"  questions that errored         {errors}")
 
 
+def one_shot_runs() -> list[str]:
+    """Every model that has a step 1 run stored."""
+    root = RESULTS_DIR / SINGLE_STEP
+    if not root.is_dir():
+        return []
+    return sorted(d.name for d in root.iterdir() if d.is_dir())
+
+
+def _one_shot_run(base: str) -> dict[str, Any]:
+    """One model's step 1 run, reduced to what a comparison needs.
+
+    The per-question score is the share of that question's attempts that were
+    right, not the record's is_correct, so a run with several attempts per
+    question is measured the same way as a run with one. With one attempt the
+    two agree, and the score is 0 or 1.
+    """
+    store = OneShotResults(RESULTS_DIR, base)
+    records = store.read()
+    summary = store.read_summary() or {}
+    scores, tokens, seconds = {}, [], []
+    unparsed = errors = 0
+    for qid, r in records.items():
+        scores[str(qid)] = ((r.get("correct_attempts") or 0)
+                            / max(r.get("total_attempts") or 1, 1))
+        if r.get("total_tokens"):
+            tokens.append(r["total_tokens"])
+        if r.get("latency_seconds"):
+            seconds.append(r["latency_seconds"])
+        unparsed += not r.get("predicted_option")
+        errors += bool(r.get("error"))
+    return {
+        "base": base,
+        "scores": scores,
+        "stored": len(scores),
+        "attempts": summary.get("n_attempts") or 1,
+        "unparsed": unparsed,
+        "errors": errors,
+        "tokens": statistics.mean(tokens) if tokens else 0.0,
+        "seconds": statistics.mean(seconds) if seconds else 0.0,
+        "accuracy_all": statistics.mean(scores.values()) * 100 if scores else 0.0,
+    }
+
+
+def _wilson(hits: float, n: int, z: float = 1.96) -> tuple[float, float]:
+    """A 95% interval for an accuracy, Wilson's rather than the textbook one.
+
+    On 483 questions the textbook interval is close enough, but it misbehaves
+    near 0 and 100% and can reach past them, which is how a model that never
+    missed ends up reported as somewhere between 98 and 102% correct.
+
+    With several attempts per question the interval is approximate: the unit is
+    the question, and a question is a fractional hit rather than a coin flip.
+    """
+    if not n:
+        return 0.0, 0.0
+    p = hits / n
+    denominator = 1 + z * z / n
+    centre = (p + z * z / (2 * n)) / denominator
+    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / denominator
+    return max(centre - half, 0.0) * 100, min(centre + half, 1.0) * 100
+
+
+def _sign_test(wins: int, losses: int) -> float:
+    """Two-sided p for a run of wins and losses being a coin.
+
+    Only the questions the two runs disagreed on carry information about which
+    model is better - the ones they both got right, or both got wrong, say
+    nothing - so the test is over those alone. With one attempt per question
+    this is exactly McNemar's exact test; with several, "won" means the model
+    got more of its attempts right on that question, which is the same test on
+    a coarser event.
+    """
+    n = wins + losses
+    if not n:
+        return 1.0
+    fewer = min(wins, losses)
+    tail = sum(math.comb(n, i) for i in range(fewer + 1)) / 2 ** n
+    return min(2 * tail, 1.0)
+
+
+def compare_step1(runs: list[str] | None = None, plot: bool = True,
+                  full: bool = False) -> dict[str, dict[str, Any]]:
+    """Compare the one-shot runs of several models, on the questions they share.
+
+        compare_step1()                              # every stored run
+        compare_step1(["gemma-4-26b", "gpt-oss-120b"])
+
+    Restricted to the questions every run answered, because that is the only
+    thing a comparison can mean: one run stopping 40 questions early would
+    otherwise be credited or blamed for whichever questions it missed. Each
+    run's accuracy over everything it did store is in the returned dict as
+    accuracy_all, and printed too when it differs by more than a point.
+
+    Prints a table, then each pair head to head: the questions one got and the
+    other missed, and whether that gap is more than noise. Pass plot=False for
+    the numbers alone, full=True to score each run on all its own questions
+    instead of the shared ones.
+
+    Returns {model: {accuracy, low, high, n, ...}} for computing on.
+    """
+    runs = runs or one_shot_runs()
+    if not runs:
+        raise FileNotFoundError(f"no step 1 runs stored under {RESULTS_DIR / SINGLE_STEP}")
+    measured = [_one_shot_run(base) for base in runs]
+    missing = [m["base"] for m in measured if not m["stored"]]
+    if missing:
+        print(f"  nothing stored for {', '.join(missing)}")
+        measured = [m for m in measured if m["stored"]]
+    if not measured:
+        return {}
+
+    shared = set.intersection(*(set(m["scores"]) for m in measured))
+    if not shared and not full:
+        print("  these runs have no questions in common")
+        return {}
+    for m in measured:
+        ids = sorted(m["scores"], key=lambda q: int(q) if q.isdigit() else 0)
+        if not full:
+            ids = [q for q in ids if q in shared]
+        m["ids"] = ids
+        m["hits"] = sum(m["scores"][q] for q in ids)
+        m["n"] = len(ids)
+        m["accuracy"] = m["hits"] / m["n"] * 100 if m["n"] else 0.0
+        m["low"], m["high"] = _wilson(m["hits"], m["n"])
+    measured.sort(key=lambda m: m["accuracy"], reverse=True)
+
+    if full:
+        print("  ONE SHOT, each run on its own questions")
+    elif len(measured) == 1:
+        print(f"  ONE SHOT, {measured[0]['base']} on its {len(shared)} questions")
+    else:
+        print(f"  ONE SHOT, the {len(shared)} questions all "
+              f"{len(measured)} runs answered")
+        stored = ", ".join(f"{m['base']} {m['stored']}" for m in measured)
+        if any(m["stored"] != len(shared) for m in measured):
+            print(f"  (stored: {stored})")
+    if len({m["attempts"] for m in measured}) > 1:
+        attempts = ", ".join(f"{m['base']} x{m['attempts']}" for m in measured)
+        print(f"  (attempts per question differ: {attempts})")
+
+    width = max(len(m["base"]) for m in measured)
+    print(f"\n  {'model':<{width}}  {'accuracy':>8}  {'95% CI':>13}  {'n':>4}  "
+          f"{'unparsed':>8}  {'errors':>6}  {'tokens/q':>8}  {'s/q':>5}")
+    for m in measured:
+        note = ""
+        if not full and abs(m["accuracy_all"] - m["accuracy"]) > 1:
+            note = f"   (all {m['stored']}: {m['accuracy_all']:.1f}%)"
+        print(f"  {m['base']:<{width}}  {m['accuracy']:7.1f}%  "
+              f"{m['low']:5.1f} - {m['high']:5.1f}  {m['n']:>4}  "
+              f"{m['unparsed']:>8}  {m['errors']:>6}  "
+              f"{m['tokens']:>8.0f}  {m['seconds']:>5.1f}{note}")
+
+    if len(measured) > 1 and shared:
+        print(f"\n  HEAD TO HEAD on the shared questions")
+        for i, a in enumerate(measured):
+            for b in measured[i + 1:]:
+                wins = sum(1 for q in shared if a["scores"][q] > b["scores"][q])
+                losses = sum(1 for q in shared if a["scores"][q] < b["scores"][q])
+                p = _sign_test(wins, losses)
+                verdict = "clear" if p < 0.05 else "within noise"
+                print(f"  {a['base']:<{width}} vs {b['base']:<{width}}  "
+                      f"{a['accuracy'] - b['accuracy']:+5.1f} pts   "
+                      f"won {wins:>3}, lost {losses:>3}, tied {len(shared) - wins - losses:>3}   "
+                      f"p={p:.3f}  {verdict}")
+
+        # What is left to win, and what the models already agree on: a question
+        # every run gets right is not where the next point comes from.
+        every = sum(1 for q in shared if all(m["scores"][q] == 1 for m in measured))
+        none = sum(1 for q in shared if all(m["scores"][q] == 0 for m in measured))
+        print(f"\n  every run right  {every:>4}   "
+              f"no run right  {none:>4}   they differ  {len(shared) - every - none:>4}")
+
+    if plot:
+        import matplotlib.pyplot as plt
+
+        names = [m["base"] for m in measured][::-1]
+        values = [m["accuracy"] for m in measured][::-1]
+        lows = [m["accuracy"] - m["low"] for m in measured][::-1]
+        highs = [m["high"] - m["accuracy"] for m in measured][::-1]
+        fig, ax = plt.subplots(figsize=(9, 0.7 * len(names) + 2))
+        ax.barh(names, values, xerr=[lows, highs], color="#1f77b4",
+                error_kw={"ecolor": "#333333", "capsize": 4})
+        for y, value in enumerate(values):
+            ax.text(value + 0.4, y, f"{value:.1f}%", va="center", fontsize=9)
+        ax.set_xlabel("% of questions answered correctly, one shot")
+        ax.set_title(f"One shot, {measured[0]['n']} questions"
+                     + ("" if full else ", the same for every model"))
+        ax.set_xlim(0, max(m["high"] for m in measured) + 6)
+        ax.grid(alpha=0.3, axis="x")
+        plt.tight_layout()
+        plt.show()
+
+    return {m["base"]: {k: v for k, v in m.items() if k not in ("scores", "ids")}
+            for m in measured}
+
+
 def _difficult_total(default: int = 483) -> int:
     """How many questions a run covers, from the list the pipeline works on."""
     from inference._dataset import load_difficult_question_ids
@@ -382,14 +708,32 @@ def _difficult_total(default: int = 483) -> int:
     return default
 
 
+def _one_shot_stored(base: str) -> int:
+    """How many questions step 1 has answered, counted without parsing them.
+
+    progress() is meant to be re-run every few seconds while a run is in
+    flight, and reading all 483 records to learn how many there are would be
+    the slowest thing in it. A record is written once, whole, so its existence
+    is enough.
+    """
+    directory = OneShotResults(RESULTS_DIR, base).directory
+    if not directory.is_dir():
+        return 0
+    return sum(1 for _ in directory.glob("question_*.json"))
+
+
 def progress(base: str | None = None, judge: str | None = None,
              total: int | None = None) -> None:
-    """Where one model's run has got to. Safe to re-run at any time.
+    """Where one model's run has got to, step by step. Safe to re-run at any time.
 
-    Everything is per run: the questions come from the difficult-questions
-    list, and the target number of candidates from the run's own summary, so
-    two models at different k each report against their own target rather than
-    against whatever the last run happened to use.
+    One line per step - the one-shot answers of step 1, the candidates of step
+    2, the verdicts of step 3 - all against the same question list, so the
+    three bars are read down the page as one run.
+
+    Everything else is per run too: the questions come from the
+    difficult-questions list, and the target number of candidates from the
+    run's own summary, so two models at different k each report against their
+    own target rather than against whatever the last run happened to use.
     """
     import subprocess
     import time
@@ -398,10 +742,13 @@ def progress(base: str | None = None, judge: str | None = None,
         return subprocess.run(["pgrep", "-f", pattern],
                               capture_output=True).returncode == 0
 
-    base = _resolve_base(base)
+    base = _resolve_run(base)
     judge = _resolve_judge(base, judge)
-    # Counting directories rather than parsing anything: this is meant to be
-    # re-run every few seconds while a run is in flight.
+    # Counting files and directories rather than parsing anything: this is
+    # meant to be re-run every few seconds while a run is in flight.
+    answered = _one_shot_stored(base)
+    attempts = (OneShotResults(RESULTS_DIR, base).read_summary()
+                or {}).get("n_attempts") or 1
     candidates = CandidateResults(RESULTS_DIR, base)
     questions = candidates.questions()
     counts = [candidates.candidate_count(q) for q in questions]
@@ -416,15 +763,26 @@ def progress(base: str | None = None, judge: str | None = None,
     judged = sum(1 for q in questions
                  if judge and (candidates.question_dir(q) / judge).is_dir())
 
-    gen_running = alive("[i]nference.cli")
-    judge_running = alive("[v]erifier.cli")
+    # Scoped to this run, not to the step: a plan runs the models one after
+    # another, and an unscoped check reports that step 1 is running when it is
+    # running for somebody else. Every step carries the run name on its command
+    # line - run_step1.py as --base, the other two as --run-name - so the name
+    # is what tells one model's work from another's.
+    one_shot_running = alive(f"[r]un_step1.py.*--base {base}"
+                             f"|[-]m cli.*--run-name {base}")
+    gen_running = alive(f"[i]nference.cli.*--run-name {base}")
+    judge_running = alive(f"[v]erifier.cli.*--run-name {base}")
 
     def bar(done: int, width: int = 40) -> str:
         filled = round(done / total * width)
         return "#" * filled + "." * (width - filled)
 
-    print(f"  {time.strftime('%H:%M:%S')}   {base}   k={target}"
+    print(f"  {time.strftime('%H:%M:%S')}   {base}"
+          + (f"   k={target}" if target else "")
           + (f"   judged by {judge}" if judge else ""))
+    print(f"  one shot    {bar(answered)}  {answered:>3}/{total}  "
+          f"{'running' if one_shot_running else 'idle'}"
+          + (f"   ({attempts} attempts each)" if attempts > 1 else ""))
     in_flight = len(questions) - generated
     print(f"  generation  {bar(generated)}  {generated:>3}/{total}  "
           f"{'running' if gen_running else 'stopped'}"
@@ -731,5 +1089,6 @@ def vote_curve(results: list[dict], max_k: int = 20, trials: int = 40,
 
 
 __all__ = ["load", "load_step1", "load_verified", "overview", "question",
-           "candidate", "facts_stats", "step1", "accuracy", "progress",
-           "monkeys_curve", "verified_curve", "vote_curve"]
+           "candidate", "facts_stats", "step1", "compare_step1", "one_shot_runs",
+           "catalogue", "judges", "stored_runs",
+           "accuracy", "progress", "monkeys_curve", "verified_curve", "vote_curve"]
