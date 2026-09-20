@@ -2,10 +2,14 @@
 
     from gdanschin_runtime.inspect_run import load, overview, question, candidate
 
-    res = load()                 # newest results/*.json
+    res = load()                 # the stored run; name the model when there are several
+    res = load("gpt-oss-120b")
     overview(res)                # one line per question
     question(res, 0)             # the question, and how the candidates voted
     candidate(res, 0, 3)         # one candidate's facts and reasoning in full
+    accuracy(res)                # baselines and the verified metric
+    step1()                      # the one-shot baseline on its own
+    verified_curve()             # the method's accuracy as k grows
 
 Everything prints rather than returns, because the point is reading it.
 The loaders return plain lists and dicts if you want to compute instead.
@@ -20,24 +24,87 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from gdanschin_runtime import _bootstrap  # noqa: F401
+
+from results_store import (
+    FACTS_PIPELINE,
+    SINGLE_STEP,
+    CandidateResults,
+    OneShotResults,
+    VerificationResults,
+)
+
 WIDTH = 100
-RESULTS_DIR = Path(__file__).resolve().parents[1] / "llm_monkeys" / "results"
+RESULTS_DIR = _bootstrap.LLM_MONKEYS_ROOT / "results"
 
 
-def load(path: str | Path | None = None) -> list[dict[str, Any]]:
-    """Load a step 2 results file; by default the most recently written one.
+def _resolve_base(base: str | None, section: str = FACTS_PIPELINE) -> str:
+    """The run to look at: the only one stored, unless told which."""
+    if base:
+        return base
+    root = RESULTS_DIR / section
+    found = sorted(d.name for d in root.iterdir() if d.is_dir()) if root.is_dir() else []
+    if len(found) == 1:
+        return found[0]
+    if not found:
+        raise FileNotFoundError(f"no runs stored under {root}")
+    raise ValueError(f"name the base model: {', '.join(found)}")
 
-    Reading a file a run is still appending to can catch it mid-write, so
-    prefer a finished run or a copy.
+
+def _resolve_judge(base: str, judge: str | None) -> str | None:
+    if judge:
+        return judge
+    found = VerificationResults(RESULTS_DIR, base, "").judges()
+    if len(found) == 1:
+        return found[0]
+    if not found:
+        return None
+    raise ValueError(f"name the judge: {', '.join(found)}")
+
+
+class Run(list):
+    """A run's questions, remembering which run they came from.
+
+    A plain list would do for reading, but then accuracy() cannot find the
+    matching verdicts once more than one model has been run, and asking for the
+    name twice in a notebook is how the wrong two halves get compared.
     """
-    if path is None:
-        files = sorted(RESULTS_DIR.glob("*.json"), key=lambda p: p.stat().st_mtime)
-        if not files:
-            raise FileNotFoundError(f"no results files in {RESULTS_DIR}")
-        path = files[-1]
-        print(f"# {path.name}")
-    data = json.loads(Path(path).read_text())
-    return data["results"] if isinstance(data, dict) and "results" in data else data
+
+    def __init__(self, results, base: str) -> None:
+        super().__init__(results)
+        self.base = base
+
+
+def load(base: str | None = None, path: str | Path | None = None) -> list[dict[str, Any]]:
+    """A stored step 2 run, assembled from its per-candidate files.
+
+    Safe to call while the run is still going: each file is written once and
+    never revised, so a read mid-run sees a prefix of the run, not a half
+    record. Pass `path` instead to read a single-file result from elsewhere.
+    """
+    if path is not None:
+        data = json.loads(Path(path).read_text())
+        return data["results"] if isinstance(data, dict) and "results" in data else data
+    base = _resolve_base(base)
+    print(f"# {base}")
+    stored = CandidateResults(RESULTS_DIR, base).load()
+    return Run((stored or {"results": []})["results"], base)
+
+
+def load_step1(base: str | None = None) -> dict[str, dict[str, Any]]:
+    """The one-shot run for a model, keyed by question id."""
+    return OneShotResults(RESULTS_DIR, _resolve_base(base, SINGLE_STEP)).read()
+
+
+def load_verified(base: str | None = None,
+                  judge: str | None = None) -> list[dict[str, Any]]:
+    """The judge's verdicts for a stored run."""
+    base = _resolve_base(base)
+    judge = _resolve_judge(base, judge)
+    if judge is None:
+        return []
+    stored = VerificationResults(RESULTS_DIR, base, judge).load()
+    return (stored or {"results": []})["results"]
 
 
 def _by_id(results: list[dict], qid: int | str) -> dict:
@@ -158,13 +225,42 @@ def _baselines(results: list[dict]) -> dict[str, float]:
     }
 
 
-def _print_baselines(b: dict, indent: str = "    ") -> None:
+def _one_shot(base: str | None, qids) -> tuple[float, int] | None:
+    """One-shot accuracy over the given questions, or None if none are stored.
+
+    Averaged over attempts rather than taken from the record's is_correct, so
+    that a run with several attempts per question is measured the same way as
+    "single candidate, on average" below it. With one attempt the two agree.
+    """
+    if not base:
+        return None
+    records = OneShotResults(RESULTS_DIR, base).read()
+    picked = [records[str(q)] for q in qids if str(q) in records]
+    if not picked:
+        return None
+    rate = statistics.mean(
+        (r.get("correct_attempts") or 0) / max(r.get("total_attempts") or 1, 1)
+        for r in picked
+    )
+    return rate * 100, len(picked)
+
+
+def _print_baselines(b: dict, indent: str = "    ",
+                     one_shot: tuple[float, int] | None = None) -> None:
+    if one_shot is not None:
+        rate, covered = one_shot
+        # Step 1 can cover fewer questions than step 2 has reached, and then it
+        # is not the same measurement - say so rather than let the numbers sit
+        # in one column as though they were comparable.
+        note = "" if covered == b["n"] else f"   (only {covered} of {b['n']} questions)"
+        print(f"{indent}one shot, no candidates        {rate:5.1f}%{note}")
     print(f"{indent}single candidate, on average    {b['single']:5.1f}%")
     print(f"{indent}majority vote                   {b['vote']:5.1f}%")
     print(f"{indent}unverified: any correct in k    {b['unverified']:5.1f}%   (ceiling for any selector)")
 
 
-def accuracy(results: list[dict], verified: list[dict] | str | Path | None = None) -> None:
+def accuracy(results: list[dict], verified: list[dict] | str | Path | None = None,
+             base: str | None = None, judge: str | None = None) -> None:
     """Selector baselines, and the verified metric where step 3 has caught up.
 
     The two sections cover different question sets on purpose. Verification
@@ -173,18 +269,33 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     whichever questions happen to be judged yet. The second section restricts
     both to the same questions.
     """
-    print(f"  ALL QUESTIONS THROUGH STEP 2")
-    _print_baselines(_baselines(results))
+    base = base or getattr(results, "base", None)
+    all_ids = [q["question_id"] for q in results]
+
+    # Step 1 over everything it has answered, not only the questions step 2 has
+    # reached. The per-section lines below are restricted to matching question
+    # sets so they can be compared with each other; this one says how the model
+    # does on its own, over the whole run.
+    if base:
+        records = OneShotResults(RESULTS_DIR, base).read()
+        if records:
+            whole = _one_shot(base, list(records))
+            print(f"  STEP 1, WHOLE RUN ({whole[1]} questions answered once)")
+            print(f"    one shot, no candidates       {whole[0]:5.1f}%")
+            print()
+    sizes = sorted(len(q.get("candidates") or []) for q in results)
+    spread = (f"{sizes[0]} candidates each" if sizes and sizes[0] == sizes[-1]
+              else f"{sizes[0]}-{sizes[-1]} candidates each")
+    print(f"  ALL QUESTIONS THROUGH STEP 2 ({len(results)} questions, {spread})")
+    _print_baselines(_baselines(results), one_shot=_one_shot(base, all_ids))
 
     if verified is None:
-        default = RESULTS_DIR / "step3.json"
-        if default.is_file():
-            verified = default
-        else:
+        verified = load_verified(base, judge)
+        if not verified:
             print("\n  no step 3 results yet")
             return
     if isinstance(verified, (str, Path)):
-        verified = load(verified)
+        verified = load(path=verified)
 
     judged = {str(q["question_id"]): q for q in verified}
     both = [q for q in results if str(q["question_id"]) in judged]
@@ -215,7 +326,8 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
 
     n = len(both)
     print(f"\n  QUESTIONS THROUGH BOTH STEPS ({n})")
-    _print_baselines(_baselines(both))
+    _print_baselines(_baselines(both),
+                     one_shot=_one_shot(base, [q["question_id"] for q in both]))
     print(f"    first fully verified candidate  {first_valid_right / n * 100:5.1f}%   <- the metric")
     print(f"    verified, else majority vote    {hybrid_right / n * 100:5.1f}%   <- hybrid")
     print(f"    (a valid candidate was found for {found}/{n}; when found it was right "
@@ -223,27 +335,62 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     if fell_back:
         print(f"    (the fallback fired {fell_back} times and the vote was right {fallback_right})")
 
+    # A question judged before its last candidate existed, and still without a
+    # pass, is not finished: the next judging pass continues it. Until then it
+    # counts against the metric, which is why a run being watched live reads
+    # worse than it is.
+    open_questions = 0
+    for q in both:
+        cv = judged[str(q["question_id"])].get("candidate_verifications", [])
+        if any(c.get("all_facts_correct") for c in cv):
+            continue
+        if len(cv) < len(q.get("candidates") or []):
+            open_questions += 1
+    if open_questions:
+        print(f"    ({open_questions} still being judged; they count as wrong "
+              f"until a later pass finds a valid candidate)")
 
-def _count_questions(path: Path) -> int | None:
-    """Questions in a results file, tolerating one that is being written.
 
-    A run saves after every question, so a plain json.load can land mid-write.
-    Counting the question_id keys textually still gives the right answer then,
-    which matters because that is exactly when you want to look.
+def step1(base: str | None = None) -> None:
+    """The one-shot baseline on its own: accuracy, and what went wrong."""
+    base = _resolve_base(base, SINGLE_STEP)
+    records = OneShotResults(RESULTS_DIR, base).read()
+    if not records:
+        print(f"  nothing stored for {base}")
+        return
+    rate, covered = _one_shot(base, list(records))
+    attempts = sum(r.get("total_attempts") or 0 for r in records.values())
+    unparsed = sum(1 for r in records.values() if not r.get("predicted_option"))
+    errors = sum(1 for r in records.values() if r.get("error"))
+    print(f"  {base}")
+    print(f"  one shot, no candidates        {rate:5.1f}%   "
+          f"({covered} questions, {attempts} attempts)")
+    if unparsed:
+        print(f"  answers that did not parse     {unparsed}")
+    if errors:
+        print(f"  questions that errored         {errors}")
+
+
+def _difficult_total(default: int = 483) -> int:
+    """How many questions a run covers, from the list the pipeline works on."""
+    from inference._dataset import load_difficult_question_ids
+
+    for name in ("difficult_questions.csv", "data/difficult_questions.candidate.csv"):
+        path = _bootstrap.LLM_MONKEYS_ROOT / name
+        if path.is_file():
+            return len(load_difficult_question_ids(path))
+    return default
+
+
+def progress(base: str | None = None, judge: str | None = None,
+             total: int | None = None) -> None:
+    """Where one model's run has got to. Safe to re-run at any time.
+
+    Everything is per run: the questions come from the difficult-questions
+    list, and the target number of candidates from the run's own summary, so
+    two models at different k each report against their own target rather than
+    against whatever the last run happened to use.
     """
-    if not path.is_file():
-        return None
-    text = path.read_text(errors="ignore")
-    try:
-        data = json.loads(text)
-        results = data["results"] if isinstance(data, dict) and "results" in data else data
-        return len(results)
-    except json.JSONDecodeError:
-        return text.count('"question_id"')
-
-
-def progress(total: int = 483) -> None:
-    """Where the pipeline has got to. Safe to re-run at any time."""
     import subprocess
     import time
 
@@ -251,23 +398,41 @@ def progress(total: int = 483) -> None:
         return subprocess.run(["pgrep", "-f", pattern],
                               capture_output=True).returncode == 0
 
-    step2 = RESULTS_DIR / "step2.json"
-    step3 = RESULTS_DIR / "step3.json"
-    generated = _count_questions(step2) or 0
-    judged = _count_questions(step3) or 0
+    base = _resolve_base(base)
+    judge = _resolve_judge(base, judge)
+    # Counting directories rather than parsing anything: this is meant to be
+    # re-run every few seconds while a run is in flight.
+    candidates = CandidateResults(RESULTS_DIR, base)
+    questions = candidates.questions()
+    counts = [candidates.candidate_count(q) for q in questions]
+    # A question's directory appears with its first candidate, so counting
+    # directories would report a question as done the moment it starts. Only
+    # the ones that reached the target count are finished.
+    summary = candidates.read_summary() or {}
+    target = summary.get("n_candidates") or max(counts, default=0)
+    generated = sum(1 for n in counts if n >= target) if target else 0
+    if total is None:
+        total = _difficult_total()
+    judged = sum(1 for q in questions
+                 if judge and (candidates.question_dir(q) / judge).is_dir())
 
     gen_running = alive("[i]nference.cli")
-    judge_running = alive("[v]erifier.cli") or alive("[s]napshot_results")
+    judge_running = alive("[v]erifier.cli")
 
     def bar(done: int, width: int = 40) -> str:
         filled = round(done / total * width)
         return "#" * filled + "." * (width - filled)
 
-    print(f"  {time.strftime('%H:%M:%S')}")
+    print(f"  {time.strftime('%H:%M:%S')}   {base}   k={target}"
+          + (f"   judged by {judge}" if judge else ""))
+    in_flight = len(questions) - generated
     print(f"  generation  {bar(generated)}  {generated:>3}/{total}  "
-          f"{'running' if gen_running else 'stopped'}")
+          f"{'running' if gen_running else 'stopped'}"
+          + (f"   (+{in_flight} started)" if in_flight else ""))
     print(f"  judging     {bar(judged)}  {judged:>3}/{total}  "
           f"{'running' if judge_running else 'idle'}")
+    if counts:
+        print(f"  candidates  {sum(counts)} stored, {target} per finished question")
 
     log = RESULTS_DIR.parents[1] / "logs" / "step2.log"
     if log.is_file():
@@ -275,6 +440,212 @@ def progress(total: int = 483) -> None:
         exhausted = text.count("Exhausted")
         if exhausted:
             print(f"  WARNING: {exhausted} candidates gave up after all retries")
+
+
+def verified_curve(base: str | None = None, judge: str | None = None,
+                   max_k: int | None = None, plot: bool = True):
+    """The method's accuracy as a function of k: judge candidates in order,
+    answer with the first whose facts all check out.
+
+    Returns {k: {curve: value}} and, by default, plots it against the baselines
+    and against what the judging costs.
+
+    Unlike vote_curve, this cannot average over random subsets of the
+    candidates. The verifier stops at the first candidate that passes, so for a
+    question where candidate j passed, nothing after j was ever judged: a
+    random subset containing candidate 17 has no verdict to read. Prefixes are
+    the one ordering the stored verdicts answer exactly, so the curves here all
+    use the first k candidates as generated, including the baselines, which
+    keeps them comparable with each other if not with vote_curve.
+
+    Ties in a majority vote are given fractional credit - two options level on
+    2 votes each, one of them right, counts as half - which is the expectation
+    of breaking the tie at random, without the noise of actually doing it.
+    """
+    base = _resolve_base(base)
+    judge = _resolve_judge(base, judge)
+    if judge is None:
+        raise FileNotFoundError(f"no verdicts stored for {base}")
+
+    candidates_store = CandidateResults(RESULTS_DIR, base)
+    verdicts_store = VerificationResults(RESULTS_DIR, base, judge)
+
+    questions = []
+    for qid in candidates_store.questions():
+        verdicts = verdicts_store.read_verdicts(qid)
+        if not verdicts:
+            continue  # step 3 has not reached this question yet
+        records = candidates_store.read_candidates(qid)
+        if not records:
+            continue
+        truth = records[0].get("ground_truth")
+        cands = [r["candidate"] for r in records]
+        judged = {v["verification"]["candidate_index"]: v["verification"]
+                  for v in verdicts}
+        passing = sorted(i for i, v in judged.items() if v.get("all_facts_correct"))
+        questions.append({
+            "picks": [c.get("predicted_option") for c in cands],
+            "right": [bool(c.get("is_correct")) for c in cands],
+            "truth": truth,
+            # The position the method stops at, and whether it was right there.
+            "first_pass": passing[0] if passing else None,
+            "pass_right": (bool(judged[passing[0]].get("is_correct"))
+                           if passing else False),
+            "judged": len(judged),
+        })
+
+    if not questions:
+        print(f"  no questions have been through both steps for {base}")
+        return {}
+
+    ks = list(range(1, (max_k or max(len(q["picks"]) for q in questions)) + 1))
+    curves = {name: [] for name in
+              ("verified", "verified, else vote", "majority vote", "any correct",
+               "single candidate")}
+    cost = {"judged by verifier": [], "generated": []}
+
+    for k in ks:
+        verified = hybrid = vote = anyright = judged_cost = single = 0.0
+        for q in questions:
+            take = min(k, len(q["picks"]))
+            found = q["first_pass"] is not None and q["first_pass"] < take
+            verified += q["pass_right"] if found else 0.0
+
+            # Majority vote over the same prefix, ties shared out.
+            counts = Counter(p for p in q["picks"][:take] if p)
+            if counts:
+                best = max(counts.values())
+                winners = [opt for opt, c in counts.items() if c == best]
+                vote_score = sum(w == q["truth"] for w in winners) / len(winners)
+            else:
+                vote_score = 0.0
+            vote += vote_score
+            hybrid += q["pass_right"] if found else vote_score
+            anyright += any(q["right"][:take])
+            # One candidate picked at random out of the first k, which is the
+            # pipeline with no selector at all.
+            single += sum(q["right"][:take]) / take
+
+            # What the method spent: judging stops at the candidate it accepts,
+            # and never goes past what was judged.
+            judged_cost += (q["first_pass"] + 1 if found
+                            else min(q["judged"], take))
+
+        n = len(questions)
+        curves["verified"].append(verified / n * 100)
+        curves["verified, else vote"].append(hybrid / n * 100)
+        curves["majority vote"].append(vote / n * 100)
+        curves["any correct"].append(anyright / n * 100)
+        curves["single candidate"].append(single / n * 100)
+        cost["judged by verifier"].append(judged_cost / n)
+        cost["generated"].append(float(k))
+
+    one_shot = _one_shot(base, [q for q in candidates_store.questions()])
+
+    if plot:
+        import matplotlib.pyplot as plt
+
+        fig, (ax, ax2) = plt.subplots(
+            2, 1, figsize=(9, 8), sharex=True,
+            gridspec_kw={"height_ratios": [3, 1]},
+        )
+        ax.plot(ks, curves["any correct"], "s--", color="#9467bd", alpha=0.7,
+                label="any correct in k (ceiling)")
+        ax.plot(ks, curves["verified, else vote"], "^-", color="#2ca02c",
+                label="verified, else majority vote")
+        ax.plot(ks, curves["verified"], "o-", color="#1f77b4",
+                label="first fully verified candidate")
+        ax.plot(ks, curves["majority vote"], "-", color="#ff7f0e",
+                label="majority vote")
+        ax.plot(ks, curves["single candidate"], "-", color="#8c564b", alpha=0.8,
+                label="single candidate, on average")
+        if one_shot is not None:
+            ax.axhline(one_shot[0], ls=":", color="#888888",
+                       label=f"one shot, no candidates ({one_shot[0]:.1f}%)")
+        ax.set_ylabel("% of questions answered correctly")
+        ax.set_title(f"{base}, judged by {judge}  ({len(questions)} questions)")
+        ax.grid(alpha=0.3)
+        ax.legend(loc="lower right")
+
+        ax2.plot(ks, cost["generated"], ":", color="#888888",
+                 label="candidates generated")
+        ax2.plot(ks, cost["judged by verifier"], "o-", color="#1f77b4",
+                 label="candidates judged, on average")
+        ax2.set_xlabel("candidates considered (k)")
+        ax2.set_ylabel("per question")
+        ax2.grid(alpha=0.3)
+        ax2.legend(loc="upper left")
+        plt.tight_layout()
+        plt.show()
+
+    return {k: {**{name: values[i] for name, values in curves.items()},
+                "judged": cost["judged by verifier"][i]}
+            for i, k in enumerate(ks)}
+
+
+def monkeys_curve(base: str | None = None, judge: str | None = None,
+                  max_k: int | None = None, plot: bool = True,
+                  majority_vote: bool = False) -> dict[int, float]:
+    """The method's accuracy against k, and nothing else but the baseline.
+
+    One line: answer each question with the first of its k candidates whose
+    facts all check out, counting a question with no such candidate as wrong.
+    The red dashed line is the same model answering once, with no candidates
+    and no verification, on the same questions.
+
+    The dashed brown line is one candidate of the same pipeline picked at
+    random - facts and an answer built on them, but no verification - which
+    separates what the pipeline is worth from what selecting within it is
+    worth.
+
+    majority_vote=True adds the other selector for comparison: the answer most
+    of the k candidates agree on. It is off by default because it reads all k
+    candidates for every question, so it answers a different question from the
+    one this chart is about - what the method buys over answering once.
+
+    Returns {k: accuracy}, the verified curve, whatever is drawn.
+    verified_curve() is the same measurement with every selector and the
+    judging cost alongside it.
+    """
+    rows = verified_curve(base, judge, max_k, plot=False)
+    curve = {k: row["verified"] for k, row in rows.items()}
+    single = {k: row["single candidate"] for k, row in rows.items()}
+    vote = {k: row["majority vote"] for k, row in rows.items()}
+    if not curve:
+        return {}
+
+    base = _resolve_base(base)
+    judge = _resolve_judge(base, judge)
+    candidates = CandidateResults(RESULTS_DIR, base)
+    one_shot = _one_shot(base, candidates.questions())
+    counted = sum(1 for q in candidates.questions()
+                  if (candidates.question_dir(q) / judge).is_dir())
+
+    if plot:
+        import matplotlib.pyplot as plt
+
+        ks = sorted(curve)
+        fig, ax = plt.subplots(figsize=(9, 5))
+        ax.plot(ks, [curve[k] for k in ks], "o-", color="#1f77b4",
+                label="first verified")
+        if majority_vote:
+            ax.plot(ks, [vote[k] for k in ks], "s-", color="#ff7f0e", alpha=0.9,
+                    label=f"majority vote ({vote[ks[-1]]:.1f}%)")
+        ax.plot(ks, [single[k] for k in ks], "--", color="#8c564b", alpha=0.8,
+                label=f"single candidate, on average ({single[ks[-1]]:.1f}%)")
+        if one_shot is not None:
+            ax.axhline(one_shot[0], ls="--", color="red",
+                       label=f"single shot baseline ({one_shot[0]:.1f}%)")
+        ax.set_xlabel("candidates considered (k)")
+        ax.set_ylabel("% of questions answered correctly")
+        ax.set_title(f"{base}, judged by {judge}  ({counted} questions)")
+        ax.set_xticks([k for k in ks if k % 2 == 0 or k == 1])
+        ax.grid(alpha=0.3)
+        ax.legend(loc="lower right")
+        plt.tight_layout()
+        plt.show()
+
+    return curve
 
 
 def vote_curve(results: list[dict], max_k: int = 20, trials: int = 40,
@@ -359,5 +730,6 @@ def vote_curve(results: list[dict], max_k: int = 20, trials: int = 40,
             for i, k in enumerate(ks)}
 
 
-__all__ = ["load", "overview", "question", "candidate", "facts_stats", "accuracy",
-           "progress", "vote_curve"]
+__all__ = ["load", "load_step1", "load_verified", "overview", "question",
+           "candidate", "facts_stats", "step1", "accuracy", "progress",
+           "monkeys_curve", "verified_curve", "vote_curve"]

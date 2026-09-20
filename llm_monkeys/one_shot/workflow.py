@@ -19,6 +19,7 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
 from config import InferenceConfig, resolve_model_name
+from results_store import build_store
 from dataset import MedQAQuestion, format_one_shot_prompt, load_medqa_dataset
 
 from .agent import create_medqa_agent, create_runner
@@ -341,6 +342,7 @@ class OneShotInferenceWorkflow:
     ) -> None:
         self.config = config or InferenceConfig()
         self.config.model_name = resolve_model_name(self.config.model_name)
+        self.store = build_store(self.config)
 
         os.environ.setdefault("ADK_SUPPRESS_GEMINI_LITELLM_WARNINGS", "true")
         if self.config.project_id:
@@ -652,71 +654,47 @@ class OneShotInferenceWorkflow:
             return False
         return True
 
-    def _load_existing_results(
-        self, output_filepath: str | Path | None
-    ) -> dict[str, InferenceItemResult]:
-        """Load already processed results from destination file if it exists."""
-        if not output_filepath:
-            return {}
-
-        path = Path(output_filepath)
-        if not path.exists() or not path.is_file():
-            return {}
-
+    def _load_existing_results(self) -> dict[str, InferenceItemResult]:
+        """Load already processed results for this run, keyed by question id."""
         try:
-            content = path.read_text(encoding="utf-8").strip()
-            if not content:
+            data = self.store.load()
+            if data is None:
                 return {}
 
-            data = json.loads(content)
-            results_data: list[dict[str, Any]] = []
-
-            if isinstance(data, dict) and "results" in data:
-                if isinstance(data["results"], list):
-                    results_data = data["results"]
-            elif isinstance(data, list):
-                results_data = data
-
             existing_results: dict[str, InferenceItemResult] = {}
-            for item in results_data:
+            for item in data["results"]:
                 if isinstance(item, dict) and "question_id" in item:
                     item_res = InferenceItemResult.from_dict(item)
                     existing_results[str(item_res.question_id)] = item_res
 
             logger.info(
-                "Loaded %d existing processed results from destination file: %s",
+                "Loaded %d existing processed results from %s",
                 len(existing_results),
-                output_filepath,
+                self.store,
             )
             return existing_results
         except Exception as exc:
             logger.warning(
-                "Failed to read existing results from destination file %s: %s. Proceeding with fresh run.",
-                output_filepath,
+                "Failed to read existing results from %s: %s. Proceeding with fresh run.",
+                self.store,
                 exc,
                 exc_info=True,
             )
             return {}
 
-    def _save_to_json(
+    def _save_to_store(
         self,
-        output_filepath: str,
         summary: WorkflowSummary,
         results: list[InferenceItemResult],
     ) -> None:
-        """Write workflow summary and detailed results with attempts to JSON file atomically."""
-        out_path = Path(output_filepath)
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        payload = {
-            "summary": summary.to_dict(),
-            "results": [r.to_dict() for r in results],
-        }
-        temp_path = out_path.with_suffix(f"{out_path.suffix}.tmp")
-        temp_path.write_text(
-            json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8"
+        """Write one file per question result, plus the run summary."""
+        self.store.save(
+            {
+                "summary": summary.to_dict(),
+                "results": [r.to_dict() for r in results],
+            }
         )
-        temp_path.replace(out_path)
-        logger.info("Saved %d results to %s", len(results), output_filepath)
+        logger.info("Saved %d results to %s", len(results), self.store)
 
     def _build_summary(
         self,
@@ -739,12 +717,10 @@ class OneShotInferenceWorkflow:
         results_map: dict[str, InferenceItemResult],
         elapsed_time: float,
     ) -> None:
-        """Save a snapshot of currently available results to the destination file."""
-        if not self.config.output_filepath:
-            return
+        """Save a snapshot of currently available results to the store."""
         saved_results = list(results_map.values())
         summary = self._build_summary(saved_results, elapsed_time)
-        self._save_to_json(self.config.output_filepath, summary, saved_results)
+        self._save_to_store(summary, saved_results)
 
     async def run(
         self,
@@ -772,9 +748,7 @@ class OneShotInferenceWorkflow:
         )
 
         existing_results_map: dict[str, InferenceItemResult] = (
-            self._load_existing_results(self.config.output_filepath)
-            if self.config.output_filepath
-            else {}
+            self._load_existing_results()
         )
         if existing_results_map:
             valid_cached_count = sum(
@@ -790,9 +764,9 @@ class OneShotInferenceWorkflow:
                 and not self._is_valid_result(existing_results_map[str(q.question_id)])
             )
             logger.info(
-                "Destination file '%s' exists: %d/%d questions in this run already processed and will be skipped, "
+                "Results already stored in '%s': %d/%d questions in this run already processed and will be skipped, "
                 "%d questions failed previously and will be re-processed.",
-                self.config.output_filepath,
+                self.store,
                 valid_cached_count,
                 total_questions,
                 failed_cached_count,
@@ -833,9 +807,7 @@ class OneShotInferenceWorkflow:
             in_progress_results[qid] = res
             completed_count += 1
 
-            if self.config.output_filepath and (
-                completed_count % max(1, self.config.save_every_n) == 0
-            ):
+            if completed_count % max(1, self.config.save_every_n) == 0:
                 async with save_lock:
                     self._save_checkpoint(
                         in_progress_results,
@@ -867,16 +839,13 @@ class OneShotInferenceWorkflow:
         total_time = time.perf_counter() - workflow_start
         summary = self._build_summary(results, total_time)
 
-        if self.config.output_filepath:
-            for r in results:
-                in_progress_results[str(r.question_id)] = r
-            self._save_checkpoint(in_progress_results, total_time)
-            if len(in_progress_results) == len(results):
-                summary = self._build_summary(results, total_time)
-            else:
-                summary = self._build_summary(
-                    list(in_progress_results.values()), total_time
-                )
+        for r in results:
+            in_progress_results[str(r.question_id)] = r
+        self._save_checkpoint(in_progress_results, total_time)
+        if len(in_progress_results) != len(results):
+            summary = self._build_summary(
+                list(in_progress_results.values()), total_time
+            )
 
         logger.info(
             "Workflow finished in %.2fs. All Correct (Simple): %d/%d (%.2f%%)",

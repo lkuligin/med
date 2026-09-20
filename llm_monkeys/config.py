@@ -9,6 +9,14 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Self
 
+from results_store import (
+    DEFAULT_CANDIDATES_FILE,
+    DEFAULT_ONE_SHOT_FILE,
+    DEFAULT_RESULTS_DIR,
+    DEFAULT_VERIFIED_FILE,
+    run_name_for,
+)
+
 from inference._prompts import (
     DEFAULT_ANSWER_SYSTEM_INSTRUCTION,
     DEFAULT_FACT_SYSTEM_INSTRUCTION,
@@ -123,6 +131,71 @@ def resolve_model_name(model_name: str | None) -> str:
     return cleaned
 
 
+MODEL_FACTORY_ENV = "MEDQA_MODEL_FACTORY"
+RESULTS_STORE_ENV = "MEDQA_RESULTS_STORE"
+
+
+def _resolve_factory(env_var: str) -> Any | None:
+    """Resolve an optional ``"module.path:callable"`` override from the environment.
+
+    Returns None when the variable is unset, which is what keeps the default
+    behaviour exactly as it was for anyone who has not opted in.
+
+    Raises:
+        RuntimeError: If the spec is malformed or cannot be imported. Failing
+            loudly is deliberate: an override that silently does nothing sends
+            work somewhere other than where it was asked to go, and that is not
+            visible until the results are read.
+    """
+    spec = os.getenv(env_var)
+    if not spec or not spec.strip():
+        return None
+
+    cleaned = spec.strip()
+    module_name, sep, attr = cleaned.partition(":")
+    if not sep or not module_name.strip() or not attr.strip():
+        raise RuntimeError(
+            f"{env_var} must look like 'module.path:callable', got {cleaned!r}"
+        )
+
+    try:
+        module = importlib.import_module(module_name.strip())
+    except Exception as exc:
+        raise RuntimeError(
+            f"{env_var}: cannot import module {module_name.strip()!r}: {exc}"
+        ) from exc
+
+    try:
+        factory = getattr(module, attr.strip())
+    except AttributeError as exc:
+        raise RuntimeError(
+            f"{env_var}: module {module_name.strip()!r} has no attribute {attr.strip()!r}"
+        ) from exc
+
+    if not callable(factory):
+        raise RuntimeError(f"{env_var}: {cleaned!r} is not callable")
+    return factory
+
+
+def resolve_model_factory() -> Any | None:
+    """The model-factory override declared via MEDQA_MODEL_FACTORY, or None.
+
+    The callable receives the active configuration and must return an ADK
+    ``BaseLlm``. Unset, callers fall back to the stock LiteLlm adapter.
+    """
+    return _resolve_factory(MODEL_FACTORY_ENV)
+
+
+def resolve_results_store() -> Any | None:
+    """The results-store override declared via MEDQA_RESULTS_STORE, or None.
+
+    The callable receives the active configuration and must return an object
+    with ``save(payload)``, ``load()`` and a readable ``str()``. Unset, results
+    are written as one JSON file per run, which is what every entry point here
+    has always done.
+    """
+    return _resolve_factory(RESULTS_STORE_ENV)
+
 def resolve_dataset_name(dataset_name: str | None) -> str:
     """Resolve dataset name or alias to canonical Hugging Face dataset identifier."""
     if not dataset_name or not dataset_name.strip():
@@ -145,51 +218,6 @@ def is_medbullets_dataset(dataset_name: str | None) -> bool:
         or lower == MEDBULLETS_DATASET.lower()
     )
 
-MODEL_FACTORY_ENV = "MEDQA_MODEL_FACTORY"
-
-
-def resolve_model_factory() -> Any | None:
-    """Resolve the optional model-factory override declared via MEDQA_MODEL_FACTORY.
-
-    The environment variable holds an import spec ``"module.path:callable"``.
-    The callable receives the active configuration and must return an ADK
-    ``BaseLlm`` instance. When the variable is unset, None is returned and
-    callers fall back to the stock LiteLlm adapter, preserving default
-    behaviour exactly.
-
-    Raises:
-        RuntimeError: If the spec is malformed or cannot be imported. Failing
-            loudly is deliberate: silently falling back to Vertex AI would
-            route traffic (and cost) to the wrong backend unnoticed.
-    """
-    spec = os.getenv(MODEL_FACTORY_ENV)
-    if not spec or not spec.strip():
-        return None
-
-    cleaned = spec.strip()
-    module_name, sep, attr = cleaned.partition(":")
-    if not sep or not module_name.strip() or not attr.strip():
-        raise RuntimeError(
-            f"{MODEL_FACTORY_ENV} must look like 'module.path:callable', got {cleaned!r}"
-        )
-
-    try:
-        module = importlib.import_module(module_name.strip())
-    except Exception as exc:
-        raise RuntimeError(
-            f"{MODEL_FACTORY_ENV}: cannot import module {module_name.strip()!r}: {exc}"
-        ) from exc
-
-    try:
-        factory = getattr(module, attr.strip())
-    except AttributeError as exc:
-        raise RuntimeError(
-            f"{MODEL_FACTORY_ENV}: module {module_name.strip()!r} has no attribute {attr.strip()!r}"
-        ) from exc
-
-    if not callable(factory):
-        raise RuntimeError(f"{MODEL_FACTORY_ENV}: {cleaned!r} is not callable")
-    return factory
 
 class WorkloadType(str, Enum):
     """Supported inference workload types."""
@@ -230,7 +258,22 @@ class BaseInferenceConfig:
     max_retry_delay: float = 60.0
     litellm_num_retries: int = 3
 
-    output_filepath: str = "results_one_shot_gemma4.json"
+    # Where a run's results go. output_filepath is what the default store
+    # writes; results_dir and run_name are read by a store that keeps a
+    # directory per run, and mean nothing to the default one.
+    output_filepath: str = DEFAULT_ONE_SHOT_FILE
+    results_dir: str = DEFAULT_RESULTS_DIR
+    run_name: str | None = None
+
+    @property
+    def resolved_run_name(self) -> str:
+        """Directory name for this run, derived from the model unless set.
+
+        Naming it explicitly is what keeps two runs of one model under
+        different settings from landing in the same directory and blending
+        into a single dataset.
+        """
+        return self.run_name or run_name_for(self.resolved_model_name)
 
     @property
     def resolved_model_name(self) -> str:
@@ -293,7 +336,7 @@ class OneShotInferenceConfig(BaseInferenceConfig):
     system_instruction: str = DEFAULT_ONE_SHOT_INSTRUCTION
     n_attempts: int = 3
     concurrency: int = 2
-    output_filepath: str = "results_one_shot_gemma4.json"
+    output_filepath: str = DEFAULT_ONE_SHOT_FILE
     save_every_n: int = 10
 
     def validate(self) -> None:
@@ -314,7 +357,7 @@ class CandidateInferenceConfig(BaseInferenceConfig):
     """Configuration for running candidate-based multi-step MedQA inference (Step 2)."""
 
     concurrency: int = 4
-    output_filepath: str = "results_step2_gemma4_candidates.json"
+    output_filepath: str = DEFAULT_CANDIDATES_FILE
 
     fact_system_instruction: str = DEFAULT_FACT_SYSTEM_INSTRUCTION
     answer_system_instruction: str = DEFAULT_ANSWER_SYSTEM_INSTRUCTION
@@ -347,13 +390,23 @@ class VerifierConfig(BaseInferenceConfig):
     temperature: float = 1.0
     max_tokens: int = 512
     concurrency: int = 4
-    input_filepath: str = "results_step2_gemma4_candidates.json"
-    output_filepath: str = "results_step3_verified.json"
+    input_filepath: str = DEFAULT_CANDIDATES_FILE
+    output_filepath: str = DEFAULT_VERIFIED_FILE
+    judge_name: str | None = None
     system_instruction: str = DEFAULT_VERIFIER_SYSTEM_INSTRUCTION
     save_every_n_questions: int = 1
     max_candidates_per_question: int | None = None
     early_stop_facts: bool = False
     early_stop_candidates: bool = True
+
+    @property
+    def resolved_judge_name(self) -> str:
+        """Directory name for this judge's verdicts, derived from its model.
+
+        run_name names the run being verified, since the verdicts are stored
+        beside the candidates they judge; this names the judge within it.
+        """
+        return self.judge_name or run_name_for(self.resolved_model_name)
 
     def validate(self) -> None:
         """Validate verifier-specific parameters."""
@@ -424,8 +477,11 @@ __all__ = [
     "create_config",
     "register_litellm_model_pricing",
     "resolve_model_name",
-    "resolve_dataset_name",
-    "is_medbullets_dataset",
     "resolve_model_factory",
     "MODEL_FACTORY_ENV",
+    "RESULTS_STORE_ENV",
+    "resolve_results_store",
+
+    "resolve_dataset_name",
+    "is_medbullets_dataset",
 ]

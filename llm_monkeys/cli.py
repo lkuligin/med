@@ -95,6 +95,8 @@ def build_config(args: argparse.Namespace) -> InferenceConfig:
         "limit": args.limit,
         "offset": args.offset,
         "output_filepath": output_filepath,
+        "results_dir": args.results_dir,
+        "run_name": args.run_name,
         "n_attempts": getattr(args, "n_attempts", 3),
         "concurrency": args.concurrency,
         "max_parse_retries": args.max_parse_retries,
@@ -111,7 +113,7 @@ def build_config(args: argparse.Namespace) -> InferenceConfig:
     return InferenceConfig(**kwargs)
 
 
-def format_summary(summary: WorkflowSummary, output_path: str) -> str:
+def format_summary(summary: WorkflowSummary, destination: str) -> str:
     """Format workflow summary statistics into a printable string."""
     config_str = f"{summary.config}, " if summary.config else ""
     return (
@@ -128,7 +130,7 @@ def format_summary(summary: WorkflowSummary, output_path: str) -> str:
         f"Accuracy (All Correct): {summary.accuracy * 100:.2f}%\n"
         f"Total Tokens: {summary.total_tokens} (Prompt: {summary.total_prompt_tokens}, Candidate: {summary.total_candidate_tokens})\n"
         f"Total Time: {summary.total_time_seconds:.2f}s (Avg Latency: {summary.average_latency_seconds:.2f}s)\n"
-        f"Results saved to: {output_path}\n"
+        f"Results saved to: {destination}\n"
         f"{'=' * 60}\n"
     )
 
@@ -137,8 +139,9 @@ async def async_main(args: argparse.Namespace) -> int:
     """Main asynchronous execution flow for CLI."""
     setup_logging(args.log_level)
     config = build_config(args)
-    summary, _ = await OneShotInferenceWorkflow(config=config).run()
-    print(format_summary(summary, config.output_filepath))
+    workflow = OneShotInferenceWorkflow(config=config)
+    summary, _ = await workflow.run()
+    print(format_summary(summary, str(workflow.store)))
     return 0 if summary.failed == 0 else 1
 
 

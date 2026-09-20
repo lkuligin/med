@@ -17,6 +17,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from results_store import OneShotResults, split_run_path
+
 
 def load_difficult_question_ids(csv_path: str | Path) -> set[str]:
     """Read difficult question IDs from CSV file as a set of strings."""
@@ -420,13 +422,18 @@ def analyze_file(
     difficult_questions_csv: str | Path | None = None,
     **kwargs: Any,
 ) -> dict[str, Any]:
-    """Load and analyze a JSON results file."""
+    """Load and analyze one run: a stored run directory, or a JSON file."""
     path = Path(file_path)
     if not path.exists():
         raise FileNotFoundError(f"File not found: {path}")
 
-    with path.open("r", encoding="utf-8") as f:
-        data = json.load(f)
+    if path.is_dir():
+        data = OneShotResults(*split_run_path(path)).load()
+        if data is None:
+            raise FileNotFoundError(f"No results stored in: {path}")
+    else:
+        with path.open("r", encoding="utf-8") as f:
+            data = json.load(f)
 
     return analyze_data(
         data,
@@ -547,8 +554,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "file",
         nargs="?",
-        default="results_gemma4.json",
-        help="Path to results JSON file (default: results_gemma4.json)",
+        default="results/single-step/gemma-4-26b-a4b-it-maas",
+        help="Directory of a stored run, or a results JSON file",
     )
     parser.add_argument(
         "--difficult-questions-csv",

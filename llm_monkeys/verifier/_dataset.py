@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from dataclasses import asdict, dataclass, field
-from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -85,54 +83,40 @@ class Step2QuestionData(_DictSerializable):
 
 
 def load_step2_results(
-    filepath: str | Path,
+    store: Any,
     limit: int | None = None,
     offset: int = 0,
 ) -> list[Step2QuestionData]:
-    """Load Step 2 JSON candidate output.
-
-    Handles both wrapped format `{"summary": ..., "results": [...]}` and bare list `[...]`.
+    """Load the candidates of a Step 2 run.
 
     Args:
-        filepath: Path to Step 2 results JSON file.
+        store: Anything holding the run to verify - whatever layout it keeps,
+            it is read through load().
         limit: Optional maximum number of questions to load.
         offset: Number of questions to skip from start.
 
     Returns:
         List of Step2QuestionData objects.
+
+    Raises:
+        FileNotFoundError: If the run holds no candidates.
     """
-    path = Path(filepath)
-    if not path.is_file():
-        raise FileNotFoundError(f"Step 2 results file not found at: {path}")
-
-    with path.open("r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    if isinstance(data, list):
-        raw_items = data
-    elif isinstance(data, dict) and "results" in data:
-        raw_items = data["results"]
-    elif isinstance(data, dict):
-        raise ValueError(
-            f"Expected 'results' key in JSON dict at {path}, found keys: {list(data.keys())}"
-        )
-    else:
-        raise ValueError(
-            f"Unexpected JSON format at {path}: expected dict or list, got {type(data)}"
-        )
+    data = store.load()
+    if data is None:
+        raise FileNotFoundError(f"No Step 2 candidates stored in: {store}")
 
     start = max(0, offset)
     stop = start + limit if limit is not None and limit > 0 else None
     selected = [
         Step2QuestionData.from_dict(item)
-        for item in raw_items
+        for item in data["results"]
         if isinstance(item, dict)
     ][start:stop]
 
     logger.info(
         "Loaded %d questions from %s (offset=%d, limit=%s)",
         len(selected),
-        path,
+        store,
         offset,
         limit,
     )

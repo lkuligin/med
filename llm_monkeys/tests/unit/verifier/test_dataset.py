@@ -7,7 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from verifier._dataset import Step2CandidateData, Step2QuestionData, load_step2_results
+from results_store import CandidateResults
+from verifier._dataset import (
+    Step2CandidateData,
+    Step2QuestionData,
+    load_step2_results,
+)
 
 
 def test_step2_candidate_data_from_dict_and_to_dict():
@@ -64,62 +69,42 @@ def test_step2_question_data_from_dict_and_to_dict():
     assert as_dict["candidates"][0]["candidate_index"] == 0
 
 
-def test_load_step2_results_wrapped_and_bare(tmp_path: Path):
-    sample_data = {
-        "summary": {"total_questions": 2},
-        "results": [
-            {
-                "question_id": "0",
-                "question": "Q0",
-                "options": {"A": "OptA"},
-                "ground_truth": "A",
-                "candidates": [],
-            },
-            {
-                "question_id": "1",
-                "question": "Q1",
-                "options": {"B": "OptB"},
-                "ground_truth": "B",
-                "candidates": [],
-            },
-        ],
-    }
-    p_wrapped = tmp_path / "wrapped.json"
-    with open(p_wrapped, "w") as f:
-        json.dump(sample_data, f)
+def test_load_step2_results_from_store(tmp_path: Path):
+    store = CandidateResults(tmp_path, "test-run")
+    store.save(
+        {
+            "summary": {"total_questions": 2},
+            "results": [
+                {
+                    "question_id": "0",
+                    "question": "Q0",
+                    "options": {"A": "OptA"},
+                    "ground_truth": "A",
+                    "candidates": [{"candidate_index": 0, "facts": ["Fact 0"]}],
+                },
+                {
+                    "question_id": "1",
+                    "question": "Q1",
+                    "options": {"B": "OptB"},
+                    "ground_truth": "B",
+                    "candidates": [{"candidate_index": 0, "facts": ["Fact 1"]}],
+                },
+            ],
+        }
+    )
 
-    loaded = load_step2_results(p_wrapped)
+    loaded = load_step2_results(store)
     assert len(loaded) == 2
     assert loaded[0].question_id == "0"
     assert loaded[1].question_id == "1"
 
-    # Test limit and offset
-    loaded_slice = load_step2_results(p_wrapped, limit=1, offset=1)
+    # Limit and offset
+    loaded_slice = load_step2_results(store, limit=1, offset=1)
     assert len(loaded_slice) == 1
     assert loaded_slice[0].question_id == "1"
 
-    # Test bare list format
-    p_bare = tmp_path / "bare.json"
-    with open(p_bare, "w") as f:
-        json.dump(sample_data["results"], f)
-
-    loaded_bare = load_step2_results(p_bare)
-    assert len(loaded_bare) == 2
-
-    # Test non-existent file
+    # A run with nothing stored
     with pytest.raises(FileNotFoundError):
-        load_step2_results(tmp_path / "nonexistent.json")
+        load_step2_results(CandidateResults(tmp_path, "no-such-run"))
 
-    # Test invalid JSON format: dict without 'results' key
-    p_invalid_dict = tmp_path / "invalid_dict.json"
-    with open(p_invalid_dict, "w") as f:
-        json.dump({"foo": "bar"}, f)
-    with pytest.raises(ValueError, match="Expected 'results' key in JSON dict"):
-        load_step2_results(p_invalid_dict)
 
-    # Test invalid JSON format: primitive / unexpected type
-    p_invalid_type = tmp_path / "invalid_type.json"
-    with open(p_invalid_type, "w") as f:
-        json.dump(12345, f)
-    with pytest.raises(ValueError, match="Unexpected JSON format"):
-        load_step2_results(p_invalid_type)

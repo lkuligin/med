@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 # Run step 2, with step 3 following a question or two behind.
 #
-#   ./gdanschin_runtime/pipeline.sh --limit 483 --n-candidates 20
-#   ./gdanschin_runtime/pipeline.sh status
+#   ./gdanschin_runtime/pipeline.sh --base gemma-4-26b --limit 483 --n-candidates 20
+#   ./gdanschin_runtime/pipeline.sh status [--base NAME]
 #   ./gdanschin_runtime/pipeline.sh stop
 #
-# Other arguments pass through to inference.cli.
+# --base and --judge name entries in gdanschin_runtime/models.py, which decide
+# both the model called and the directory results land in. Other arguments pass
+# through to inference.cli.
+#
+# Step 3 reads the candidates straight out of the store, so it needs no copy of
+# step 2's output and can run while step 2 is still generating: a record is
+# written once and never revised, so what it reads is always whole.
 #
 # Detached with setsid rather than tmux. tmux hands a new session the
 # environment of the tmux SERVER - started long ago by whoever opened the first
@@ -15,8 +21,8 @@
 #
 # The steps use different gateways on purpose: generation goes to the internal
 # one, which showed no rate limit and saturates around 8 concurrent, judging to
-# the external one, where Gemini lives behind a per-user RPS limit that bites at
-# any concurrency, so it stays low and simply lags behind.
+# the external one, where Gemini lives behind a per-user limit on requests in
+# flight, so it stays low and simply lags behind.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -25,85 +31,74 @@ PY="$REPO/.venv/bin/python"
 MONKEYS="$REPO/llm_monkeys"
 LOGS="$REPO/logs"
 
-# Results live under results/<model>/ rather than in one shared file. The
-# generator merges with whatever output it finds and tops each question up to
-# the target count, which is exactly right for resuming an interrupted run and
-# exactly wrong across models: a second run would quietly blend another model's
-# candidates into the first one's dataset, with nothing to show for it.
-RUN_NAME="${RUN_NAME:-}"
-if [[ -z "$RUN_NAME" ]]; then
-    RUN_NAME="gemma-4-26b"
-    prev=""
-    for arg in "$@"; do
-        [[ "$prev" == "--model" ]] && RUN_NAME="$arg"
-        prev="$arg"
-    done
-    RUN_NAME="${RUN_NAME//\//-}"
-fi
-RUN_DIR="$MONKEYS/results/$RUN_NAME"
+BASE="${MEDQA_BASE_MODEL:-gemma-4-26b}"
+JUDGE="${MEDQA_JUDGE_MODEL:-gemini-3.8-flash}"
+COMMAND=""
+PASS=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --base)  BASE="$2"; shift 2 ;;
+        --judge) JUDGE="$2"; shift 2 ;;
+        status|stop) COMMAND="$1"; shift ;;
+        *) PASS+=("$1"); shift ;;
+    esac
+done
+export MEDQA_BASE_MODEL="$BASE" MEDQA_JUDGE_MODEL="$JUDGE"
 
-STEP2_OUT="${STEP2_OUT:-$RUN_DIR/step2.json}"
-SNAPSHOT="${SNAPSHOT:-$RUN_DIR/step2_snapshot.json}"
-STEP3_OUT="${STEP3_OUT:-$RUN_DIR/step3.json}"
 GEN_CONCURRENCY="${GEN_CONCURRENCY:-8}"
 JUDGE_CONCURRENCY="${JUDGE_CONCURRENCY:-2}"
 CYCLE_SECONDS="${CYCLE_SECONDS:-180}"
 
-count() {
-    [[ -f "$1" ]] || { echo 0; return; }
-    "$PY" -c "
-import json, sys
-try:
-    d = json.load(open(sys.argv[1]))
-    r = d['results'] if isinstance(d, dict) and 'results' in d else d
-    print(len(r))
-except Exception:
-    print(0)" "$1" 2>/dev/null || echo 0
-}
-
-case "${1:-}" in
-status)
+if [[ "$COMMAND" == "status" ]]; then
     gen=$(pgrep -f "[i]nference.cli" >/dev/null && echo running || echo stopped)
     judge=$(pgrep -f "[v]erifier.cli" >/dev/null && echo running || echo idle)
     pos=$(grep -o "Processing Question [0-9]*/[0-9]*" "$LOGS/step2.log" 2>/dev/null | tail -1)
+    echo "  base       $BASE   judge $JUDGE"
     echo "  generation $gen   ${pos:-}"
     echo "  judging    $judge"
-    echo "  generated  $(count "$STEP2_OUT") questions"
-    echo "  judged     $(count "$STEP3_OUT") questions"
+    "$PY" -c "
+import sys
+sys.path.insert(0, '$REPO')
+from gdanschin_runtime import _bootstrap
+from results_store import CandidateResults, VerificationResults
+candidates = CandidateResults('$MONKEYS/results', '$BASE')
+verdicts = VerificationResults('$MONKEYS/results', '$BASE', '$JUDGE')
+qs = candidates.questions()
+print(f'  generated  {len(qs)} questions, {sum(candidates.candidate_count(q) for q in qs)} candidates')
+print(f'  judged     {sum(1 for q in qs if verdicts.judge_dir(q).is_dir())} questions')"
     [[ -f "$LOGS/step2.log" ]] && echo "  gen errors $(grep -c Exhausted "$LOGS/step2.log")"
     exit 0
-    ;;
-stop)
+fi
+
+if [[ "$COMMAND" == "stop" ]]; then
     pkill -f "[i]nference.cli" 2>/dev/null && echo "  generation stopped" || echo "  generation was not running"
     pkill -f "[v]erifier.cli" 2>/dev/null && echo "  judging stopped" || echo "  judging was not running"
-    pkill -f "[p]ipeline.sh watch" 2>/dev/null || true
+    pkill -f "[p]ipeline.sh" 2>/dev/null || true
     exit 0
-    ;;
-esac
+fi
 
 # shellcheck source=env.sh
 source "$HERE/env.sh"
-mkdir -p "$RUN_DIR" "$LOGS"
+export MEDQA_BASE_MODEL="$BASE" MEDQA_JUDGE_MODEL="$JUDGE"
+mkdir -p "$LOGS"
 
-echo "run        $RUN_NAME"
-echo "generation -> ${STEP2_OUT#"$REPO/"}   internal gateway, concurrency $GEN_CONCURRENCY"
+echo "base       $BASE   judge $JUDGE"
+echo "generation -> results/facts-pipeline/$BASE   internal gateway, concurrency $GEN_CONCURRENCY"
 cd "$MONKEYS"
 setsid nohup "$PY" -m inference.cli --concurrency "$GEN_CONCURRENCY" \
-    --output "$STEP2_OUT" "$@" > "$LOGS/step2.log" 2>&1 < /dev/null &
+    --run-name "$BASE" "${PASS[@]}" > "$LOGS/step2.log" 2>&1 < /dev/null &
 echo "  pid $!"
 
-echo "judging    -> ${STEP3_OUT#"$REPO/"}   external gateway, concurrency $JUDGE_CONCURRENCY"
+echo "judging    -> $JUDGE   external gateway, concurrency $JUDGE_CONCURRENCY"
 setsid nohup bash -c '
     while true; do
         generating=$(pgrep -f "[i]nference.cli" >/dev/null && echo yes || echo no)
-        if "'"$HERE"'/snapshot_results.sh" "'"$STEP2_OUT"'" "'"$SNAPSHOT"'" >/dev/null 2>&1; then
-            "'"$PY"'" -m verifier.cli --input "'"$SNAPSHOT"'" --output "'"$STEP3_OUT"'" \
-                --concurrency '"$JUDGE_CONCURRENCY"' >> "'"$LOGS"'/step3.log" 2>&1 || true
-        fi
+        "'"$PY"'" -m verifier.cli --run-name "'"$BASE"'" --judge-name "'"$JUDGE"'" \
+            --concurrency '"$JUDGE_CONCURRENCY"' >> "'"$LOGS"'/step3.log" 2>&1 || true
         [[ "$generating" == "no" ]] && break
         sleep '"$CYCLE_SECONDS"'
     done
 ' > "$LOGS/watch.log" 2>&1 < /dev/null &
 echo "  pid $!"
 echo
-echo "watch it with:  ./gdanschin_runtime/pipeline.sh status"
+echo "watch it with:  ./gdanschin_runtime/pipeline.sh status --base $BASE"

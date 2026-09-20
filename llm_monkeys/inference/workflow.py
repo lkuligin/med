@@ -36,6 +36,7 @@ from inference.agent import (
     create_fact_generation_agent,
     create_runner,
 )
+from results_store import build_store
 from inference.parser import (
     evaluate_prediction,
     extract_predicted_option,
@@ -116,6 +117,7 @@ class CandidateInferenceWorkflow:
         session_service: InMemorySessionService | None = None,
     ) -> None:
         self.config = config or CandidateInferenceConfig()
+        self.store = build_store(self.config)
         self._save_lock = threading.Lock()
 
         os.environ.setdefault("ADK_SUPPRESS_GEMINI_LITELLM_WARNINGS", "true")
@@ -436,73 +438,49 @@ class CandidateInferenceWorkflow:
         question_res.update_aggregates()
         return question_res
 
-    def load_existing_results(
-        self, filepath: str | Path | None
-    ) -> dict[str, CandidateQuestionResult]:
-        """Load previously saved results from output JSON file if it exists."""
-        if not filepath:
-            return {}
-
-        path = Path(filepath)
-        if not path.is_file():
-            return {}
-
+    def load_existing_results(self) -> dict[str, CandidateQuestionResult]:
+        """Load previously stored results for this run, keyed by question id."""
         try:
-            with open(path, mode="r", encoding="utf-8") as f:
-                data = json.load(f)
-            raw_results: list[dict[str, Any]] = []
-            if isinstance(data, dict) and "results" in data:
-                if isinstance(data["results"], list):
-                    raw_results = data["results"]
-            elif isinstance(data, list):
-                raw_results = data
+            data = self.store.load()
+            if data is None:
+                return {}
 
             existing: dict[str, CandidateQuestionResult] = {}
-            for item in raw_results:
+            for item in data["results"]:
                 if isinstance(item, dict) and "question_id" in item:
                     q_res = CandidateQuestionResult.from_dict(item)
                     existing[str(q_res.question_id)] = q_res
 
             logger.info(
-                "Loaded %d existing question results from %s", len(existing), path
+                "Loaded %d existing question results from %s", len(existing), self.store
             )
             return existing
         except Exception as e:
-            logger.warning("Could not read existing results from %s: %s", path, e)
+            logger.warning(
+                "Could not read existing results from %s: %s", self.store, e
+            )
             return {}
 
     def save_results(
         self,
-        filepath: str | Path | None,
         results: list[CandidateQuestionResult],
         summary: CandidateWorkflowSummary | None = None,
     ) -> None:
-        """Persist results and summary atomically to output JSON file."""
-        if not filepath:
-            return
-        path = Path(filepath)
-        if not str(path):
-            return
+        """Persist results and summary, one file per candidate.
 
-        path.parent.mkdir(parents=True, exist_ok=True)
-        temp_path = path.with_suffix(
-            f".tmp_{int(time.time() * 1000)}_{random.randint(1000, 9999)}"
-        )
+        Records already on disk are left untouched, so a save costs only the
+        candidates generated since the last one however long the run gets.
+        """
         payload: dict[str, Any] = {
             "summary": summary.to_dict() if summary else None,
             "results": [r.to_dict() for r in results],
         }
-
         with self._save_lock:
             try:
-                with open(temp_path, mode="w", encoding="utf-8") as f:
-                    json.dump(payload, f, indent=2, ensure_ascii=False)
-                temp_path.replace(path)
-                logger.debug("Successfully saved %d results to %s", len(results), path)
+                self.store.save(payload)
+                logger.debug("Successfully saved %d results to %s", len(results), self.store)
             except Exception as e:
-                if temp_path.exists():
-                    temp_path.unlink()
-                logger.error("Failed to save results to %s: %s", path, e)
+                logger.error("Failed to save results to %s: %s", self.store, e)
                 raise
 
     async def run(
@@ -535,7 +513,7 @@ class CandidateInferenceWorkflow:
             )
             return empty_summary, []
 
-        existing_results = self.load_existing_results(self.config.output_filepath)
+        existing_results = self.load_existing_results()
         all_results_map: dict[str, CandidateQuestionResult] = dict(existing_results)
 
         # Overview of what exists in destination file
@@ -564,10 +542,10 @@ class CandidateInferenceWorkflow:
         )
         if existing_results:
             logger.info(
-                "Destination file '%s' exists (%d total stored questions). "
+                "Results already stored in '%s' (%d total stored questions). "
                 "Current run breakdown: %d already completed (will skip), "
                 "%d need additional candidates, %d are completely new.",
-                self.config.output_filepath,
+                self.store,
                 len(existing_results),
                 completed_count,
                 partial_count,
@@ -598,9 +576,7 @@ class CandidateInferenceWorkflow:
                     total_time_seconds=round(time.perf_counter() - start_time, 2),
                 )
                 self.save_results(
-                    self.config.output_filepath,
-                    list(all_results_map.values()),
-                    checkpoint_summary,
+                    list(all_results_map.values()), checkpoint_summary
                 )
 
         for q_idx, question in enumerate(questions):
@@ -655,9 +631,7 @@ class CandidateInferenceWorkflow:
                     total_time_seconds=round(time.perf_counter() - start_time, 2),
                 )
                 self.save_results(
-                    self.config.output_filepath,
-                    list(all_results_map.values()),
-                    checkpoint_summary,
+                    list(all_results_map.values()), checkpoint_summary
                 )
 
         total_time = round(time.perf_counter() - start_time, 2)
@@ -672,7 +646,7 @@ class CandidateInferenceWorkflow:
             total_time_seconds=total_time,
         )
 
-        self.save_results(self.config.output_filepath, all_results_list, summary)
+        self.save_results(all_results_list, summary)
         logger.info(
             "Workflow complete: %d total questions saved (%d in current run), %d total candidates, overall accuracy: %.2f%%, time: %.2fs",
             summary.total_questions,

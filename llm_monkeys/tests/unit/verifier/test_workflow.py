@@ -303,8 +303,12 @@ async def test_workflow_run_with_resume_and_file_io(tmp_path: Path):
 
     mock_runner.run_async = mock_run
 
-    out_file = tmp_path / "verified_results.json"
-    config = VerifierConfig(output_filepath=str(out_file), save_every_n_questions=1)
+    config = VerifierConfig(
+        results_dir=str(tmp_path),
+        run_name="test-run",
+        judge_name="test-judge",
+        save_every_n_questions=1,
+    )
     workflow = VerifierWorkflow(config=config, verifier_runner=mock_runner)
 
     questions = [
@@ -330,16 +334,104 @@ async def test_workflow_run_with_resume_and_file_io(tmp_path: Path):
     assert summary.questions_with_valid_candidate == 2
     assert summary.correct_answers == 2
     assert len(results) == 2
-    assert out_file.exists()
-
-    # Load file from disk and check structure
-    with open(out_file) as f:
-        saved = json.load(f)
+    # Read back from the store and check structure
+    saved = workflow.store.load()
+    assert saved is not None
     assert "summary" in saved
     assert len(saved["results"]) == 2
+    assert workflow.store.verdict_path("Q1", 0).is_file()
 
     # Second run should resume and skip already processed questions
     workflow_resume = VerifierWorkflow(config=config, verifier_runner=mock_runner)
     summary2, results2 = await workflow_resume.run(questions=questions)
     assert summary2.total_questions == 2
     assert len(results2) == 2
+
+
+@pytest.mark.asyncio
+async def test_workflow_continues_a_question_that_found_no_valid_candidate(tmp_path):
+    """A question judged to the end without a pass resumes at its new candidates."""
+    judged_facts = []
+
+    async def mock_run(**kwargs):
+        # The prompt carries the fact under verification; record what is judged.
+        judged_facts.append(kwargs)
+        yield make_mock_event('{"is_correct": 0, "rationale": "No."}')
+
+    mock_runner = MagicMock()
+    mock_runner.run_async = mock_run
+
+    config = VerifierConfig(
+        results_dir=str(tmp_path),
+        run_name="test-run",
+        judge_name="test-judge",
+        save_every_n_questions=1,
+    )
+    question = Step2QuestionData(
+        question_id="Q1",
+        question="Q1 text",
+        options={"A": "A"},
+        ground_truth="A",
+        candidates=[
+            Step2CandidateData(0, ["Fact 0"], "A", True),
+            Step2CandidateData(1, ["Fact 1"], "A", True),
+        ],
+    )
+
+    first = VerifierWorkflow(config=config, verifier_runner=mock_runner)
+    summary, results = await first.run(questions=[question])
+    assert results[0].found_valid_candidate is False
+    assert results[0].candidates_evaluated == 2
+    judged_first_time = len(judged_facts)
+    assert judged_first_time == 2
+
+    # Two more candidates arrive for the same question
+    question.candidates += [
+        Step2CandidateData(2, ["Fact 2"], "A", True),
+        Step2CandidateData(3, ["Fact 3"], "A", True),
+    ]
+
+    second = VerifierWorkflow(config=config, verifier_runner=mock_runner)
+    summary2, results2 = await second.run(questions=[question])
+
+    # Only the new ones cost anything, and the verdicts cover all four
+    assert len(judged_facts) - judged_first_time == 2
+    assert results2[0].candidates_evaluated == 4
+    assert [cv.candidate_index for cv in results2[0].candidate_verifications] == [
+        0,
+        1,
+        2,
+        3,
+    ]
+    assert [cv.attempt_number for cv in results2[0].candidate_verifications] == [
+        1,
+        2,
+        3,
+        4,
+    ]
+    assert second.store.verdict_path("Q1", 3).is_file()
+
+    # A question that did find a valid candidate is left alone
+    third = VerifierWorkflow(config=config, verifier_runner=mock_runner)
+    third.store.save(
+        {
+            "summary": None,
+            "results": [
+                {
+                    **results2[0].to_dict(),
+                    "question_id": "Q2",
+                    "found_valid_candidate": True,
+                }
+            ],
+        }
+    )
+    before = len(judged_facts)
+    question2 = Step2QuestionData(
+        question_id="Q2",
+        question="Q2 text",
+        options={"A": "A"},
+        ground_truth="A",
+        candidates=question.candidates + [Step2CandidateData(4, ["Fact 4"], "A", True)],
+    )
+    await third.run(questions=[question2])
+    assert len(judged_facts) == before

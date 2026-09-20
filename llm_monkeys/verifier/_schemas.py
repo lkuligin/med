@@ -212,8 +212,8 @@ class VerifierWorkflowSummary:
     """Aggregate statistics and metrics for the verification workflow run."""
 
     model: str
-    input_filepath: str
-    output_filepath: str
+    run_name: str
+    judge_name: str
     total_questions: int
     completed_questions: int
     failed_questions: int
@@ -231,6 +231,10 @@ class VerifierWorkflowSummary:
     total_tokens: int
     total_prompt_tokens: int
     total_candidate_tokens: int
+    # What the judge was set to, not just what it was called. A name says
+    # nothing about the sampling, and two judges that differ only in
+    # temperature are otherwise indistinguishable once stored.
+    temperature: float | None = None
     total_correct_candidates: int = 0
     total_correct_candidates_right_answers: int = 0
     total_correct_candidates_wrong_answers: int = 0
@@ -253,9 +257,10 @@ class VerifierWorkflowSummary:
         cls,
         results: list[QuestionVerificationResult],
         model: str,
-        input_filepath: str,
-        output_filepath: str,
+        run_name: str,
+        judge_name: str,
         total_time_seconds: float,
+        temperature: float | None = None,
     ) -> VerifierWorkflowSummary:
         """Compute aggregate summary from question verification results."""
         total_questions = len(results)
@@ -347,8 +352,9 @@ class VerifierWorkflowSummary:
 
         return cls(
             model=model,
-            input_filepath=input_filepath,
-            output_filepath=output_filepath,
+            run_name=run_name,
+            judge_name=judge_name,
+            temperature=temperature,
             total_questions=total_questions,
             completed_questions=completed_questions,
             failed_questions=failed_questions,

@@ -19,7 +19,7 @@ def make_mock_event(text: str, usage: Any = None) -> MagicMock:
 
 
 @pytest.mark.asyncio
-async def test_workflow_run_single_candidate():
+async def test_workflow_run_single_candidate(tmp_path):
     mock_fact_runner = MagicMock()
     mock_ans_runner = MagicMock()
 
@@ -52,7 +52,7 @@ async def test_workflow_run_single_candidate():
     mock_fact_runner.run_async = mock_fact_run
     mock_ans_runner.run_async = mock_ans_run
 
-    config = CandidateInferenceConfig(output_filepath="")
+    config = CandidateInferenceConfig(results_dir=str(tmp_path), run_name="test-run")
     workflow = CandidateInferenceWorkflow(
         config=config,
         fact_runner=mock_fact_runner,
@@ -118,7 +118,6 @@ async def test_workflow_run_candidate_fact_error():
 
 @pytest.mark.asyncio
 async def test_workflow_end_to_end_with_resume(tmp_path):
-    output_file = tmp_path / "test_candidates.json"
 
     mock_fact_runner = MagicMock()
     mock_ans_runner = MagicMock()
@@ -151,7 +150,8 @@ async def test_workflow_end_to_end_with_resume(tmp_path):
     mock_ans_runner.run_async = mock_ans_run
 
     config = CandidateInferenceConfig(
-        output_filepath=str(output_file),
+        results_dir=str(tmp_path),
+        run_name="test-run",
         n_candidates=2,
         concurrency=2,
     )
@@ -182,7 +182,7 @@ async def test_workflow_end_to_end_with_resume(tmp_path):
     assert summary.total_questions == 2
     assert summary.total_candidates_generated == 4
     assert summary.total_correct_candidates == 4
-    assert output_file.exists()
+    assert workflow.store.load() is not None
 
     # Test resume: running again should load existing results without error
     summary2, results2 = await workflow.run(questions=questions)
@@ -192,7 +192,6 @@ async def test_workflow_end_to_end_with_resume(tmp_path):
 
 @pytest.mark.asyncio
 async def test_workflow_adds_missing_candidates_only(tmp_path):
-    output_file = tmp_path / "test_missing_candidates.json"
 
     call_count = 0
 
@@ -229,7 +228,7 @@ async def test_workflow_adds_missing_candidates_only(tmp_path):
 
     # Run 1: generate 2 candidates
     config1 = CandidateInferenceConfig(
-        output_filepath=str(output_file), n_candidates=2, concurrency=1
+        results_dir=str(tmp_path), run_name="test-run", n_candidates=2, concurrency=1
     )
     wf1 = CandidateInferenceWorkflow(
         config=config1, fact_runner=mock_fact, answer_runner=mock_ans
@@ -242,7 +241,7 @@ async def test_workflow_adds_missing_candidates_only(tmp_path):
 
     # Run 2: request 4 candidates -> only 2 missing candidates should be generated
     config2 = CandidateInferenceConfig(
-        output_filepath=str(output_file), n_candidates=4, concurrency=1
+        results_dir=str(tmp_path), run_name="test-run", n_candidates=4, concurrency=1
     )
     wf2 = CandidateInferenceWorkflow(
         config=config2, fact_runner=mock_fact, answer_runner=mock_ans
@@ -257,7 +256,6 @@ async def test_workflow_adds_missing_candidates_only(tmp_path):
 
 @pytest.mark.asyncio
 async def test_workflow_skips_existing_and_only_runs_new_question(tmp_path):
-    output_file = tmp_path / "test_skip_and_new.json"
 
     async def mock_fact_run(**kwargs):
         yield make_mock_event('{"facts": ["Fact"]}', None)
@@ -279,7 +277,7 @@ async def test_workflow_skips_existing_and_only_runs_new_question(tmp_path):
 
     # Step 1: run Q0 only
     config1 = CandidateInferenceConfig(
-        output_filepath=str(output_file), n_candidates=2, concurrency=1
+        results_dir=str(tmp_path), run_name="test-run", n_candidates=2, concurrency=1
     )
     wf1 = CandidateInferenceWorkflow(
         config=config1, fact_runner=mock_fact, answer_runner=mock_ans
@@ -299,7 +297,7 @@ async def test_workflow_skips_existing_and_only_runs_new_question(tmp_path):
 
     # Step 2: run with Q0 and Q1. Q0 should be skipped completely, only Q1 should be run.
     config2 = CandidateInferenceConfig(
-        output_filepath=str(output_file), n_candidates=2, concurrency=1
+        results_dir=str(tmp_path), run_name="test-run", n_candidates=2, concurrency=1
     )
     wf2 = CandidateInferenceWorkflow(
         config=config2, fact_runner=mock_fact2, answer_runner=mock_ans
@@ -313,7 +311,7 @@ async def test_workflow_skips_existing_and_only_runs_new_question(tmp_path):
     assert summary2.total_candidates_generated == 4
 
     # File should contain both Q0 and Q1
-    saved = wf2.load_existing_results(output_file)
+    saved = wf2.load_existing_results()
     assert "0" in saved
     assert "1" in saved
     assert len(saved["0"].candidates) == 2
@@ -324,7 +322,6 @@ async def test_workflow_skips_existing_and_only_runs_new_question(tmp_path):
 async def test_workflow_preserves_other_questions_when_running_disjoint_subset(
     tmp_path,
 ):
-    output_file = tmp_path / "test_disjoint.json"
 
     async def mock_fact_run(**kwargs):
         yield make_mock_event('{"facts": ["Fact"]}', None)
@@ -354,7 +351,7 @@ async def test_workflow_preserves_other_questions_when_running_disjoint_subset(
 
     # Save Q0 first
     config1 = CandidateInferenceConfig(
-        output_filepath=str(output_file), n_candidates=1, concurrency=1
+        results_dir=str(tmp_path), run_name="test-run", n_candidates=1, concurrency=1
     )
     wf1 = CandidateInferenceWorkflow(
         config=config1, fact_runner=mock_fact, answer_runner=mock_ans
@@ -363,7 +360,7 @@ async def test_workflow_preserves_other_questions_when_running_disjoint_subset(
 
     # Run with Q1 only
     config2 = CandidateInferenceConfig(
-        output_filepath=str(output_file), n_candidates=1, concurrency=1
+        results_dir=str(tmp_path), run_name="test-run", n_candidates=1, concurrency=1
     )
     wf2 = CandidateInferenceWorkflow(
         config=config2, fact_runner=mock_fact, answer_runner=mock_ans
@@ -375,7 +372,7 @@ async def test_workflow_preserves_other_questions_when_running_disjoint_subset(
     assert results2[0].question_id == "200"
 
     # But file must contain BOTH Q100 and Q200
-    saved = wf2.load_existing_results(output_file)
+    saved = wf2.load_existing_results()
     assert len(saved) == 2
     assert "100" in saved
     assert "200" in saved
@@ -390,7 +387,6 @@ async def test_workflow_retries_failed_candidate(tmp_path):
         StepTokenUsage,
     )
 
-    output_file = tmp_path / "test_failed_retry.json"
 
     # Create an existing result where candidate 0 succeeded, candidate 1 failed
     c0 = CandidateResult(
@@ -439,10 +435,10 @@ async def test_workflow_retries_failed_candidate(tmp_path):
     qres.update_aggregates()
 
     config = CandidateInferenceConfig(
-        output_filepath=str(output_file), n_candidates=2, concurrency=1
+        results_dir=str(tmp_path), run_name="test-run", n_candidates=2, concurrency=1
     )
     wf = CandidateInferenceWorkflow(config=config)
-    wf.save_results(output_file, [qres])
+    wf.save_results([qres])
 
     async def mock_fact_run(**kwargs):
         yield make_mock_event('{"facts": ["Retried fact"]}', None)
@@ -481,30 +477,33 @@ async def test_workflow_retries_failed_candidate(tmp_path):
 
 
 def test_load_existing_results_formats(tmp_path):
-    wf = CandidateInferenceWorkflow()
-
-    # None and empty path
-    assert wf.load_existing_results(None) == {}
-    assert wf.load_existing_results("") == {}
-    assert wf.load_existing_results(tmp_path / "nonexistent.json") == {}
-
-    # File with list format
-    list_file = tmp_path / "list.json"
-    list_file.write_text(
-        '[{"question_id": 42, "question": "Q?", "options": {}, "ground_truth": "A", "ground_truth_answer": "A"}]'
+    empty = CandidateInferenceWorkflow(
+        config=CandidateInferenceConfig(results_dir=str(tmp_path), run_name="empty")
     )
-    res_list = wf.load_existing_results(list_file)
-    assert "42" in res_list
-    assert res_list["42"].question_id == "42"
+    assert empty.load_existing_results() == {}
 
-    # File with dict "results" format
-    dict_file = tmp_path / "dict.json"
-    dict_file.write_text(
-        '{"summary": {}, "results": [{"question_id": "99", "question": "Q?", "options": {}, "ground_truth": "B", "ground_truth_answer": "B"}]}'
+    stored = CandidateInferenceWorkflow(
+        config=CandidateInferenceConfig(results_dir=str(tmp_path), run_name="stored")
     )
-    res_dict = wf.load_existing_results(dict_file)
-    assert "99" in res_dict
-    assert res_dict["99"].question_id == "99"
+    stored.store.save(
+        {
+            "summary": None,
+            "results": [
+                {
+                    "question_id": 42,
+                    "question": "Q?",
+                    "options": {},
+                    "ground_truth": "A",
+                    "ground_truth_answer": "A",
+                    "candidates": [{"candidate_index": 0, "facts": ["Fact"]}],
+                }
+            ],
+        }
+    )
+    loaded = stored.load_existing_results()
+    assert "42" in loaded
+    assert loaded["42"].question_id == "42"
+    assert len(loaded["42"].candidates) == 1
 
 
 def test_is_rate_limit_error():

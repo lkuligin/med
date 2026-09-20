@@ -17,6 +17,7 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
 from config import VerifierConfig
+from results_store import build_store
 from inference._schemas import StepTokenUsage
 from inference.parser import evaluate_prediction
 from inference.workflow import _calculate_backoff, is_rate_limit_error
@@ -45,6 +46,9 @@ class VerifierWorkflow:
         session_service: InMemorySessionService | None = None,
     ) -> None:
         self.config = config or VerifierConfig()
+        # The store also carries what step 3 reads: whichever layout is in
+        # use, the candidates being judged are reached as store.candidates.
+        self.store = build_store(self.config)
 
         os.environ.setdefault("ADK_SUPPRESS_GEMINI_LITELLM_WARNINGS", "true")
         if self.config.project_id:
@@ -219,7 +223,12 @@ class VerifierWorkflow:
                 predicted_option=candidate.predicted_option,
                 ground_truth=question.ground_truth,
                 is_correct=is_ans_correct,
-                total_latency_seconds=round(time.perf_counter() - t0, 4),
+                total_latency_seconds=round(
+                time.perf_counter()
+                - t0
+                + sum(cv.total_latency_seconds for cv in prior),
+                4,
+            ),
                 total_tokens=0,
                 total_prompt_tokens=0,
                 total_candidate_tokens=0,
@@ -285,23 +294,40 @@ class VerifierWorkflow:
         on_candidate_complete: (
             Callable[[CandidateVerificationResult, int, int], None] | None
         ) = None,
+        prior: list[CandidateVerificationResult] | None = None,
     ) -> QuestionVerificationResult:
-        """Evaluate candidates for a question, verifying their atomic facts and computing curve metrics."""
+        """Evaluate candidates for a question, verifying their atomic facts and computing curve metrics.
+
+        Args:
+            question: The question and its candidates.
+            semaphore: Limits concurrent judge requests.
+            on_candidate_complete: Called after each candidate is judged.
+            prior: Verdicts this question already has, from an earlier run that
+                reached the end of its candidates without finding a valid one.
+                Those candidates are not judged again; the metrics below are
+                computed over the old verdicts and the new ones together.
+        """
         t0 = time.perf_counter()
         candidates = question.candidates or []
         max_cands = self.config.max_candidates_per_question
         if max_cands and max_cands > 0:
             candidates = candidates[:max_cands]
 
-        total_candidates = len(candidates)
+        prior = list(prior or [])
+        already_judged = {cv.candidate_index for cv in prior}
+        candidates = [c for c in candidates if c.candidate_index not in already_judged]
+
+        total_candidates = len(prior) + len(candidates)
         logger.info(
-            "Starting verification for Question %s (%d candidates available, ground_truth=%s)",
+            "Starting verification for Question %s (%d candidates available, "
+            "%d already judged, ground_truth=%s)",
             question.question_id,
             total_candidates,
+            len(prior),
             question.ground_truth,
         )
 
-        completed_count = 0
+        completed_count = len(prior)
 
         async def _verify_candidate_task(
             attempt_number: int,
@@ -378,9 +404,9 @@ class VerifierWorkflow:
 
             return cand_res
 
-        candidate_verifications: list[CandidateVerificationResult] = []
+        candidate_verifications: list[CandidateVerificationResult] = list(prior)
         if getattr(self.config, "early_stop_candidates", True):
-            for attempt_number, candidate in enumerate(candidates, start=1):
+            for attempt_number, candidate in enumerate(candidates, start=len(prior) + 1):
                 cand_res = await _verify_candidate_task(attempt_number, candidate)
                 candidate_verifications.append(cand_res)
                 if cand_res.all_facts_correct:
@@ -393,11 +419,13 @@ class VerifierWorkflow:
                     )
                     break
         else:
-            candidate_verifications = list(
+            candidate_verifications += list(
                 await asyncio.gather(
                     *[
                         _verify_candidate_task(attempt_number, candidate)
-                        for attempt_number, candidate in enumerate(candidates, start=1)
+                        for attempt_number, candidate in enumerate(
+                            candidates, start=len(prior) + 1
+                        )
                     ]
                 )
             )
@@ -510,63 +538,47 @@ class VerifierWorkflow:
             error=None,
         )
 
-    def load_existing_results(
-        self, filepath: str | Path
-    ) -> dict[str, QuestionVerificationResult]:
-        """Load previously processed question verification results for resumption."""
-        path = Path(filepath)
-        if not path.is_file():
-            return {}
-
+    def load_existing_results(self) -> dict[str, QuestionVerificationResult]:
+        """Load this judge's existing verdicts for resumption."""
         try:
-            with open(path, mode="r", encoding="utf-8") as f:
-                data = json.load(f)
+            data = self.store.load()
+            if data is None:
+                return {}
 
-            raw_results = data.get("results", []) if isinstance(data, dict) else data
             loaded = {
                 item["question_id"]: QuestionVerificationResult.from_dict(item)
-                for item in raw_results
+                for item in data["results"]
                 if isinstance(item, dict) and "question_id" in item
             }
-            logger.info("Resumed %d verified questions from %s", len(loaded), path)
+            logger.info("Resumed %d verified questions from %s", len(loaded), self.store)
             return loaded
         except Exception as e:
             logger.warning(
                 "Failed to load existing results from %s: %s. Starting fresh.",
-                path,
+                self.store,
                 e,
             )
             return {}
 
     def save_results(
         self,
-        filepath: str | Path,
         results: list[QuestionVerificationResult],
         summary: VerifierWorkflowSummary | None = None,
     ) -> None:
-        """Atomically persist verification results and summary to output JSON file."""
-        path = Path(filepath)
-        if not str(path):
-            return
-
-        path.parent.mkdir(parents=True, exist_ok=True)
-        temp_path = path.with_suffix(f".tmp_{int(time.time() * 1000)}")
+        """Persist verification results and summary, one file per verdict."""
         payload: dict[str, Any] = {
             "summary": summary.to_dict() if summary else None,
             "results": [r.to_dict() for r in results],
         }
-
         try:
-            with open(temp_path, mode="w", encoding="utf-8") as f:
-                json.dump(payload, f, indent=2, ensure_ascii=False)
-            temp_path.replace(path)
+            self.store.save(payload)
             logger.debug(
-                "Successfully saved %d verification results to %s", len(results), path
+                "Successfully saved %d verification results to %s",
+                len(results),
+                self.store,
             )
         except Exception as e:
-            if temp_path.exists():
-                temp_path.unlink()
-            logger.error("Failed to save results to %s: %s", path, e)
+            logger.error("Failed to save results to %s: %s", self.store, e)
             raise
 
     async def run(
@@ -587,7 +599,7 @@ class VerifierWorkflow:
 
         if questions is None:
             questions = load_step2_results(
-                filepath=self.config.input_filepath,
+                store=self.store.candidates,
                 limit=self.config.limit,
                 offset=self.config.offset,
             )
@@ -597,8 +609,9 @@ class VerifierWorkflow:
             empty_summary = VerifierWorkflowSummary.from_results(
                 results=[],
                 model=self.config.resolved_model_name,
-                input_filepath=self.config.input_filepath,
-                output_filepath=self.config.output_filepath,
+                run_name=self.store.run_name,
+                judge_name=self.store.judge_name,
+                temperature=self.config.temperature,
                 total_time_seconds=0.0,
             )
             return empty_summary, []
@@ -610,18 +623,36 @@ class VerifierWorkflow:
             self.config.resolved_model_name,
         )
 
-        existing_results = self.load_existing_results(self.config.output_filepath)
+        existing_results = self.load_existing_results()
         results: list[QuestionVerificationResult] = []
         semaphore = asyncio.Semaphore(self.config.concurrency)
 
         for q_idx, question in enumerate(questions):
-            if question.question_id in existing_results:
+            previous = existing_results.get(question.question_id)
+            prior: list[CandidateVerificationResult] = []
+            if previous is not None:
+                judged = {cv.candidate_index for cv in previous.candidate_verifications}
+                unjudged = [
+                    c for c in (question.candidates or [])
+                    if c.candidate_index not in judged
+                ]
+                # Nothing to add when a valid candidate was already found: the
+                # run stops at it, so later candidates would never be reached.
+                if previous.found_valid_candidate or not unjudged:
+                    logger.info(
+                        "Question %s already verified in previous run, skipping.",
+                        question.question_id,
+                    )
+                    results.append(previous)
+                    continue
+                prior = list(previous.candidate_verifications)
                 logger.info(
-                    "Question %s already verified in previous run, skipping.",
+                    "Question %s: %d candidates judged before without a valid one, "
+                    "%d new candidates to judge.",
                     question.question_id,
+                    len(prior),
+                    len(unjudged),
                 )
-                results.append(existing_results[question.question_id])
-                continue
 
             logger.info(
                 "Processing Question %d/%d (ID: %s)...",
@@ -634,6 +665,7 @@ class VerifierWorkflow:
                 question=question,
                 semaphore=semaphore,
                 on_candidate_complete=on_candidate_complete,
+                prior=prior,
             )
             results.append(q_res)
 
@@ -650,30 +682,24 @@ class VerifierWorkflow:
                 interim_summary = VerifierWorkflowSummary.from_results(
                     results=results,
                     model=self.config.resolved_model_name,
-                    input_filepath=self.config.input_filepath,
-                    output_filepath=self.config.output_filepath,
+                    run_name=self.store.run_name,
+                    judge_name=self.store.judge_name,
+                    temperature=self.config.temperature,
                     total_time_seconds=round(time.perf_counter() - start_time, 2),
                 )
-                self.save_results(
-                    filepath=self.config.output_filepath,
-                    results=results,
-                    summary=interim_summary,
-                )
+                self.save_results(results=results, summary=interim_summary)
 
         total_time = time.perf_counter() - start_time
         summary = VerifierWorkflowSummary.from_results(
             results=results,
             model=self.config.resolved_model_name,
-            input_filepath=self.config.input_filepath,
-            output_filepath=self.config.output_filepath,
+            run_name=self.store.run_name,
+            judge_name=self.store.judge_name,
+            temperature=self.config.temperature,
             total_time_seconds=total_time,
         )
 
-        self.save_results(
-            filepath=self.config.output_filepath,
-            results=results,
-            summary=summary,
-        )
+        self.save_results(results=results, summary=summary)
 
         logger.info(
             "VerifierWorkflow completed: %d questions processed, %d valid candidates found, "
