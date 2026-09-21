@@ -534,9 +534,6 @@ STEP_2_VOTE = "Step 2 Facts extraction Pipeline (Majority vote)"
 STEP_3 = "Step 3 Verifier (First Valid Candidate)"
 STEP_3_HYBRID = "Step 3 Verifier (First Valid, else Majority vote)"
 CEILING = "Unverified Baseline (Generator Pass@k)"
-# What the author's plot legend calls the same lines.
-PLOT_VERIFIED = "First Valid Candidate (Rejection Sampling Policy)"
-PLOT_ONE_SHOT = "Single-Shot Baseline (First Attempt)"
 LABEL = 50
 
 
@@ -1260,18 +1257,16 @@ def verified_curve(base: str | None = None, judge: str | None = None,
         ax.plot(ks, curves["any correct"], "s--", color="#9467bd", alpha=0.7,
                 label=legend(CEILING, curves["any correct"][-1]))
         ax.plot(ks, curves["verified, else vote"], "^-", color="#2ca02c",
-                label=legend("First Valid, else Majority vote",
-                             curves["verified, else vote"][-1]))
+                label=legend(STEP_3_HYBRID, curves["verified, else vote"][-1]))
         ax.plot(ks, curves["verified"], "o-", color="#1f77b4",
-                label=legend(PLOT_VERIFIED, curves["verified"][-1]))
+                label=legend(STEP_3, curves["verified"][-1]))
         ax.plot(ks, curves["majority vote"], "-", color="#ff7f0e",
-                label=legend("Majority vote", curves["majority vote"][-1]))
+                label=legend(STEP_2_VOTE, curves["majority vote"][-1]))
         ax.plot(ks, curves["single candidate"], "-", color="#8c564b", alpha=0.8,
-                label=legend("Facts extraction Pipeline (On Average)",
-                             curves["single candidate"][-1]))
+                label=legend(STEP_2_AVERAGE, curves["single candidate"][-1]))
         if one_shot is not None:
             ax.axhline(one_shot.attempt0, ls=":", color="#888888",
-                       label=legend(PLOT_ONE_SHOT, one_shot.attempt0))
+                       label=legend(STEP_1, one_shot.attempt0))
         ax.set_ylabel("% of questions answered correctly")
         ax.set_title(f"{base}, judged by {judge}  ({len(questions)} questions)")
         ax.grid(alpha=0.3)
@@ -1346,16 +1341,15 @@ def monkeys_curve(base: str | None = None, judge: str | None = None,
             return f"{name}: {_score(at_last_k * n / 100, n).strip()}"
 
         ax.plot(ks, [curve[k] for k in ks], "o-", color="#1f77b4",
-                label=legend(PLOT_VERIFIED, curve[ks[-1]]))
+                label=legend(STEP_3, curve[ks[-1]]))
         if majority_vote:
             ax.plot(ks, [vote[k] for k in ks], "s-", color="#ff7f0e", alpha=0.9,
-                    label=legend("Majority vote", vote[ks[-1]]))
+                    label=legend(STEP_2_VOTE, vote[ks[-1]]))
         ax.plot(ks, [single[k] for k in ks], "--", color="#8c564b", alpha=0.8,
-                label=legend("Facts extraction Pipeline (On Average)",
-                             single[ks[-1]]))
+                label=legend(STEP_2_AVERAGE, single[ks[-1]]))
         if one_shot is not None:
             ax.axhline(one_shot.attempt0, ls="--", color="red",
-                       label=legend(PLOT_ONE_SHOT, one_shot.attempt0))
+                       label=legend(STEP_1, one_shot.attempt0))
         ax.set_xlabel("candidates considered (k)")
         ax.set_ylabel("% of questions answered correctly")
         ax.set_title(f"{base}, judged by {judge}  ({counted} questions)")
