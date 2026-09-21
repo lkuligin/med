@@ -176,10 +176,13 @@ def load(base: str | None = None, judge: str | None = None,
         return data["results"] if isinstance(data, dict) and "results" in data else data
     dataset = _ds(dataset)
     base = _resolve_base(base, dataset=dataset)
-    print(f"# {base}" + (f"   in {dataset}" if dataset != "med_qa" else "")
-          + (f"   judged by {judge}" if judge else ""))
     stored = CandidateResults(RESULTS_DIR, base, dataset).load()
-    results = _on_list((stored or {"results": []})["results"], dataset)
+    held = (stored or {"results": []})["results"]
+    results = _on_list(held, dataset)
+    scope = ("" if len(results) == len(held)
+             else f"   {len(results)} of {len(held)} stored questions are on the list")
+    print(f"# {base}" + (f"   in {dataset}" if dataset != "med_qa" else "")
+          + (f"   judged by {judge}" if judge else "") + scope)
     return Run(results, base, judge, dataset)
 
 
@@ -214,11 +217,7 @@ def _on_list(results: list[dict[str, Any]],
     if listed is None:
         return results
     ids = {_norm_id(q) for q in listed}
-    kept = [q for q in results if _norm_id(q["question_id"]) in ids]
-    if len(kept) != len(results):
-        print(f"#   {len(kept)} of {len(results)} stored questions are on the "
-              f"difficult list; the rest are left out")
-    return kept
+    return [q for q in results if _norm_id(q["question_id"]) in ids]
 
 
 def load_step1(base: str | None = None,
@@ -530,7 +529,6 @@ def _one_shot(base: str | None, qids, dataset: str | None = None) -> OneShot | N
 # The names the author's analyzer prints, so that a number of ours can be put
 # beside a number of his without anyone having to work out which is which.
 STEP_1 = "Step 1 Baseline (Single-Shot Attempt 0)"
-STEP_1_MEAN = "Step 1 Baseline (averaged over attempts)"
 STEP_2_AVERAGE = "Step 2 Facts extraction Pipeline (On Average)"
 STEP_2_VOTE = "Step 2 Facts extraction Pipeline (Majority vote)"
 STEP_3 = "Step 3 Verifier (First Valid Candidate)"
@@ -560,7 +558,14 @@ def _line(label: str, hits: float, n: int, indent: str = "    ",
 
 
 def _print_baselines(b: dict, indent: str = "    ",
-                     one_shot: tuple[float, int] | None = None) -> None:
+                     one_shot: OneShot | None = None,
+                     tail: tuple = ()) -> None:
+    """The selectors in one block, weakest first, with the bound underneath.
+
+    `tail` is whatever step 3 has to add, printed with the selectors rather
+    than in a block of its own: the numbers are all over the same questions,
+    and reading them down one column is the whole point.
+    """
     if one_shot is not None:
         covered = one_shot.covered
         # Step 1 can cover fewer questions than step 2 has reached, and then it
@@ -568,12 +573,11 @@ def _print_baselines(b: dict, indent: str = "    ",
         # in one column as though they were comparable.
         note = "" if covered == b["n"] else f"   (only {covered} of {b['n']} questions)"
         _line(STEP_1, one_shot.attempt0 * covered / 100, covered, indent, note)
-        if abs(one_shot.averaged - one_shot.attempt0) > 0.05:
-            _line(STEP_1_MEAN, one_shot.averaged * covered / 100, covered,
-                  indent, note)
     _line(STEP_2_AVERAGE, b["single_hits"], b["n"], indent)
     _line(STEP_2_VOTE, b["vote_hits"], b["n"], indent)
-    _line(CEILING, b["any_hits"], b["n"], indent, "   (ceiling for any selector)")
+    for label, hits, note in tail:
+        _line(label, hits, b["n"], indent, note)
+    _line(CEILING, b["any_hits"], b["n"], indent)
 
 
 def accuracy(results: list[dict], verified: list[dict] | str | Path | None = None,
@@ -600,35 +604,42 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
         records = OneShotResults(RESULTS_DIR, base, dataset).read()
         if records:
             whole = _one_shot(base, list(records), dataset)
-            print(f"  STEP 1, WHOLE RUN ({whole.covered} questions answered once)")
+            print(f"  WHOLE SPLIT, {whole.covered} questions")
             _line(STEP_1, whole.attempt0 * whole.covered / 100, whole.covered)
-            if abs(whole.averaged - whole.attempt0) > 0.05:
-                _line(STEP_1_MEAN, whole.averaged * whole.covered / 100, whole.covered)
             print()
     sizes = sorted(len(q.get("candidates") or []) for q in results)
     spread = (f"{sizes[0]} candidates each" if sizes and sizes[0] == sizes[-1]
               else f"{sizes[0]}-{sizes[-1]} candidates each")
-    print(f"  ALL QUESTIONS THROUGH STEP 2 ({len(results)} questions, {spread})")
-    _print_baselines(_baselines(results), one_shot=_one_shot(base, all_ids, dataset))
 
     if verified is None:
         verified = load_verified(base, judge, dataset)
         if not verified:
+            print(f"  THROUGH STEP 2, {len(results)} questions, {spread}")
+            _print_baselines(_baselines(results),
+                             one_shot=_one_shot(base, all_ids, dataset))
             print("\n  no step 3 results yet")
             return
     if isinstance(verified, (str, Path)):
         verified = load(path=verified)
 
-    judged = {str(q["question_id"]): q for q in verified}
-    both = [q for q in results if str(q["question_id"]) in judged]
+    judged = {_norm_id(q["question_id"]): q for q in verified}
+    both = [q for q in results if _norm_id(q["question_id"]) in judged]
     if not both:
         print("\n  no questions have been through both steps yet")
         return
+    # Step 3 lags step 2 while a run is in flight, and then the two cover
+    # different questions and need blocks of their own. Once it has caught up
+    # there is one set of questions and one block.
+    if len(both) < len(results):
+        print(f"  THROUGH STEP 2 ONLY, {len(results)} questions, {spread}")
+        _print_baselines(_baselines(results),
+                         one_shot=_one_shot(base, all_ids, dataset))
+        print()
 
     first_valid_right = found = hybrid_right = 0
     fell_back = fallback_right = 0
     for q in both:
-        cv = judged[str(q["question_id"])].get("candidate_verifications", [])
+        cv = judged[_norm_id(q["question_id"])].get("candidate_verifications", [])
         passing = next((c for c in cv if c.get("all_facts_correct")), None)
         if passing is not None:
             found += 1
@@ -647,16 +658,16 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
             hybrid_right += hit
 
     n = len(both)
-    print(f"\n  QUESTIONS THROUGH BOTH STEPS ({n})")
-    _print_baselines(_baselines(both),
-                     one_shot=_one_shot(base, [q["question_id"] for q in both], dataset))
-    _line(STEP_3, first_valid_right, n, note="   <- the metric")
-    _line(STEP_3_HYBRID, hybrid_right, n, note="   <- hybrid")
-    _line("Valid Coverage", found, n,
-          note=f"   (when found it was right "
-               f"{first_valid_right / max(found, 1) * 100:.0f}% of the time)")
-    if fell_back:
-        print(f"    (the fallback fired {fell_back} times and the vote was right {fallback_right})")
+    print(f"  THROUGH BOTH STEPS, {n} questions, {spread}")
+    fallback = (f"   (fell back {fell_back}x, right {fallback_right})"
+                if fell_back else "")
+    _print_baselines(
+        _baselines(both),
+        one_shot=_one_shot(base, [q["question_id"] for q in both], dataset),
+        tail=((STEP_3, first_valid_right, "   <- the metric"),
+              (STEP_3_HYBRID, hybrid_right, fallback),
+              ("Valid Coverage", found,
+               f"   (right {first_valid_right / max(found, 1) * 100:.0f}% when found)")))
 
     # A question judged before its last candidate existed, and still without a
     # pass, is not finished: the next judging pass continues it. Until then it
@@ -664,7 +675,7 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     # worse than it is.
     open_questions = 0
     for q in both:
-        cv = judged[str(q["question_id"])].get("candidate_verifications", [])
+        cv = judged[_norm_id(q["question_id"])].get("candidate_verifications", [])
         if any(c.get("all_facts_correct") for c in cv):
             continue
         if len(cv) < len(q.get("candidates") or []):
