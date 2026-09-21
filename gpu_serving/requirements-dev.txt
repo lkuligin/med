@@ -1,0 +1,7 @@
+# Enough to work on this package anywhere: the code itself is standard library
+# only, so nothing here is needed to RUN it - only to test it.
+#
+# Deliberately does not include sglang. The serving wheels are CUDA builds for
+# linux-x86_64 and will not install on a laptop; nothing in the tests needs
+# them, because every GPU-dependent call is behind a boundary the tests fake.
+pytest>=8

@@ -192,3 +192,7 @@ llm_monkeys/results_*.json
 
 # Runs assembled back into the single-file layout, for reading elsewhere.
 exports/
+
+# gpu_serving machine-local settings (cards, paths, venv)
+gpu_serving/configs/serving.conf
+gpu_serving/run/

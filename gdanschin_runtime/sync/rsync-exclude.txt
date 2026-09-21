@@ -28,6 +28,8 @@ exports/
 cache/
 # run logs
 logs/
+# gpu_serving's state file and server logs, written on the box
+gpu_serving/run/
 # ad-hoc files made on the remote: debug scripts, notes, patched configs
 scratch/
 # notebooks written on the GPU box. Excluded so the mirror neither overwrites
@@ -101,6 +103,7 @@ service-account*.json
 # do not match and are committed and synced on purpose.
 remote.conf
 gateway.conf
+serving.conf
 jupyter-password.conf
 jupyter_server_config.generated.py
 

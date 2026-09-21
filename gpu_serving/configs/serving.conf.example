@@ -1,0 +1,25 @@
+# Copy to serving.conf and adjust for the box you are on:
+#
+#   cp gpu_serving/configs/serving.conf.example gpu_serving/configs/serving.conf
+#
+# Any GPU_SERVING_* environment variable overrides a value here.
+
+# Cards this box lets us use. On the GPU box cards 0-3 belong to other people.
+GPU_SERVING_CARDS="4,5,6,7"
+
+# Where the weights live. A model's `weights` in catalog.py is relative to this.
+GPU_SERVING_MODELS_ROOT="/mnt/data/models"
+
+# The virtualenv holding sglang and sglang-router, built by setup_env.sh.
+# A relative path is resolved against the package directory. Deliberately not
+# the pipeline's venv: SGLang pins its own torch/CUDA stack.
+GPU_SERVING_VENV=".venv"
+
+# Where the server listens. Keep it on loopback: this is a shared machine, and
+# 0.0.0.0 would hand the model to anyone who can reach the box.
+GPU_SERVING_HOST="127.0.0.1"
+GPU_SERVING_PORT="8000"
+
+# Runtime state and server logs. Relative to the package. Listed in
+# rsync-exclude.txt as remote-owned, so the mirror neither ships nor deletes it.
+GPU_SERVING_RUN_DIR="run"

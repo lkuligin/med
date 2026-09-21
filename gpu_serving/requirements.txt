@@ -1,0 +1,13 @@
+# The serving environment, kept apart from the pipeline's venv because SGLang
+# pins its own torch/CUDA stack and the two cannot share one interpreter.
+#
+# 0.5.19 is not a free choice: it is the first release that loads Qwen3.8's
+# FP8 lm_head, and it is the version the reference playground scripts on this
+# box were verified against.
+sglang==0.5.19
+
+# The data-parallel launcher. sglang_router.launch_server puts one endpoint in
+# front of several replicas and routes by prefix-cache affinity, which is what
+# makes repeated sampling of one question cheap. 0.3.2 is what resolved
+# against sglang 0.5.19 on the box, so it is pinned rather than left to drift.
+sglang-router==0.3.2
