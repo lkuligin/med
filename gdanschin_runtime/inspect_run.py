@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import statistics
 import textwrap
 from collections import Counter
@@ -40,10 +41,18 @@ from results_store import (
 WIDTH = 100
 RESULTS_DIR = _bootstrap.LLM_MONKEYS_ROOT / "results"
 
-# Which dataset's runs everything below reads. The layout keeps one directory
-# per dataset, because a question id means nothing without it, and comparing a
-# run on one against a run on the other would be comparing different questions.
-DATASET = "med_qa"
+# Which dataset's runs a call reads when it does not say. Kept in the
+# environment rather than in a module variable on purpose: a notebook running
+# %autoreload re-executes this file whenever it changes, which puts a module
+# variable back to its default - so use_dataset() would appear to work and the
+# next call would quietly read med_qa again. The environment survives that.
+DATASET_ENV = "MEDQA_INSPECT_DATASET"
+DEFAULT_DATASET = "med_qa"
+
+
+def current_dataset() -> str:
+    """The dataset in force for calls that name none."""
+    return os.environ.get(DATASET_ENV) or DEFAULT_DATASET
 
 
 def use_dataset(name: str) -> None:
@@ -51,13 +60,13 @@ def use_dataset(name: str) -> None:
 
         use_dataset('medbullets')
 
-    catalogue() lists every dataset whatever this is set to.
+    Naming a dataset in a call always wins over this. catalogue() lists every
+    dataset whatever it is set to.
     """
-    global DATASET
     from results_store import dataset_dir_for
 
-    DATASET = dataset_dir_for(name)
-    print(f"# reading runs stored under {DATASET}")
+    os.environ[DATASET_ENV] = dataset_dir_for(name)
+    print(f"# reading runs stored under {current_dataset()}")
 
 
 def datasets() -> list[str]:
@@ -67,11 +76,29 @@ def datasets() -> list[str]:
     return sorted(d.name for d in RESULTS_DIR.iterdir() if d.is_dir())
 
 
-def _resolve_base(base: str | None, section: str = FACTS_PIPELINE) -> str:
+def _ds(dataset: str | None) -> str:
+    """The dataset a call should read: the one it names, else the one in force.
+
+    Every entry point takes it, rather than reading a module-level default
+    only, because %autoreload puts a module variable back to its default
+    whenever this file changes - which looks like a call quietly reading the
+    wrong dataset.
+
+    Deliberately reads the environment itself rather than calling
+    current_dataset(): a notebook that has had this file reloaded under it can
+    hold a patched copy of this function next to a namespace that predates any
+    name it would call, and the failure is a NameError in the middle of
+    something unrelated. Depending on nothing but os keeps that impossible.
+    """
+    return dataset or os.environ.get("MEDQA_INSPECT_DATASET") or "med_qa"
+
+
+def _resolve_base(base: str | None, section: str = FACTS_PIPELINE,
+                  dataset: str | None = None) -> str:
     """The run to look at: the only one stored, unless told which."""
     if base:
         return base
-    root = RESULTS_DIR / DATASET / section
+    root = RESULTS_DIR / _ds(dataset) / section
     found = sorted(d.name for d in root.iterdir() if d.is_dir()) if root.is_dir() else []
     if len(found) == 1:
         return found[0]
@@ -80,7 +107,7 @@ def _resolve_base(base: str | None, section: str = FACTS_PIPELINE) -> str:
     raise ValueError(f"name the base model: {', '.join(found)}")
 
 
-def _resolve_run(base: str | None) -> str:
+def _resolve_run(base: str | None, dataset: str | None = None) -> str:
     """The run to watch, named under either step's results.
 
     _resolve_base looks in one section, which is right for reading a finished
@@ -92,7 +119,7 @@ def _resolve_run(base: str | None) -> str:
         return base
     found: set[str] = set()
     for section in (FACTS_PIPELINE, SINGLE_STEP):
-        root = RESULTS_DIR / DATASET / section
+        root = RESULTS_DIR / _ds(dataset) / section
         if root.is_dir():
             found |= {d.name for d in root.iterdir() if d.is_dir()}
     if len(found) == 1:
@@ -102,10 +129,11 @@ def _resolve_run(base: str | None) -> str:
     raise ValueError(f"name the base model: {', '.join(sorted(found))}")
 
 
-def _resolve_judge(base: str, judge: str | None) -> str | None:
+def _resolve_judge(base: str, judge: str | None,
+                   dataset: str | None = None) -> str | None:
     if judge:
         return judge
-    found = VerificationResults(RESULTS_DIR, base, "", DATASET).judges()
+    found = VerificationResults(RESULTS_DIR, base, "", _ds(dataset)).judges()
     if len(found) == 1:
         return found[0]
     if not found:
@@ -122,14 +150,17 @@ class Run(list):
     name twice in a notebook is how the wrong two halves get compared.
     """
 
-    def __init__(self, results, base: str, judge: str | None = None) -> None:
+    def __init__(self, results, base: str, judge: str | None = None,
+                 dataset: str | None = None) -> None:
         super().__init__(results)
         self.base = base
         self.judge = judge
+        self.dataset = dataset
 
 
 def load(base: str | None = None, judge: str | None = None,
-         path: str | Path | None = None) -> list[dict[str, Any]]:
+         path: str | Path | None = None,
+         dataset: str | None = None) -> list[dict[str, Any]]:
     """A stored step 2 run, assembled from its per-candidate files.
 
     Safe to call while the run is still going: each file is written once and
@@ -143,31 +174,39 @@ def load(base: str | None = None, judge: str | None = None,
     if path is not None:
         data = json.loads(Path(path).read_text())
         return data["results"] if isinstance(data, dict) and "results" in data else data
-    base = _resolve_base(base)
-    print(f"# {base}" + (f"   judged by {judge}" if judge else ""))
-    stored = CandidateResults(RESULTS_DIR, base, DATASET).load()
-    return Run((stored or {"results": []})["results"], base, judge)
+    dataset = _ds(dataset)
+    base = _resolve_base(base, dataset=dataset)
+    print(f"# {base}" + (f"   in {dataset}" if dataset != "med_qa" else "")
+          + (f"   judged by {judge}" if judge else ""))
+    stored = CandidateResults(RESULTS_DIR, base, dataset).load()
+    return Run((stored or {"results": []})["results"], base, judge, dataset)
 
 
-def load_step1(base: str | None = None) -> dict[str, dict[str, Any]]:
+def load_step1(base: str | None = None,
+               dataset: str | None = None) -> dict[str, dict[str, Any]]:
     """The one-shot run for a model, keyed by question id."""
-    return OneShotResults(RESULTS_DIR, _resolve_base(base, SINGLE_STEP, DATASET)).read()
+    dataset = _ds(dataset)
+    return OneShotResults(
+        RESULTS_DIR, _resolve_base(base, SINGLE_STEP, dataset), dataset).read()
 
 
-def load_verified(base: str | None = None,
-                  judge: str | None = None) -> list[dict[str, Any]]:
+def load_verified(base: str | None = None, judge: str | None = None,
+                  dataset: str | None = None) -> list[dict[str, Any]]:
     """The judge's verdicts for a stored run."""
-    base = _resolve_base(base)
-    judge = _resolve_judge(base, judge)
+    dataset = _ds(dataset)
+    base = _resolve_base(base, dataset=dataset)
+    judge = _resolve_judge(base, judge, dataset)
     if judge is None:
         return []
-    stored = VerificationResults(RESULTS_DIR, base, judge, DATASET).load()
+    stored = VerificationResults(RESULTS_DIR, base, judge, dataset).load()
     return (stored or {"results": []})["results"]
 
 
-def judges(base: str | None = None) -> list[str]:
+def judges(base: str | None = None, dataset: str | None = None) -> list[str]:
     """Judges that have verdicts stored for a run."""
-    return VerificationResults(RESULTS_DIR, _resolve_base(base), "", DATASET).judges()
+    dataset = _ds(dataset)
+    return VerificationResults(
+        RESULTS_DIR, _resolve_base(base, dataset=dataset), "", dataset).judges()
 
 
 def stored_runs(dataset: str | None = None) -> dict[str, dict[str, Any]]:
@@ -177,7 +216,7 @@ def stored_runs(dataset: str | None = None) -> dict[str, dict[str, Any]]:
     function here takes - and because a run name need not be a model name: a
     model measured twice under different settings is two runs.
     """
-    dataset = dataset or DATASET
+    dataset = _ds(dataset)
     found: dict[str, dict[str, Any]] = {}
     one_shot_root = RESULTS_DIR / dataset / SINGLE_STEP
     if one_shot_root.is_dir():
@@ -216,7 +255,7 @@ def catalogue() -> None:
 
     for name in datasets():
         runs = stored_runs(name)
-        mark = "  <- in force" if name == DATASET else ""
+        mark = "  <- in force" if name == current_dataset() else ""
         print(f"DATASET {name}{mark}: {', '.join(runs) if runs else 'nothing stored'}")
     print("  use_dataset(<name>) to read another\n")
 
@@ -387,7 +426,7 @@ def _baselines(results: list[dict]) -> dict[str, float]:
     }
 
 
-def _one_shot(base: str | None, qids) -> tuple[float, int] | None:
+def _one_shot(base: str | None, qids, dataset: str | None = None) -> tuple[float, int] | None:
     """One-shot accuracy over the given questions, or None if none are stored.
 
     Averaged over attempts rather than taken from the record's is_correct, so
@@ -396,7 +435,7 @@ def _one_shot(base: str | None, qids) -> tuple[float, int] | None:
     """
     if not base:
         return None
-    records = OneShotResults(RESULTS_DIR, base, DATASET).read()
+    records = OneShotResults(RESULTS_DIR, base, _ds(dataset)).read()
     picked = [records[str(q)] for q in qids if str(q) in records]
     if not picked:
         return None
@@ -422,7 +461,8 @@ def _print_baselines(b: dict, indent: str = "    ",
 
 
 def accuracy(results: list[dict], verified: list[dict] | str | Path | None = None,
-             base: str | None = None, judge: str | None = None) -> None:
+             base: str | None = None, judge: str | None = None,
+             dataset: str | None = None) -> None:
     """Selector baselines, and the verified metric where step 3 has caught up.
 
     The two sections cover different question sets on purpose. Verification
@@ -433,6 +473,7 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     """
     base = base or getattr(results, "base", None)
     judge = judge or getattr(results, "judge", None)
+    dataset = _ds(dataset or getattr(results, "dataset", None))
     all_ids = [q["question_id"] for q in results]
 
     # Step 1 over everything it has answered, not only the questions step 2 has
@@ -440,9 +481,9 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     # sets so they can be compared with each other; this one says how the model
     # does on its own, over the whole run.
     if base:
-        records = OneShotResults(RESULTS_DIR, base, DATASET).read()
+        records = OneShotResults(RESULTS_DIR, base, dataset).read()
         if records:
-            whole = _one_shot(base, list(records))
+            whole = _one_shot(base, list(records), dataset)
             print(f"  STEP 1, WHOLE RUN ({whole[1]} questions answered once)")
             print(f"    one shot, no candidates       {whole[0]:5.1f}%")
             print()
@@ -450,10 +491,10 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     spread = (f"{sizes[0]} candidates each" if sizes and sizes[0] == sizes[-1]
               else f"{sizes[0]}-{sizes[-1]} candidates each")
     print(f"  ALL QUESTIONS THROUGH STEP 2 ({len(results)} questions, {spread})")
-    _print_baselines(_baselines(results), one_shot=_one_shot(base, all_ids))
+    _print_baselines(_baselines(results), one_shot=_one_shot(base, all_ids, dataset))
 
     if verified is None:
-        verified = load_verified(base, judge)
+        verified = load_verified(base, judge, dataset)
         if not verified:
             print("\n  no step 3 results yet")
             return
@@ -490,7 +531,7 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     n = len(both)
     print(f"\n  QUESTIONS THROUGH BOTH STEPS ({n})")
     _print_baselines(_baselines(both),
-                     one_shot=_one_shot(base, [q["question_id"] for q in both]))
+                     one_shot=_one_shot(base, [q["question_id"] for q in both], dataset))
     print(f"    first fully verified candidate  {first_valid_right / n * 100:5.1f}%   <- the metric")
     print(f"    verified, else majority vote    {hybrid_right / n * 100:5.1f}%   <- hybrid")
     print(f"    (a valid candidate was found for {found}/{n}; when found it was right "
@@ -514,14 +555,15 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
               f"until a later pass finds a valid candidate)")
 
 
-def step1(base: str | None = None) -> None:
+def step1(base: str | None = None, dataset: str | None = None) -> None:
     """The one-shot baseline on its own: accuracy, and what went wrong."""
-    base = _resolve_base(base, SINGLE_STEP)
-    records = OneShotResults(RESULTS_DIR, base, DATASET).read()
+    dataset = _ds(dataset)
+    base = _resolve_base(base, SINGLE_STEP, dataset)
+    records = OneShotResults(RESULTS_DIR, base, dataset).read()
     if not records:
         print(f"  nothing stored for {base}")
         return
-    rate, covered = _one_shot(base, list(records))
+    rate, covered = _one_shot(base, list(records), dataset)
     attempts = sum(r.get("total_attempts") or 0 for r in records.values())
     unparsed = sum(1 for r in records.values() if not r.get("predicted_option"))
     errors = sum(1 for r in records.values() if r.get("error"))
@@ -534,15 +576,15 @@ def step1(base: str | None = None) -> None:
         print(f"  questions that errored         {errors}")
 
 
-def one_shot_runs() -> list[str]:
+def one_shot_runs(dataset: str | None = None) -> list[str]:
     """Every model that has a step 1 run stored."""
-    root = RESULTS_DIR / DATASET / SINGLE_STEP
+    root = RESULTS_DIR / _ds(dataset) / SINGLE_STEP
     if not root.is_dir():
         return []
     return sorted(d.name for d in root.iterdir() if d.is_dir())
 
 
-def _one_shot_run(base: str) -> dict[str, Any]:
+def _one_shot_run(base: str, dataset: str | None = None) -> dict[str, Any]:
     """One model's step 1 run, reduced to what a comparison needs.
 
     The per-question score is the share of that question's attempts that were
@@ -550,7 +592,7 @@ def _one_shot_run(base: str) -> dict[str, Any]:
     question is measured the same way as a run with one. With one attempt the
     two agree, and the score is 0 or 1.
     """
-    store = OneShotResults(RESULTS_DIR, base, DATASET)
+    store = OneShotResults(RESULTS_DIR, base, _ds(dataset))
     records = store.read()
     summary = store.read_summary() or {}
     scores, tokens, seconds = {}, [], []
@@ -615,7 +657,8 @@ def _sign_test(wins: int, losses: int) -> float:
 
 
 def compare_step1(runs: list[str] | None = None, plot: bool = True,
-                  full: bool = False) -> dict[str, dict[str, Any]]:
+                  full: bool = False,
+                  dataset: str | None = None) -> dict[str, dict[str, Any]]:
     """Compare the one-shot runs of several models, on the questions they share.
 
         compare_step1()                              # every stored run
@@ -634,10 +677,12 @@ def compare_step1(runs: list[str] | None = None, plot: bool = True,
 
     Returns {model: {accuracy, low, high, n, ...}} for computing on.
     """
-    runs = runs or one_shot_runs()
+    dataset = _ds(dataset)
+    runs = runs or one_shot_runs(dataset)
     if not runs:
-        raise FileNotFoundError(f"no step 1 runs stored under {RESULTS_DIR / SINGLE_STEP}")
-    measured = [_one_shot_run(base) for base in runs]
+        raise FileNotFoundError(
+            f"no step 1 runs stored under {RESULTS_DIR / dataset / SINGLE_STEP}")
+    measured = [_one_shot_run(base, dataset) for base in runs]
     missing = [m["base"] for m in measured if not m["stored"]]
     if missing:
         print(f"  nothing stored for {', '.join(missing)}")
@@ -730,20 +775,49 @@ def compare_step1(runs: list[str] | None = None, plot: bool = True,
             for m in measured}
 
 
-def _difficult_total(default: int = 483) -> int:
-    """How many questions a run covers, from the list the pipeline works on."""
+def _difficult_total(dataset: str | None = None, default: int | None = None) -> int:
+    """How many questions a run covers.
+
+    The list of difficult questions when the dataset has one; otherwise the
+    whole split, because a run on a dataset whose list has not been built yet
+    covers all of it. Falling back to another dataset's number is how a bar
+    ends up reading 483/308.
+    """
     from inference._dataset import load_difficult_question_ids
 
-    names = (("difficult_questions_mb.csv",) if DATASET == "medbullets"
-             else ("difficult_questions.csv", "data/difficult_questions.candidate.csv"))
+    from gdanschin_runtime.fetch_dataset import KNOWN
+
+    dataset = _ds(dataset)
+    known = KNOWN.get(dataset)
+    names = ([known.difficult.name] if known else []) + [
+        "data/difficult_questions.candidate.csv"]
     for name in names:
         path = _bootstrap.LLM_MONKEYS_ROOT / name
         if path.is_file():
             return len(load_difficult_question_ids(path))
-    return default
+    if default is not None:
+        return default
+    if known and known.rows:
+        return known.rows
+    raise FileNotFoundError(
+        f"no question count for {dataset}: neither a difficult-questions list "
+        f"nor a known split size. Pass total=<n>."
+    )
 
 
-def _one_shot_stored(base: str) -> int:
+def _split_size(dataset: str | None = None, default: int | None = None) -> int:
+    """How many questions the dataset's split holds - what step 1 covers."""
+    from gdanschin_runtime.fetch_dataset import KNOWN
+
+    known = KNOWN.get(_ds(dataset))
+    if known and known.rows:
+        return known.rows
+    if default is not None:
+        return default
+    raise FileNotFoundError(f"no known split size for {_ds(dataset)}")
+
+
+def _one_shot_stored(base: str, dataset: str | None = None) -> int:
     """How many questions step 1 has answered, counted without parsing them.
 
     progress() is meant to be re-run every few seconds while a run is in
@@ -751,14 +825,71 @@ def _one_shot_stored(base: str) -> int:
     the slowest thing in it. A record is written once, whole, so its existence
     is enough.
     """
-    directory = OneShotResults(RESULTS_DIR, base, DATASET).directory
+    directory = OneShotResults(RESULTS_DIR, base, _ds(dataset)).directory
     if not directory.is_dir():
         return 0
     return sum(1 for _ in directory.glob("question_*.json"))
 
 
+def _progress_numbers(base: str | None, judge: str | None,
+                      total: int | None, dataset: str | None) -> dict[str, Any]:
+    """Where a run has got to, as numbers. Read by progress() and by watch().
+
+    Counting files and directories rather than parsing anything: this is meant
+    to be asked every few seconds while a run is in flight.
+    """
+    import subprocess
+
+    def alive(pattern: str) -> bool:
+        return subprocess.run(["pgrep", "-f", pattern],
+                              capture_output=True).returncode == 0
+
+    dataset = _ds(dataset)
+    base = _resolve_run(base, dataset)
+    judge = _resolve_judge(base, judge, dataset)
+    answered = _one_shot_stored(base, dataset)
+    attempts = (OneShotResults(RESULTS_DIR, base, dataset).read_summary()
+                or {}).get("n_attempts") or 1
+    candidates = CandidateResults(RESULTS_DIR, base, dataset)
+    questions = candidates.questions()
+    counts = [candidates.candidate_count(q) for q in questions]
+    # A question's directory appears with its first candidate, so counting
+    # directories would report a question as done the moment it starts. Only
+    # the ones that reached the target count are finished.
+    summary = candidates.read_summary() or {}
+    target = summary.get("n_candidates") or max(counts, default=0)
+    # Two denominators, because the steps cover different things: step 1
+    # answers every question in the split, while steps 2 and 3 work through the
+    # list they were given. Reporting one against the other is how a bar reads
+    # 300/135.
+    pipeline_total = total if total is not None else _difficult_total(dataset)
+    if total is None:
+        from gdanschin_runtime.fetch_dataset import KNOWN
+
+        known = KNOWN.get(dataset)
+        total = known.rows if known and known.rows else pipeline_total
+    # Scoped to this run, not to the step: a plan runs the models one after
+    # another, and an unscoped check reports that step 1 is running when it is
+    # running for somebody else. Every step carries the run name on its command
+    # line, so the name is what tells one model's work from another's.
+    return {
+        "base": base, "judge": judge, "dataset": dataset,
+        "answered": answered, "attempts": attempts,
+        "generated": sum(1 for n in counts if n >= target) if target else 0,
+        "started": len(questions),
+        "judged": sum(1 for q in questions
+                      if judge and (candidates.question_dir(q) / judge).is_dir()),
+        "stored": sum(counts), "target": target,
+        "total": total, "pipeline_total": pipeline_total,
+        "one_shot_running": alive(f"[r]un_step1.py.*--base {base}"
+                                  f"|[-]m cli.*--run-name {base}"),
+        "gen_running": alive(f"[i]nference.cli.*--run-name {base}"),
+        "judge_running": alive(f"[v]erifier.cli.*--run-name {base}"),
+    }
+
+
 def progress(base: str | None = None, judge: str | None = None,
-             total: int | None = None) -> None:
+             total: int | None = None, dataset: str | None = None) -> None:
     """Where one model's run has got to, step by step. Safe to re-run at any time.
 
     One line per step - the one-shot answers of step 1, the candidates of step
@@ -770,62 +901,31 @@ def progress(base: str | None = None, judge: str | None = None,
     run's own summary, so two models at different k each report against their
     own target rather than against whatever the last run happened to use.
     """
-    import subprocess
     import time
 
-    def alive(pattern: str) -> bool:
-        return subprocess.run(["pgrep", "-f", pattern],
-                              capture_output=True).returncode == 0
+    n = _progress_numbers(base, judge, total, dataset)
 
-    base = _resolve_run(base)
-    judge = _resolve_judge(base, judge)
-    # Counting files and directories rather than parsing anything: this is
-    # meant to be re-run every few seconds while a run is in flight.
-    answered = _one_shot_stored(base)
-    attempts = (OneShotResults(RESULTS_DIR, base, DATASET).read_summary()
-                or {}).get("n_attempts") or 1
-    candidates = CandidateResults(RESULTS_DIR, base, DATASET)
-    questions = candidates.questions()
-    counts = [candidates.candidate_count(q) for q in questions]
-    # A question's directory appears with its first candidate, so counting
-    # directories would report a question as done the moment it starts. Only
-    # the ones that reached the target count are finished.
-    summary = candidates.read_summary() or {}
-    target = summary.get("n_candidates") or max(counts, default=0)
-    generated = sum(1 for n in counts if n >= target) if target else 0
-    if total is None:
-        total = _difficult_total()
-    judged = sum(1 for q in questions
-                 if judge and (candidates.question_dir(q) / judge).is_dir())
-
-    # Scoped to this run, not to the step: a plan runs the models one after
-    # another, and an unscoped check reports that step 1 is running when it is
-    # running for somebody else. Every step carries the run name on its command
-    # line - run_step1.py as --base, the other two as --run-name - so the name
-    # is what tells one model's work from another's.
-    one_shot_running = alive(f"[r]un_step1.py.*--base {base}"
-                             f"|[-]m cli.*--run-name {base}")
-    gen_running = alive(f"[i]nference.cli.*--run-name {base}")
-    judge_running = alive(f"[v]erifier.cli.*--run-name {base}")
-
-    def bar(done: int, width: int = 40) -> str:
-        filled = round(done / total * width)
+    def bar(done: int, out_of: int, width: int = 40) -> str:
+        filled = round(done / out_of * width) if out_of else 0
         return "#" * filled + "." * (width - filled)
 
-    print(f"  {time.strftime('%H:%M:%S')}   {base}"
-          + (f"   k={target}" if target else "")
-          + (f"   judged by {judge}" if judge else ""))
-    print(f"  one shot    {bar(answered)}  {answered:>3}/{total}  "
-          f"{'running' if one_shot_running else 'idle'}"
-          + (f"   ({attempts} attempts each)" if attempts > 1 else ""))
-    in_flight = len(questions) - generated
-    print(f"  generation  {bar(generated)}  {generated:>3}/{total}  "
-          f"{'running' if gen_running else 'stopped'}"
+    print(f"  {time.strftime('%H:%M:%S')}   {n['base']}   {n['dataset']}"
+          + (f"   k={n['target']}" if n["target"] else "")
+          + (f"   judged by {n['judge']}" if n["judge"] else ""))
+    print(f"  one shot    {bar(n['answered'], n['total'])}  "
+          f"{n['answered']:>3}/{n['total']}  "
+          f"{'running' if n['one_shot_running'] else 'idle'}"
+          + (f"   ({n['attempts']} attempts each)" if n["attempts"] > 1 else ""))
+    in_flight = n["started"] - n["generated"]
+    print(f"  generation  {bar(n['generated'], n['pipeline_total'])}  "
+          f"{n['generated']:>3}/{n['pipeline_total']}  "
+          f"{'running' if n['gen_running'] else 'stopped'}"
           + (f"   (+{in_flight} started)" if in_flight else ""))
-    print(f"  judging     {bar(judged)}  {judged:>3}/{total}  "
-          f"{'running' if judge_running else 'idle'}")
-    if counts:
-        print(f"  candidates  {sum(counts)} stored, {target} per finished question")
+    print(f"  judging     {bar(n['judged'], n['pipeline_total'])}  "
+          f"{n['judged']:>3}/{n['pipeline_total']}  "
+          f"{'running' if n['judge_running'] else 'idle'}")
+    if n["stored"]:
+        print(f"  candidates  {n['stored']} stored, {n['target']} per finished question")
 
     log = RESULTS_DIR.parents[1] / "logs" / "step2.log"
     if log.is_file():
@@ -835,8 +935,78 @@ def progress(base: str | None = None, judge: str | None = None,
             print(f"  WARNING: {exhausted} candidates gave up after all retries")
 
 
+def watch(base: str | None = None, judge: str | None = None,
+          dataset: str | None = None, every: int = 20,
+          total: int | None = None) -> None:
+    """Three live bars for a run, refreshing until it is done or you interrupt.
+
+        watch('gemma-4-26b', dataset='medbullets')
+
+    Bars rather than a printed snapshot, because the interesting part of a long
+    run is the rate: tqdm keeps it, and the estimate that comes with it, from
+    what the counts do between refreshes. The work itself is happening in
+    another process - all this does is read what it has written so far.
+    """
+    import time
+
+    from tqdm.auto import tqdm
+
+    n = _progress_numbers(base, judge, total, dataset)
+    print(f"{n['base']} · {n['dataset']}"
+          + (f" · k={n['target']}" if n["target"] else "")
+          + (f" · judged by {n['judge']}" if n["judge"] else ""))
+    steps = [("one shot", "answered", "total"),
+             ("generation", "generated", "pipeline_total"),
+             ("judging", "judged", "pipeline_total")]
+    # The percentage belongs on the right, with the counts: by default tqdm
+    # puts it in the left label together with the description, so the label is
+    # a different length on every row and no fixed width fits it.
+    bar_format = "{desc} {bar} {percentage:3.0f}%  {n_fmt}/{total_fmt}{postfix}"
+    width = max(len(name) for name, _, _ in steps)
+    bars = [tqdm(total=n[cap], initial=n[key], desc=name.ljust(width),
+                 unit="q", leave=True, bar_format=bar_format)
+            for name, key, cap in steps]
+    # A notebook bar is three widgets in a row - label, bar, text - and the row
+    # shares its width between them, so the bar shrinks by however long the
+    # text on its right happens to be. Three steps with three different texts
+    # therefore draw three different bars. Fixing the first two widths makes
+    # the three rows line up whatever the text says.
+    for barred in bars:
+        container = getattr(barred, "container", None)
+        if container is None:
+            continue                        # a terminal bar, nothing to lay out
+        label, bar_widget = container.children[0], container.children[1]
+        label.layout.width = "7em"
+        bar_widget.layout.width = "22em"
+        bar_widget.layout.flex = "0 0 auto"
+    running = {"one shot": "one_shot_running", "generation": "gen_running",
+               "judging": "judge_running"}
+
+    try:
+        while True:
+            for barred, (name, key, cap) in zip(bars, steps):
+                barred.total = n[cap]
+                barred.n = n[key]
+                barred.set_postfix_str(
+                    ("running" if n[running[name]] else "idle")
+                    + (f", {n['stored']} candidates" if name == "generation" else ""),
+                    refresh=False)
+                barred.refresh()
+            done = all(n[key] >= n[cap] for _, key, cap in steps)
+            if done or not any(n[flag] for flag in running.values()):
+                break
+            time.sleep(every)
+            n = _progress_numbers(base, judge, total, dataset)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        for barred in bars:
+            barred.close()
+
+
 def verified_curve(base: str | None = None, judge: str | None = None,
-                   max_k: int | None = None, plot: bool = True):
+                   max_k: int | None = None, plot: bool = True,
+                   dataset: str | None = None):
     """The method's accuracy as a function of k: judge candidates in order,
     answer with the first whose facts all check out.
 
@@ -855,13 +1025,14 @@ def verified_curve(base: str | None = None, judge: str | None = None,
     2 votes each, one of them right, counts as half - which is the expectation
     of breaking the tie at random, without the noise of actually doing it.
     """
-    base = _resolve_base(base)
-    judge = _resolve_judge(base, judge)
+    dataset = _ds(dataset)
+    base = _resolve_base(base, dataset=dataset)
+    judge = _resolve_judge(base, judge, dataset)
     if judge is None:
         raise FileNotFoundError(f"no verdicts stored for {base}")
 
-    candidates_store = CandidateResults(RESULTS_DIR, base, DATASET)
-    verdicts_store = VerificationResults(RESULTS_DIR, base, judge, DATASET)
+    candidates_store = CandidateResults(RESULTS_DIR, base, dataset)
+    verdicts_store = VerificationResults(RESULTS_DIR, base, judge, dataset)
 
     questions = []
     for qid in candidates_store.questions():
@@ -933,7 +1104,7 @@ def verified_curve(base: str | None = None, judge: str | None = None,
         cost["judged by verifier"].append(judged_cost / n)
         cost["generated"].append(float(k))
 
-    one_shot = _one_shot(base, [q for q in candidates_store.questions()])
+    one_shot = _one_shot(base, [q for q in candidates_store.questions()], dataset)
 
     if plot:
         import matplotlib.pyplot as plt
@@ -978,7 +1149,8 @@ def verified_curve(base: str | None = None, judge: str | None = None,
 
 def monkeys_curve(base: str | None = None, judge: str | None = None,
                   max_k: int | None = None, plot: bool = True,
-                  majority_vote: bool = False) -> dict[int, float]:
+                  majority_vote: bool = False,
+                  dataset: str | None = None) -> dict[int, float]:
     """The method's accuracy against k, and nothing else but the baseline.
 
     One line: answer each question with the first of its k candidates whose
@@ -1000,7 +1172,8 @@ def monkeys_curve(base: str | None = None, judge: str | None = None,
     verified_curve() is the same measurement with every selector and the
     judging cost alongside it.
     """
-    rows = verified_curve(base, judge, max_k, plot=False)
+    dataset = _ds(dataset)
+    rows = verified_curve(base, judge, max_k, plot=False, dataset=dataset)
     curve = {k: row["verified"] for k, row in rows.items()}
     single = {k: row["single candidate"] for k, row in rows.items()}
     vote = {k: row["majority vote"] for k, row in rows.items()}
@@ -1009,8 +1182,8 @@ def monkeys_curve(base: str | None = None, judge: str | None = None,
 
     base = _resolve_base(base)
     judge = _resolve_judge(base, judge)
-    candidates = CandidateResults(RESULTS_DIR, base, DATASET)
-    one_shot = _one_shot(base, candidates.questions())
+    candidates = CandidateResults(RESULTS_DIR, base, dataset)
+    one_shot = _one_shot(base, candidates.questions(), dataset)
     counted = sum(1 for q in candidates.questions()
                   if (candidates.question_dir(q) / judge).is_dir())
 
@@ -1123,7 +1296,7 @@ def vote_curve(results: list[dict], max_k: int = 20, trials: int = 40,
             for i, k in enumerate(ks)}
 
 
-__all__ = ["use_dataset", "datasets", "load", "load_step1", "load_verified", "overview", "question",
+__all__ = ["use_dataset", "current_dataset", "datasets", "load", "load_step1", "load_verified", "overview", "question",
            "candidate", "facts_stats", "step1", "compare_step1", "one_shot_runs",
-           "catalogue", "judges", "stored_runs",
+           "catalogue", "judges", "stored_runs", "watch",
            "accuracy", "progress", "monkeys_curve", "verified_curve", "vote_curve"]
