@@ -179,7 +179,32 @@ def load(base: str | None = None, judge: str | None = None,
     print(f"# {base}" + (f"   in {dataset}" if dataset != "med_qa" else "")
           + (f"   judged by {judge}" if judge else ""))
     stored = CandidateResults(RESULTS_DIR, base, dataset).load()
-    return Run((stored or {"results": []})["results"], base, judge, dataset)
+    results = _on_list((stored or {"results": []})["results"], dataset)
+    return Run(results, base, judge, dataset)
+
+
+def _on_list(results: list[dict[str, Any]],
+             dataset: str | None = None) -> list[dict[str, Any]]:
+    """The questions of a run that the difficult-questions list names.
+
+    A run can hold more than the list names: a list can be shortened between
+    runs, and nothing stored is ever thrown away. The questions it drops are
+    the easy ones by definition, so leaving them in flatters every number the
+    pipeline reports - seventeen points of it on medbullets - and makes the
+    result incomparable with anything measured on the list.
+
+    Steps 2 and 3 are what this covers. Step 1 answers the whole split and is
+    reported over the whole split, here as everywhere else.
+    """
+    listed = _difficult_ids(dataset)
+    if listed is None:
+        return results
+    ids = {_norm_id(q) for q in listed}
+    kept = [q for q in results if _norm_id(q["question_id"]) in ids]
+    if len(kept) != len(results):
+        print(f"#   {len(kept)} of {len(results)} stored questions are on the "
+              f"difficult list; the rest are left out")
+    return kept
 
 
 def load_step1(base: str | None = None,
@@ -426,6 +451,20 @@ def _baselines(results: list[dict]) -> dict[str, float]:
     }
 
 
+def _norm_id(qid: Any) -> str:
+    """A question id in one form, whatever store or list it came from.
+
+    The one-shot store keys a question by the id the dataset hands it, while
+    the per-candidate store and the difficult-questions list carry the id
+    medbullets writes, which is padded to three digits. Compared as strings,
+    '1' and '001' are different questions, so every medbullets question below
+    100 - two thirds of the list - dropped out of the one-shot baseline, and
+    what was left still read as a plausible number.
+    """
+    text = str(qid)
+    return (text.lstrip("0") or "0") if text.isdigit() else text
+
+
 def _one_shot(base: str | None, qids, dataset: str | None = None) -> tuple[float, int] | None:
     """One-shot accuracy over the given questions, or None if none are stored.
 
@@ -436,7 +475,8 @@ def _one_shot(base: str | None, qids, dataset: str | None = None) -> tuple[float
     if not base:
         return None
     records = OneShotResults(RESULTS_DIR, base, _ds(dataset)).read()
-    picked = [records[str(q)] for q in qids if str(q) in records]
+    by_id = {_norm_id(k): v for k, v in records.items()}
+    picked = [by_id[_norm_id(q)] for q in qids if _norm_id(q) in by_id]
     if not picked:
         return None
     rate = statistics.mean(
@@ -1041,8 +1081,14 @@ def verified_curve(base: str | None = None, judge: str | None = None,
     candidates_store = CandidateResults(RESULTS_DIR, base, dataset)
     verdicts_store = VerificationResults(RESULTS_DIR, base, judge, dataset)
 
+    listed = _difficult_ids(dataset)
+    on_list = None if listed is None else {_norm_id(q) for q in listed}
     questions = []
     for qid in candidates_store.questions():
+        # The same scope as load(): the list the run works, not everything the
+        # run happens to hold.
+        if on_list is not None and _norm_id(qid) not in on_list:
+            continue
         verdicts = verdicts_store.read_verdicts(qid)
         if not verdicts:
             continue  # step 3 has not reached this question yet
