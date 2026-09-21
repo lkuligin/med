@@ -119,6 +119,15 @@ BASE_MODELS: dict[str, BaseModel] = {
              "the name. Budget matches the gateway entry's, which records a "
              "peak near 2900 tokens.",
     ),
+    "qwen3.8-27b-nr-local": served_locally(
+        "qwen3.8-27b-nr-local", "Qwen/Qwen3.8-27B-FP8", max_tokens=4096,
+        note="the FP8 checkpoint the gateway serves, on our own cards. The "
+             "thinking switch is not optional here: the gateway entry is the "
+             "-noreasoning one, and with thinking on the model spends the "
+             "whole budget reasoning and returns an empty string. Serving it "
+             "thinking would compare two different configurations.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+    ),
     "qwen3.8-27b-nr": BaseModel(
         name="qwen3.8-27b-nr",
         gateway_model="qwen3.8-27b-noreasoning",

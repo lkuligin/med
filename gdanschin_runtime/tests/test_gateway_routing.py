@@ -38,6 +38,7 @@ POOLS = {"internal": ("https://internal.test", "token-internal"),
 EXPECTED_POOL = {
     "google/gemma-4-26B-A4B-it": "local",
     "openai/gpt-oss-120b": "local",
+    "Qwen/Qwen3.8-27B-FP8": "local",
     "gemma-4-26b-internal": "internal",
     "gpt-oss-120b": "internal",
     "deepseek-v4-flash": "internal",
