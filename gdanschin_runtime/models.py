@@ -104,9 +104,13 @@ BASE_MODELS: dict[str, BaseModel] = {
         note="thinking disabled; with it on the whole budget goes to reasoning",
     ),
     "gemma-4-26b-local": served_locally(
-        "gemma-4-26b-local", "google/gemma-4-26B-A4B-it", max_tokens=1024,
-        note="the same weights as gemma-4-26b, on our own cards; 13/20 against "
-             "the gateway's 11/20 on the first twenty difficult questions",
+        "gemma-4-26b-local", "google/gemma-4-26B-A4B-it", max_tokens=4096,
+        note="the same weights as gemma-4-26b, on our own cards. 4096 rather "
+             "than the gateway entry's 1024: at 1024, 36 of 1273 MedQA and 7 "
+             "of 308 MedBullets questions hit the ceiling on some attempt, "
+             "which returns a truncated answer with no error. Note this makes "
+             "the two entries no longer directly comparable on exactly those "
+             "questions - the gateway baselines were produced at 1024.",
     ),
     "qwen3.8-27b-nr": BaseModel(
         name="qwen3.8-27b-nr",
