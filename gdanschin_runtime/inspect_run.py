@@ -534,7 +534,16 @@ STEP_2_VOTE = "Step 2 Facts extraction Pipeline (Majority vote)"
 STEP_3 = "Step 3 Verifier (First Valid Candidate)"
 STEP_3_HYBRID = "Step 3 Verifier (First Valid, else Majority vote)"
 CEILING = "Unverified Baseline (Generator Pass@k)"
-LABEL = 50
+# A frontier model answering once, on the same questions. This is what the
+# method competes with: fifty candidates and a judge are worth their cost only
+# if they beat one call to this, so it belongs beside every score rather than
+# in a comparison run by hand now and then.
+REFERENCE = os.environ.get("MEDQA_REFERENCE_RUN", "gemini-3.8-flash")
+LABEL = 51
+
+
+def reference_label() -> str:
+    return f"Reference: {REFERENCE} (Single-Shot Attempt 0)"
 
 
 def _score(hits: float, n: int) -> str:
@@ -554,9 +563,27 @@ def _line(label: str, hits: float, n: int, indent: str = "    ",
     print(f"{indent}• {label:<{LABEL}}: {_score(hits, n)}{note}")
 
 
+def _reference(qids, dataset: str | None = None,
+               base: str | None = None) -> OneShot | None:
+    """The reference model over the same questions, or None.
+
+    None when the reference is what is being measured, when it has no run
+    stored for this dataset, or when it did not answer these questions - a
+    reference that covers half of them would be a different measurement
+    printed in the same column.
+    """
+    if not REFERENCE or base == REFERENCE:
+        return None
+    measured = _one_shot(REFERENCE, qids, dataset)
+    if measured is None or measured.covered < len(list(qids)):
+        return None
+    return measured
+
+
 def _print_baselines(b: dict, indent: str = "    ",
                      one_shot: OneShot | None = None,
-                     tail: tuple = ()) -> None:
+                     tail: tuple = (),
+                     reference: OneShot | None = None) -> None:
     """The selectors in one block, weakest first, with the bound underneath.
 
     `tail` is whatever step 3 has to add, printed with the selectors rather
@@ -575,6 +602,10 @@ def _print_baselines(b: dict, indent: str = "    ",
     for label, hits, note in tail:
         _line(label, hits, b["n"], indent, note)
     _line(CEILING, b["any_hits"], b["n"], indent)
+    if reference is not None:
+        _line(reference_label(),
+              reference.attempt0 * reference.covered / 100, reference.covered,
+              indent)
 
 
 def accuracy(results: list[dict], verified: list[dict] | str | Path | None = None,
@@ -613,7 +644,8 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
         if not verified:
             print(f"  THROUGH STEP 2, {len(results)} questions, {spread}")
             _print_baselines(_baselines(results),
-                             one_shot=_one_shot(base, all_ids, dataset))
+                             one_shot=_one_shot(base, all_ids, dataset),
+                             reference=_reference(all_ids, dataset, base))
             print("\n  no step 3 results yet")
             return
     if isinstance(verified, (str, Path)):
@@ -630,7 +662,8 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     if len(both) < len(results):
         print(f"  THROUGH STEP 2 ONLY, {len(results)} questions, {spread}")
         _print_baselines(_baselines(results),
-                         one_shot=_one_shot(base, all_ids, dataset))
+                         one_shot=_one_shot(base, all_ids, dataset),
+                         reference=_reference(all_ids, dataset, base))
         print()
 
     first_valid_right = found = hybrid_right = 0
@@ -658,9 +691,11 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     print(f"  THROUGH BOTH STEPS, {n} questions, {spread}")
     fallback = (f"   (fell back {fell_back}x, right {fallback_right})"
                 if fell_back else "")
+    both_ids = [q["question_id"] for q in both]
     _print_baselines(
         _baselines(both),
-        one_shot=_one_shot(base, [q["question_id"] for q in both], dataset),
+        one_shot=_one_shot(base, both_ids, dataset),
+        reference=_reference(both_ids, dataset, base),
         tail=((STEP_3, first_valid_right, "   <- the metric"),
               (STEP_3_HYBRID, hybrid_right, fallback),
               ("Valid Coverage", found,
@@ -1189,6 +1224,7 @@ def verified_curve(base: str | None = None, judge: str | None = None,
                   for v in verdicts}
         passing = sorted(i for i, v in judged.items() if v.get("all_facts_correct"))
         questions.append({
+            "id": qid,
             "picks": [c.get("predicted_option") for c in cands],
             "right": [bool(c.get("is_correct")) for c in cands],
             "truth": truth,
@@ -1273,6 +1309,10 @@ def verified_curve(base: str | None = None, judge: str | None = None,
         if one_shot is not None:
             ax.axhline(one_shot.attempt0, ls=":", color="#888888",
                        label=legend(STEP_1, one_shot.attempt0))
+        reference = _reference([q["id"] for q in questions], dataset, base)
+        if reference is not None:
+            ax.axhline(reference.attempt0, ls="-.", color="#d62728", alpha=0.8,
+                       label=legend(reference_label(), reference.attempt0))
         ax.set_ylabel("% of questions answered correctly")
         ax.set_title(f"{base}, judged by {judge}  ({len(questions)} questions)")
         ax.grid(alpha=0.3)
@@ -1354,8 +1394,12 @@ def monkeys_curve(base: str | None = None, judge: str | None = None,
         ax.plot(ks, [single[k] for k in ks], "--", color="#8c564b", alpha=0.8,
                 label=legend(STEP_2_AVERAGE, single[ks[-1]]))
         if one_shot is not None:
-            ax.axhline(one_shot.attempt0, ls="--", color="red",
+            ax.axhline(one_shot.attempt0, ls="--", color="#888888",
                        label=legend(STEP_1, one_shot.attempt0))
+        reference = _reference(on_list, dataset, base)
+        if reference is not None:
+            ax.axhline(reference.attempt0, ls="-.", color="#d62728", alpha=0.8,
+                       label=legend(reference_label(), reference.attempt0))
         ax.set_xlabel("candidates considered (k)")
         ax.set_ylabel("% of questions answered correctly")
         ax.set_title(f"{base}, judged by {judge}  ({counted} questions)")
