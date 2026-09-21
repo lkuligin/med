@@ -92,6 +92,31 @@ SERVABLE: dict[str, ServedModel] = {
         note="120B total but MXFP4 with 4 of 128 experts active, so 61 GB on "
              "disk and fast to decode",
     ),
+    "gemma-4-e2b": ServedModel(
+        name="gemma-4-e2b",
+        weights="google/gemma-4-E2B-it",
+        served_name="google/gemma-4-E2B-it",
+        weights_gb=9.6,
+        sglang_args=(
+            "--reasoning-parser", "gemma4",
+            "--tool-call-parser", "gemma4",
+        ),
+        note="the smallest Gemma 4; flags from the reference playground's "
+             "e2b.sh, which unlike the 26B script does name the parsers",
+    ),
+    "gpt-oss-20b": ServedModel(
+        name="gpt-oss-20b",
+        weights="openai/gpt-oss-20b",
+        served_name="openai/gpt-oss-20b",
+        weights_gb=13,
+        mem_fraction=0.75,
+        sglang_args=(
+            "--trust-remote-code",
+            "--reasoning-parser", "gpt-oss",
+            "--tool-call-parser", "gpt-oss",
+        ),
+        note="the smaller of the two GPT-OSS models; there is no third",
+    ),
     "qwen3.8-27b": ServedModel(
         name="qwen3.8-27b",
         weights="Qwen/Qwen3.8-27B-FP8",
@@ -114,6 +139,35 @@ SERVABLE: dict[str, ServedModel] = {
              "flags are not optional. Weights are not on the box yet.",
     ),
 }
+
+
+# Qwen ships nothing under 27B in 3.6 or 3.8, so small Qwen means dropping
+# back to 3.5. These four are one family served one way, which is why they are
+# generated rather than written out four times.
+#
+# No reference script exists for any of them. The reasoning parser is the
+# family's and is UNVERIFIED here; no tool-call parser is set, because
+# guessing one is worse than having none. The generation probe in check.py is
+# what will say whether reasoning leaks into content.
+QWEN35_SMALL_GB = {"0.8B": 2, "2B": 4, "4B": 10, "9B": 20}
+
+
+def _qwen35_small(label: str, weights_gb: float) -> ServedModel:
+    repo = f"Qwen/Qwen3.5-{label}"
+    return ServedModel(
+        name=f"qwen3.5-{label.lower()}",
+        weights=repo,
+        served_name=repo,
+        weights_gb=weights_gb,
+        sglang_args=("--trust-remote-code", "--reasoning-parser", "qwen3"),
+        note="smallest Qwen generation that has small models; parsers unverified",
+    )
+
+
+SERVABLE.update({
+    model.name: model
+    for model in (_qwen35_small(label, gb) for label, gb in QWEN35_SMALL_GB.items())
+})
 
 
 def describe() -> None:
