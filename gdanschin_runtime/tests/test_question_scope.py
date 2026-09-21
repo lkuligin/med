@@ -84,3 +84,33 @@ def test_a_dataset_with_no_list_yet_is_read_whole(monkeypatch):
     stored = [{"question_id": "1"}, {"question_id": "2"}]
 
     assert inspect_run._on_list(stored, "medbullets") == stored
+
+
+class FakeCandidates:
+    """A per-candidate store, which knows only which questions it holds."""
+
+    def __init__(self, ids: list[str]):
+        self.ids = ids
+
+    def questions(self) -> list[str]:
+        return self.ids
+
+
+def test_a_chart_reads_the_questions_the_curve_on_it_was_drawn_from(monkeypatch):
+    """The baseline line and the curve went through different paths once, and
+    the chart ended up comparing 165 questions against 308."""
+    monkeypatch.setattr(inspect_run, "_difficult_ids",
+                        lambda dataset=None: ["1", "3"])
+
+    kept = inspect_run._questions_on_list(
+        FakeCandidates(["001", "002", "003"]), "medbullets")
+
+    assert kept == ["001", "003"]
+
+
+def test_with_no_list_a_chart_reads_the_whole_run(monkeypatch):
+    monkeypatch.setattr(inspect_run, "_difficult_ids", lambda dataset=None: None)
+
+    store = FakeCandidates(["1", "2"])
+
+    assert inspect_run._questions_on_list(store, "med_qa") == ["1", "2"]

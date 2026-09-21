@@ -183,6 +183,20 @@ def load(base: str | None = None, judge: str | None = None,
     return Run(results, base, judge, dataset)
 
 
+def _questions_on_list(store, dataset: str | None = None) -> list[str]:
+    """The questions a run holds that the difficult-questions list names.
+
+    Every reader of a step 2 or step 3 run goes through this, so that a chart
+    cannot end up drawing a baseline over one set of questions and a curve
+    over another.
+    """
+    listed = _difficult_ids(dataset)
+    if listed is None:
+        return store.questions()
+    ids = {_norm_id(q) for q in listed}
+    return [q for q in store.questions() if _norm_id(q) in ids]
+
+
 def _on_list(results: list[dict[str, Any]],
              dataset: str | None = None) -> list[dict[str, Any]]:
     """The questions of a run that the difficult-questions list names.
@@ -888,7 +902,6 @@ def _progress_numbers(base: str | None, judge: str | None,
                 or {}).get("n_attempts") or 1
     candidates = CandidateResults(RESULTS_DIR, base, dataset)
     questions = candidates.questions()
-    counts = [candidates.candidate_count(q) for q in questions]
     # Steps 2 and 3 both cover the list the run was given, and are both counted
     # against it, so the bars are read down the page as one run. The run may
     # hold more than the list - a list can be shortened between runs, and
@@ -904,7 +917,7 @@ def _progress_numbers(base: str | None, judge: str | None,
     # directories would report a question as done the moment it starts. Only
     # the ones that reached the target count are finished.
     summary = candidates.read_summary() or {}
-    target = summary.get("n_candidates") or max(counts, default=0)
+    target = summary.get("n_candidates") or max(on_list, default=0)
     # Two denominators, because the steps cover different things: step 1
     # answers every question in the split, while steps 2 and 3 work through the
     # list they were given. Reporting one against the other is how a bar reads
@@ -926,7 +939,7 @@ def _progress_numbers(base: str | None, judge: str | None,
         "started": sum(1 for n in on_list if n),
         "judged": sum(1 for q in wanted
                       if judge and (candidates.question_dir(q) / judge).is_dir()),
-        "stored": sum(counts), "target": target,
+        "stored": sum(on_list), "target": target,
         "total": total, "pipeline_total": pipeline_total,
         "one_shot_running": alive(f"[r]un_step1.py.*--base {base}"
                                   f"|[-]m cli.*--run-name {base}"),
@@ -1081,14 +1094,10 @@ def verified_curve(base: str | None = None, judge: str | None = None,
     candidates_store = CandidateResults(RESULTS_DIR, base, dataset)
     verdicts_store = VerificationResults(RESULTS_DIR, base, judge, dataset)
 
-    listed = _difficult_ids(dataset)
-    on_list = None if listed is None else {_norm_id(q) for q in listed}
+    # The list the run works, not everything the run happens to hold.
+    on_list = _questions_on_list(candidates_store, dataset)
     questions = []
-    for qid in candidates_store.questions():
-        # The same scope as load(): the list the run works, not everything the
-        # run happens to hold.
-        if on_list is not None and _norm_id(qid) not in on_list:
-            continue
+    for qid in on_list:
         verdicts = verdicts_store.read_verdicts(qid)
         if not verdicts:
             continue  # step 3 has not reached this question yet
@@ -1157,7 +1166,7 @@ def verified_curve(base: str | None = None, judge: str | None = None,
         cost["judged by verifier"].append(judged_cost / n)
         cost["generated"].append(float(k))
 
-    one_shot = _one_shot(base, [q for q in candidates_store.questions()], dataset)
+    one_shot = _one_shot(base, on_list, dataset)
 
     if plot:
         import matplotlib.pyplot as plt
@@ -1233,11 +1242,12 @@ def monkeys_curve(base: str | None = None, judge: str | None = None,
     if not curve:
         return {}
 
-    base = _resolve_base(base)
-    judge = _resolve_judge(base, judge)
+    base = _resolve_base(base, dataset=dataset)
+    judge = _resolve_judge(base, judge, dataset)
     candidates = CandidateResults(RESULTS_DIR, base, dataset)
-    one_shot = _one_shot(base, candidates.questions(), dataset)
-    counted = sum(1 for q in candidates.questions()
+    on_list = _questions_on_list(candidates, dataset)
+    one_shot = _one_shot(base, on_list, dataset)
+    counted = sum(1 for q in on_list
                   if (candidates.question_dir(q) / judge).is_dir())
 
     if plot:
