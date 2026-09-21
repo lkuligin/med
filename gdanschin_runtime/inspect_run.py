@@ -563,6 +563,23 @@ def _line(label: str, hits: float, n: int, indent: str = "    ",
     print(f"{indent}• {label:<{LABEL}}: {_score(hits, n)}{note}")
 
 
+def _step1_run(base: str | None, dataset: str | None = None) -> str | None:
+    """The run that holds step 1 for a model, or None if none does.
+
+    A run over the whole split is stored apart from a run over the difficult
+    questions, under <name>-full, because the same model at two coverages
+    under one name would leave a directory nothing could describe. The cost is
+    that a step 2 run named for the model has no step 1 of its own, and the
+    baseline it should be compared against sits next door.
+    """
+    if not base:
+        return None
+    for name in (base, f"{base}-full"):
+        if OneShotResults(RESULTS_DIR, name, _ds(dataset)).read():
+            return name
+    return None
+
+
 def _reference(qids, dataset: str | None = None,
                base: str | None = None) -> OneShot | None:
     """The reference model over the same questions, or None.
@@ -623,6 +640,7 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     judge = judge or getattr(results, "judge", None)
     dataset = _ds(dataset or getattr(results, "dataset", None))
     all_ids = [q["question_id"] for q in results]
+    step1 = _step1_run(base, dataset)
 
     # Step 1 over everything it has answered, not only the questions step 2 has
     # reached. The per-section lines below are restricted to matching question
@@ -634,17 +652,17 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
         print("  WHOLE SPLIT not shown: this result does not carry a run name."
               "\n    load() attaches one; a plain list of records does not."
               " Pass base='<run>'.\n")
+    elif not step1:
+        print(f"  WHOLE SPLIT not shown: no step 1 run stored as {base!r} or "
+              f"{base + '-full'!r} in {dataset}.\n    one_shot_runs"
+              f"('{dataset}') lists the ones there are.\n")
     else:
-        records = OneShotResults(RESULTS_DIR, base, dataset).read()
-        if not records:
-            print(f"  WHOLE SPLIT not shown: no step 1 run stored as "
-                  f"{base!r} in {dataset}.\n    one_shot_runs('{dataset}') "
-                  f"lists the ones there are.\n")
-        else:
-            whole = _one_shot(base, list(records), dataset)
-            print(f"  WHOLE SPLIT, {whole.covered} questions")
-            _line(STEP_1, whole.attempt0 * whole.covered / 100, whole.covered)
-            print()
+        records = OneShotResults(RESULTS_DIR, step1, dataset).read()
+        whole = _one_shot(step1, list(records), dataset)
+        named = "" if step1 == base else f"   (run {step1})"
+        print(f"  WHOLE SPLIT, {whole.covered} questions{named}")
+        _line(STEP_1, whole.attempt0 * whole.covered / 100, whole.covered)
+        print()
     sizes = sorted(len(q.get("candidates") or []) for q in results)
     spread = (f"{sizes[0]} candidates each" if sizes and sizes[0] == sizes[-1]
               else f"{sizes[0]}-{sizes[-1]} candidates each")
@@ -654,7 +672,7 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
         if not verified:
             print(f"  THROUGH STEP 2, {len(results)} questions, {spread}")
             _print_baselines(_baselines(results),
-                             one_shot=_one_shot(base, all_ids, dataset),
+                             one_shot=_one_shot(step1, all_ids, dataset),
                              reference=_reference(all_ids, dataset, base))
             print("\n  no step 3 results yet")
             return
@@ -672,7 +690,7 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     if len(both) < len(results):
         print(f"  THROUGH STEP 2 ONLY, {len(results)} questions, {spread}")
         _print_baselines(_baselines(results),
-                         one_shot=_one_shot(base, all_ids, dataset),
+                         one_shot=_one_shot(step1, all_ids, dataset),
                          reference=_reference(all_ids, dataset, base))
         print()
 
@@ -704,7 +722,7 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     both_ids = [q["question_id"] for q in both]
     _print_baselines(
         _baselines(both),
-        one_shot=_one_shot(base, both_ids, dataset),
+        one_shot=_one_shot(step1, both_ids, dataset),
         reference=_reference(both_ids, dataset, base),
         tail=((STEP_3, first_valid_right, "   <- the metric"),
               (STEP_3_HYBRID, hybrid_right, fallback),
@@ -735,13 +753,13 @@ def step1(base: str | None = None, dataset: str | None = None) -> None:
     if not records:
         print(f"  nothing stored for {base}")
         return
-    rate, covered = _one_shot(base, list(records), dataset)
+    measured = _one_shot(base, list(records), dataset)
     attempts = sum(r.get("total_attempts") or 0 for r in records.values())
     unparsed = sum(1 for r in records.values() if not r.get("predicted_option"))
     errors = sum(1 for r in records.values() if r.get("error"))
     print(f"  {base}")
-    print(f"  one shot, no candidates        {rate:5.1f}%   "
-          f"({covered} questions, {attempts} attempts)")
+    _line(STEP_1, measured.attempt0 * measured.covered / 100, measured.covered,
+          indent="  ", note=f"   ({attempts} attempts)")
     if unparsed:
         print(f"  answers that did not parse     {unparsed}")
     if errors:
@@ -1308,7 +1326,7 @@ def verified_curve(base: str | None = None, judge: str | None = None,
         cost["judged by verifier"].append(judged_cost / n)
         cost["generated"].append(float(k))
 
-    one_shot = _one_shot(base, on_list, dataset)
+    one_shot = _one_shot(_step1_run(base, dataset), on_list, dataset)
 
     if plot:
         import matplotlib.pyplot as plt
@@ -1399,7 +1417,7 @@ def monkeys_curve(base: str | None = None, judge: str | None = None,
     judge = _resolve_judge(base, judge, dataset)
     candidates = CandidateResults(RESULTS_DIR, base, dataset)
     on_list = _questions_on_list(candidates, dataset)
-    one_shot = _one_shot(base, on_list, dataset)
+    one_shot = _one_shot(_step1_run(base, dataset), on_list, dataset)
     counted = sum(1 for q in on_list
                   if (candidates.question_dir(q) / judge).is_dir())
 
