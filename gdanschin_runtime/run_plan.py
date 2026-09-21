@@ -57,6 +57,15 @@ MODELS = ("gemma-4-26b", "gpt-oss-120b", "qwen3.8-27b-nr")
 # questions, so the budget is raised here rather than there: the MedQA runs a
 # result is compared against were generated with the old one, and changing it
 # in the registry would quietly change them too the next time they are run.
+# How far a second pass over MedBullets takes each question, or None for no
+# second pass. Off, because on this dataset the verified selector stops
+# improving around k=20: past that the judge does still certify a candidate
+# now and then, and on gpt-oss every one of those late certifications was
+# wrong, so the pass costs about ten hours and moves the metric by nothing.
+# Set it to 100 to run it - it does keep raising the ceiling, which is the
+# measurement worth coming back for.
+TOP_UP_TO: int | None = None
+
 MAX_TOKENS: dict[tuple[str, str], int] = {
     ("medbullets", "gemma-4-26b"): 4096,
 }
@@ -225,21 +234,22 @@ def plan() -> list[Step]:
         steps.append(Step(f"medbullets {base} verdicts k=50", "verdicts",
                           base, "verdicts", dataset=MEDBULLETS))
 
-    # 4. MedBullets candidates from fifty to a hundred. The generator tops each
-    #    question up, so this adds the second fifty rather than redoing the first.
-    for base in MODELS:
-        stage = f"medbullets {base} k=100"
-        steps += [
-            Step(stage, "candidates k=100", base, "candidates", 100, MEDBULLETS),
-            Step(stage, "verdicts", base, "verdicts", dataset=MEDBULLETS),
-        ]
-
-    # 5. MedBullets verdicts over the second fifty. No filtering is needed: the
-    #    verifier skips questions that already found a valid candidate and
-    #    continues the rest from the candidate it stopped at.
-    for base in MODELS:
-        steps.append(Step(f"medbullets {base} verdicts k=100", "verdicts",
-                          base, "verdicts", dataset=MEDBULLETS))
+    # 4. MedBullets candidates from fifty up to TOP_UP_TO. The generator tops
+    #    each question up, so this adds the difference rather than redoing what
+    #    is stored. Verdicts follow: no filtering is needed, since the verifier
+    #    skips questions that already found a valid candidate and continues the
+    #    rest from the candidate it stopped at.
+    if TOP_UP_TO:
+        for base in MODELS:
+            stage = f"medbullets {base} k={TOP_UP_TO}"
+            steps += [
+                Step(stage, f"candidates k={TOP_UP_TO}", base, "candidates",
+                     TOP_UP_TO, MEDBULLETS),
+                Step(stage, "verdicts", base, "verdicts", dataset=MEDBULLETS),
+            ]
+        for base in MODELS:
+            steps.append(Step(f"medbullets {base} verdicts k={TOP_UP_TO}",
+                              "verdicts", base, "verdicts", dataset=MEDBULLETS))
 
     return steps
 
