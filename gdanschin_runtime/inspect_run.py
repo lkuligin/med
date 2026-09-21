@@ -741,7 +741,13 @@ def _one_shot_run(base: str, dataset: str | None = None) -> dict[str, Any]:
         "unparsed": unparsed,
         "errors": errors,
         "tokens": statistics.mean(tokens) if tokens else 0.0,
-        "seconds": statistics.mean(seconds) if seconds else 0.0,
+        # Wall clock over the questions, not the mean of the records'
+        # latency_seconds: that field is the time from the start of the run to
+        # when a question finished, so its mean is half the run's length
+        # whatever the model did, and reads as a per-question cost.
+        "seconds": ((summary.get("total_time_seconds") or 0.0) / len(scores)
+                    if scores and summary.get("total_time_seconds")
+                    else statistics.mean(seconds) if seconds else 0.0),
         "accuracy_all": statistics.mean(scores.values()) * 100 if scores else 0.0,
     }
 
@@ -848,7 +854,7 @@ def compare_step1(runs: list[str] | None = None, plot: bool = True,
 
     width = max(len(m["base"]) for m in measured)
     print(f"\n  {'model':<{width}}  {'accuracy':>8}  {'95% CI':>13}  {'n':>4}  "
-          f"{'unparsed':>8}  {'errors':>6}  {'tokens/q':>8}  {'s/q':>5}")
+          f"{'unparsed':>8}  {'errors':>6}  {'tokens/q':>8}  {'wall s/q':>8}")
     for m in measured:
         note = ""
         if not full and abs(m["accuracy_all"] - m["accuracy"]) > 1:
@@ -856,7 +862,7 @@ def compare_step1(runs: list[str] | None = None, plot: bool = True,
         print(f"  {m['base']:<{width}}  {m['accuracy']:7.1f}%  "
               f"{m['low']:5.1f} - {m['high']:5.1f}  {m['n']:>4}  "
               f"{m['unparsed']:>8}  {m['errors']:>6}  "
-              f"{m['tokens']:>8.0f}  {m['seconds']:>5.1f}{note}")
+              f"{m['tokens']:>8.0f}  {m['seconds']:>8.2f}{note}")
 
     if len(measured) > 1 and shared:
         print(f"\n  HEAD TO HEAD on the shared questions")
