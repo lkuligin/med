@@ -296,3 +296,15 @@ def test_fetching_is_online_and_skips_duplicate_weights(settings):
     # gpt-oss ships the same weights three ways; without this the download is
     # twice the size for nothing.
     assert "original/*" in argv and "metal/*" in argv
+
+
+def test_a_verbose_model_is_not_a_broken_one():
+    # gpt-oss writes past a 400-token cap on the cranial nerve probe. That is
+    # verbosity, not malfunction, and flagging it taught nothing except to
+    # ignore the check.
+    verbose = ("Cranial Nerves I-XII. I Olfactory carries smell from the nasal "
+               "epithelium to the olfactory bulb. II Optic carries vision from "
+               "the retina through the chiasm. III Oculomotor supplies most of "
+               "the extraocular muscles and the pupil. IV Trochlear supplies "
+               "the superior oblique muscle alone.")
+    assert check_module.degenerate(verbose) is None

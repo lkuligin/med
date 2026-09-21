@@ -151,10 +151,12 @@ def verify(base_url: str, expect_name: str, max_tokens: int = 256,
             f"degenerate output over {long_usage.get('completion_tokens', 0)} "
             f"tokens: {wrong}. The model is loaded but decoding wrongly - "
             f"suspect the attention backend.")
-    if long_finish == "length":
-        problems.append(
-            "the 400-token probe did not finish on its own; the model may be "
-            "running away rather than answering")
+    # Deliberately no finish_reason check on this probe. It asks for all
+    # twelve cranial nerves with notes, and a verbose model legitimately runs
+    # past the cap - gpt-oss does. The fault this probe exists to catch is a
+    # model that decodes wrongly, and a model that loops instead of finishing
+    # fails the degeneracy test above. Failing it for verbosity only teaches
+    # people to ignore the check.
 
     return Result(
         ok=not problems,
