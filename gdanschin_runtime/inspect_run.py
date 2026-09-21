@@ -989,9 +989,24 @@ def _one_shot_stored(base: str, dataset: str | None = None) -> int:
     the slowest thing in it. A record is written once, whole, so its existence
     is enough.
     """
-    directory = OneShotResults(RESULTS_DIR, base, _ds(dataset)).directory
+    dataset = _ds(dataset)
+    directory = OneShotResults(RESULTS_DIR, base, dataset).directory
+    if directory.is_dir():
+        return sum(1 for _ in directory.glob("question_*.json"))
+
+    # Fall back to the whole-split run of the same model. The questions the
+    # pipeline works on are a subset of the split, so a "-full" run has
+    # already answered every one of them - with more attempts, not fewer.
+    # Without this the row reads 0 for a model that has been answered
+    # thoroughly, which looks like a missing step rather than a name that
+    # does not match.
+    directory = OneShotResults(RESULTS_DIR, f"{base}-full", dataset).directory
     if not directory.is_dir():
         return 0
+    # Counted whole, against the split, because that is what this row is
+    # measured against - filtering to the list here would report the list's
+    # questions against the split's denominator, which is the 300/135 the
+    # comment below warns about.
     return sum(1 for _ in directory.glob("question_*.json"))
 
 
@@ -1012,8 +1027,10 @@ def _progress_numbers(base: str | None, judge: str | None,
     base = _resolve_run(base, dataset)
     judge = _resolve_judge(base, judge, dataset)
     answered = _one_shot_stored(base, dataset)
-    attempts = (OneShotResults(RESULTS_DIR, base, dataset).read_summary()
-                or {}).get("n_attempts") or 1
+    summary = (OneShotResults(RESULTS_DIR, base, dataset).read_summary()
+               or OneShotResults(RESULTS_DIR, f"{base}-full", dataset).read_summary()
+               or {})
+    attempts = summary.get("n_attempts") or 1
     candidates = CandidateResults(RESULTS_DIR, base, dataset)
     questions = candidates.questions()
     # Steps 2 and 3 both cover the list the run was given, and are both counted
