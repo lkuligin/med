@@ -23,7 +23,17 @@ DEFAULTS: dict[str, str] = {
     # would collide with someone else's run, so the allocation is configuration
     # rather than a flag anyone can pass by accident.
     "GPU_SERVING_CARDS": "4,5,6,7",
-    "GPU_SERVING_MODELS_ROOT": "/mnt/data/models",
+    # Where weights are looked for, in order, as flat <root>/<org>/<name>
+    # directories. Colon-separated, like PATH: the shared directory first,
+    # then anywhere we keep our own. /mnt/data/models belongs to someone else
+    # and is read-only for us, which is why there has to be a second place.
+    "GPU_SERVING_MODELS_ROOTS": "/mnt/data/models",
+    # A Hugging Face cache, used for models that are not in any flat root:
+    # SGLang is then given the repo id and resolves it here. This is also
+    # where downloads go, so it has to be writable. /mnt/data/model (singular)
+    # is the box's shared cache - world-writable, on the big array, and
+    # already holding what the sglang-worker services use.
+    "GPU_SERVING_HF_HOME": "/mnt/data/model",
     # The package carries its own environment, so that moving this directory
     # moves everything it needs. ".venv" at any depth is already excluded from
     # both git and the mirror, so the box builds its own against its own CUDA.
@@ -54,11 +64,17 @@ def _from_file() -> dict[str, str]:
 @dataclass(frozen=True)
 class Settings:
     cards: tuple[int, ...]
-    models_root: Path
+    models_roots: tuple[Path, ...]
+    hf_home: Path
     venv: Path
     host: str
     port: int
     run_dir: Path
+
+    @property
+    def models_root(self) -> Path:
+        """The first flat root. Kept for callers that only need somewhere."""
+        return self.models_roots[0]
 
     @property
     def python(self) -> Path:
@@ -84,9 +100,15 @@ def load() -> Settings:
     if not cards:
         raise ValueError("GPU_SERVING_CARDS is empty; no cards to serve on")
 
+    roots = tuple(Path(r).expanduser()
+                  for r in values["GPU_SERVING_MODELS_ROOTS"].split(":") if r.strip())
+    if not roots:
+        raise ValueError("GPU_SERVING_MODELS_ROOTS is empty; nowhere to find weights")
+
     return Settings(
         cards=cards,
-        models_root=Path(values["GPU_SERVING_MODELS_ROOT"]),
+        models_roots=roots,
+        hf_home=Path(values["GPU_SERVING_HF_HOME"]).expanduser(),
         venv=_path(values["GPU_SERVING_VENV"]),
         host=values["GPU_SERVING_HOST"],
         port=int(values["GPU_SERVING_PORT"]),

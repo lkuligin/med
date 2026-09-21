@@ -7,8 +7,17 @@
 # Cards this box lets us use. On the GPU box cards 0-3 belong to other people.
 GPU_SERVING_CARDS="4,5,6,7"
 
-# Where the weights live. A model's `weights` in catalog.py is relative to this.
-GPU_SERVING_MODELS_ROOT="/mnt/data/models"
+# Where flat <org>/<name> weight directories are looked for, in order, like
+# PATH. /mnt/data/models is the shared one and belongs to another user: we can
+# read it, not add to it. Add your own directory after a colon if you keep
+# weights in that layout too.
+GPU_SERVING_MODELS_ROOTS="/mnt/data/models"
+
+# The Hugging Face cache for everything not in a flat root: SGLang is handed
+# the repo id and resolves it here, and "serve.sh fetch" downloads into it. It
+# must be writable. /mnt/data/model (singular) is the box's shared cache, on
+# the large array, already holding what the sglang-worker services use.
+GPU_SERVING_HF_HOME="/mnt/data/model"
 
 # The virtualenv holding sglang and sglang-router, built by setup_env.sh.
 # A relative path is resolved against the package directory. Deliberately not

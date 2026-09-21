@@ -13,6 +13,7 @@ import pathlib
 import pytest
 
 from gpu_serving.catalog import SERVABLE, ServedModel
+from gpu_serving import check as check_module
 from gpu_serving.check import LEAKED
 from gpu_serving.config import Settings
 from gpu_serving import host, logs
@@ -24,7 +25,8 @@ from gpu_serving.server import launch_argv
 def settings(tmp_path) -> Settings:
     return Settings(
         cards=(4, 5, 6, 7),
-        models_root=tmp_path / "models",
+        models_roots=(tmp_path / "shared", tmp_path / "ours"),
+        hf_home=tmp_path / "hf",
         venv=tmp_path / "venv",
         host="127.0.0.1",
         port=8000,
@@ -67,9 +69,10 @@ def test_launch_command_stays_on_loopback(settings):
 
 
 def test_launch_command_uses_the_configured_weights_root(settings):
+    (settings.models_roots[0] / "openai/gpt-oss-120b").mkdir(parents=True)
     argv = launch_argv(SERVABLE["gpt-oss-120b"], settings)
     path = argv[argv.index("--model-path") + 1]
-    assert path == str(settings.models_root / "openai/gpt-oss-120b")
+    assert path == str(settings.models_roots[0] / "openai/gpt-oss-120b")
 
 
 def test_reasoning_leak_detection():
@@ -221,3 +224,75 @@ def test_the_server_can_find_its_own_tools(settings):
     assert env["PATH"].startswith(str(settings.venv / "bin") + ":")
     assert env["VIRTUAL_ENV"] == str(settings.venv)
     assert env["CUDA_VISIBLE_DEVICES"] == "4,5,6,7"
+
+
+def test_an_override_comes_after_the_catalogue(settings):
+    # SGLang takes the last occurrence of a repeated flag, so appending is what
+    # makes "try this backend without editing the catalogue" work.
+    argv = server_module.launch_argv(SERVABLE["gemma-4-26b"], settings,
+                                     ("--attention-backend", "flashinfer"))
+    assert argv[-2:] == ["--attention-backend", "flashinfer"]
+
+
+# --- would verification have caught the broken backend? -------------------
+
+def test_pad_spam_is_degenerate():
+    # Exactly what trtllm_mha produced for Gemma 4: a server that loads, serves
+    # and answers, while every answer is padding.
+    assert "special token" in check_module.degenerate("<pad>" * 40)
+
+
+def test_one_word_forever_is_degenerate():
+    assert "of the words are" in check_module.degenerate("the " * 60)
+
+
+def test_real_prose_is_not_degenerate():
+    text = ("The vagus nerve carries parasympathetic fibres to the thorax and "
+            "abdomen, and its injury causes hoarseness. The facial nerve "
+            "supplies the muscles of expression and taste to the anterior "
+            "tongue. The optic nerve carries vision from the retina.")
+    assert check_module.degenerate(text) is None
+
+
+def test_a_short_reply_is_never_called_degenerate():
+    # Under 40 words the repetition test would fire on ordinary answers.
+    assert check_module.degenerate("PONG") is None
+    assert check_module.degenerate("The answer is D. The answer is D.") is None
+
+
+# --- where the weights come from -----------------------------------------
+
+def test_a_later_root_is_used_when_the_shared_one_lacks_the_model(settings):
+    # The shared directory belongs to another user and is read-only, so
+    # anything we add ourselves has to be found somewhere else.
+    model = SERVABLE["qwen3.8-27b"]
+    (settings.models_roots[1] / model.weights).mkdir(parents=True)
+    assert server_module.resolve_weights(model, settings) == str(
+        settings.models_roots[1] / model.weights)
+
+
+def test_an_unfound_model_is_passed_as_a_repo_id(settings):
+    # Nothing on disk in a flat layout: SGLang gets the id and HF_HOME turns
+    # it into weights, so nobody has to write out a cache snapshot path.
+    model = SERVABLE["qwen3.8-27b"]
+    assert server_module.resolve_weights(model, settings) == model.weights
+
+
+def test_the_server_is_pointed_at_the_cache_and_kept_offline(settings):
+    env = server_module.server_env(settings)
+    assert env["HF_HOME"] == str(settings.hf_home)
+    # Starting a server is not the moment to discover a download is needed.
+    assert env["HF_HUB_OFFLINE"] == "1"
+
+
+def test_fetching_is_online_and_skips_duplicate_weights(settings):
+    from gpu_serving import fetch as fetch_module
+
+    env = fetch_module.fetch_env(settings)
+    assert env["HF_HUB_OFFLINE"] == "0"
+    assert env["HF_HOME"] == str(settings.hf_home)
+
+    argv = fetch_module.fetch_argv(SERVABLE["gpt-oss-120b"], settings)
+    # gpt-oss ships the same weights three ways; without this the download is
+    # twice the size for nothing.
+    assert "original/*" in argv and "metal/*" in argv

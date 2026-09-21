@@ -111,8 +111,12 @@ def _alive(pid: int) -> bool:
     return True
 
 
-def launch_argv(model: ServedModel, settings: Settings) -> list[str]:
+def launch_argv(model: ServedModel, settings: Settings,
+                extra: tuple[str, ...] = ()) -> list[str]:
     """The exact command that serves `model`. Pure, so it can be tested dry.
+
+    `extra` is appended verbatim, so a flag given there overrides the same
+    flag from the catalogue.
 
     Data parallelism comes from SGLang's own --dp-size rather than the separate
     sglang-router package. The router would add prefix-cache-aware dispatch,
@@ -123,7 +127,7 @@ def launch_argv(model: ServedModel, settings: Settings) -> list[str]:
     replicas = model.replicas(len(settings.cards))
     return [
         str(settings.python), "-m", LAUNCHER,
-        "--model-path", str(settings.models_root / model.weights),
+        "--model-path", resolve_weights(model, settings),
         "--served-model-name", model.served_name,
         "--tp-size", str(model.tp),
         "--dp-size", str(replicas),
@@ -132,7 +136,35 @@ def launch_argv(model: ServedModel, settings: Settings) -> list[str]:
         *model.sglang_args,
         "--host", settings.host,
         "--port", str(settings.port),
+        # Last, so an override on the command line beats the catalogue: SGLang
+        # takes the final occurrence of a repeated flag. That is how a backend
+        # or a budget gets tried before it is written down.
+        *extra,
     ]
+
+
+def resolve_weights(model: ServedModel, settings: Settings) -> str:
+    """What to pass as --model-path: a directory if we have one, else the id.
+
+    Two shapes exist on this box and both are needed. /mnt/data/models holds
+    flat <org>/<name> directories but belongs to another user, so nothing new
+    can go there. Anything we fetch ourselves lands in a Hugging Face cache,
+    whose layout is models--org--name/snapshots/<hash> - a path nobody should
+    have to write down. So a model not found in any flat root is passed to
+    SGLang as its repo id, and HF_HOME in the environment is what turns that
+    into weights.
+    """
+    for root in settings.models_roots:
+        candidate = root / model.weights
+        if candidate.is_dir():
+            return str(candidate)
+    return model.weights
+
+
+def cached_in_hf_home(model: ServedModel, settings: Settings) -> bool:
+    """Is this model already in the Hugging Face cache we point SGLang at?"""
+    folder = "models--" + model.weights.replace("/", "--")
+    return (settings.hf_home / "hub" / folder).is_dir()
 
 
 def server_env(settings: Settings) -> dict[str, str]:
@@ -151,10 +183,17 @@ def server_env(settings: Settings) -> dict[str, str]:
         "CUDA_VISIBLE_DEVICES": ",".join(str(c) for c in settings.cards),
         "VIRTUAL_ENV": str(settings.venv),
         "PATH": f"{bin_dir}:{os.environ.get('PATH', '')}",
+        # How a repo id passed as --model-path becomes weights. Offline on
+        # purpose: serving is not the moment to discover that a download is
+        # needed, and "serve.sh fetch" is where that belongs.
+        "HF_HOME": str(settings.hf_home),
+        "HF_HUB_OFFLINE": "1",
+        "TRANSFORMERS_OFFLINE": "1",
     }
 
 
-def start(name: str, settings: Settings | None = None) -> State:
+def start(name: str, settings: Settings | None = None,
+          extra: tuple[str, ...] = ()) -> State:
     """Launch a model, detached, and record where it went."""
     settings = settings or load()
     if name not in SERVABLE:
@@ -167,16 +206,20 @@ def start(name: str, settings: Settings | None = None) -> State:
         )
 
     model = SERVABLE[name]
-    weights = settings.models_root / model.weights
-    # Checked here rather than left to SGLang: a missing directory otherwise
-    # surfaces minutes later as a traceback in a log nobody is tailing yet.
-    if not weights.is_dir():
-        raise FileNotFoundError(f"weights not on this box: {weights}")
+    # Checked here rather than left to SGLang: missing weights otherwise
+    # surface minutes later as a traceback in a log nobody is tailing yet.
+    path = resolve_weights(model, settings)
+    if not Path(path).is_dir() and not cached_in_hf_home(model, settings):
+        roots = ", ".join(str(r) for r in settings.models_roots)
+        raise FileNotFoundError(
+            f"{model.weights} is not in any weights root ({roots}) nor in the "
+            f"cache at {settings.hf_home}.\nFetch it: "
+            f"./gpu_serving/serve.sh fetch {name}")
 
     settings.run_dir.mkdir(parents=True, exist_ok=True)
     log = settings.run_dir / f"{name}.log"
     env = server_env(settings)
-    argv = launch_argv(model, settings)
+    argv = launch_argv(model, settings, extra)
     with log.open("ab") as handle:
         handle.write(f"\n=== {time.strftime('%F %T')} {' '.join(argv)}\n".encode())
         handle.flush()
@@ -311,4 +354,5 @@ def stop(settings: Settings | None = None, timeout: int = FREE_TIMEOUT) -> None:
 __all__ = [
     "State", "start", "stop", "wait_ready", "read_state", "launch_argv",
     "log_tail", "cards_free", "NoDriver", "LAUNCHER", "server_env",
+    "resolve_weights", "cached_in_hf_home",
 ]

@@ -25,6 +25,7 @@ code inside that range; nothing here should need a newer feature.
 ./gpu_serving/serve.sh up gemma-4-26b       # start, wait until it can generate, verify
 ./gpu_serving/serve.sh status
 ./gpu_serving/serve.sh down                 # stop, wait for the cards to be released
+./gpu_serving/serve.sh fetch qwen3.8-27b    # download weights (tens of GB)
 ./gpu_serving/serve.sh stats [log]          # how hard the server was worked
 ```
 
@@ -88,6 +89,15 @@ laptop — and ends with the reading that changes what to do next: if
 runner's concurrency and its throughput figure says nothing about the GPUs.
 Fields are parsed generically, because which ones SGLang prints depends on the
 version and on what is enabled.
+
+**Weights come from two places, and only one of them is ours.**
+`/mnt/data/models` holds flat `<org>/<name>` directories, belongs to another
+user, and is read-only for us — so nothing new can go there. Anything we fetch
+lands in the Hugging Face cache at `GPU_SERVING_HF_HOME`, and a model that is
+not in any flat root is handed to SGLang as its repo id, which `HF_HOME`
+resolves. That keeps cache snapshot paths out of the catalogue. Serving runs
+with `HF_HUB_OFFLINE=1`: starting a server is not the moment to find out a
+download is needed, and `fetch` is where that belongs.
 
 **Cards 4–7 only.** Cards 0–3 on this box belong to other people. The
 allocation lives in `configs/serving.conf`, not in a flag someone can pass.

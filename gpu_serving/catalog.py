@@ -70,7 +70,13 @@ SERVABLE: dict[str, ServedModel] = {
         ),
         note="the experiment's default model; the gateway serves it too, so it "
              "is the one configuration where local and gateway can be compared "
-             "against results we already have",
+             "against results we already have. No --attention-backend here on "
+             "purpose. SGLang rejects flashinfer for Gemma4 outright, and of "
+             "the backends it does accept, trtllm_mha loads and serves but "
+             "decodes garbage: measured 7/20 against triton's 13/20, every "
+             "reply burning the full token budget on <pad>. The triton "
+             "default is the right one, and is why the reference playground "
+             "script names no backend either",
     ),
     "gpt-oss-120b": ServedModel(
         name="gpt-oss-120b",

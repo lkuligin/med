@@ -19,7 +19,7 @@ import sys
 import time
 from pathlib import Path
 
-from gpu_serving import check, host, logs, server
+from gpu_serving import check, fetch as fetch_module, host, logs, server
 from gpu_serving.catalog import SERVABLE, describe
 from gpu_serving.config import load
 
@@ -31,7 +31,7 @@ def _up(args: argparse.Namespace) -> int:
     except host.CannotServe as error:
         print(error, file=sys.stderr)
         return 1
-    state = server.start(args.model, settings)
+    state = server.start(args.model, settings, tuple(args.sglang_args))
     print(f"{state.model}: pid {state.pid}, {state.replicas} replicas on "
           f"cards {state.cards}, log {state.log}")
     print("waiting until it can generate ...")
@@ -72,6 +72,14 @@ def _down(args: argparse.Namespace) -> int:
     return 0
 
 
+def _fetch(args: argparse.Namespace) -> int:
+    try:
+        return fetch_module.fetch(args.model)
+    except (PermissionError, KeyError) as error:
+        print(error, file=sys.stderr)
+        return 1
+
+
 def _status(args: argparse.Namespace) -> int:
     settings = load()
     capabilities = host.inspect(settings)
@@ -99,7 +107,8 @@ def _list(args: argparse.Namespace) -> int:
 
 
 def _command(args: argparse.Namespace) -> int:
-    print(" ".join(server.launch_argv(SERVABLE[args.model], load())))
+    print(" ".join(server.launch_argv(SERVABLE[args.model], load(),
+                                      tuple(args.sglang_args))))
     return 0
 
 
@@ -139,6 +148,8 @@ def main(argv: list[str] | None = None) -> int:
     up.add_argument("--timeout", type=int, default=server.READY_TIMEOUT)
     up.add_argument("--max-tokens", type=int, default=256)
     up.add_argument("--no-verify", action="store_true")
+    up.add_argument("sglang_args", nargs="*", metavar="-- ARG...",
+                    help="extra flags passed to SGLang, overriding the catalogue")
     up.set_defaults(func=_up)
 
     verify = sub.add_parser("verify", help="check the running endpoint")
@@ -152,12 +163,17 @@ def main(argv: list[str] | None = None) -> int:
     ):
         sub.add_parser(name, help=helptext).set_defaults(func=func)
 
+    fetch = sub.add_parser("fetch", help="download a model's weights (tens of GB)")
+    fetch.add_argument("model", choices=sorted(SERVABLE))
+    fetch.set_defaults(func=_fetch)
+
     stats = sub.add_parser("stats", help="summarise a server log; works without a GPU")
     stats.add_argument("log", nargs="?", help="defaults to the newest log here")
     stats.set_defaults(func=_stats)
 
     command = sub.add_parser("command", help="print the launch command, run nothing")
     command.add_argument("model", choices=sorted(SERVABLE))
+    command.add_argument("sglang_args", nargs="*", metavar="-- ARG...")
     command.set_defaults(func=_command)
 
     args = parser.parse_args(argv)
