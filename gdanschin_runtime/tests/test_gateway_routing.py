@@ -37,6 +37,7 @@ POOLS = {"internal": ("https://internal.test", "token-internal"),
 # model onto or off our hardware is as deliberate as moving it between pools.
 EXPECTED_POOL = {
     "google/gemma-4-26B-A4B-it": "local",
+    "openai/gpt-oss-120b": "local",
     "gemma-4-26b-internal": "internal",
     "gpt-oss-120b": "internal",
     "deepseek-v4-flash": "internal",

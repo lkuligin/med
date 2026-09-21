@@ -112,6 +112,13 @@ BASE_MODELS: dict[str, BaseModel] = {
              "the two entries no longer directly comparable on exactly those "
              "questions - the gateway baselines were produced at 1024.",
     ),
+    "gpt-oss-120b-local": served_locally(
+        "gpt-oss-120b-local", "openai/gpt-oss-120b", max_tokens=4096,
+        note="the same weights the gateway serves as gpt-oss-120b. MXFP4 with "
+             "4 of 128 experts live per token, so 61 GB and one card despite "
+             "the name. Budget matches the gateway entry's, which records a "
+             "peak near 2900 tokens.",
+    ),
     "qwen3.8-27b-nr": BaseModel(
         name="qwen3.8-27b-nr",
         gateway_model="qwen3.8-27b-noreasoning",
