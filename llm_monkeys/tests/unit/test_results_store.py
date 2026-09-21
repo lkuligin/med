@@ -12,6 +12,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+import results_store
 from config import CandidateInferenceConfig, InferenceConfig, VerifierConfig
 from results_store import (
     CandidateResults,
@@ -181,7 +182,9 @@ def test_two_datasets_keep_their_own_records(monkeypatch, tmp_path):
         records = stores[dataset].read()
         assert sorted(records) == ["0", "1"]
         assert {r["predicted_option"] for r in records.values()} == {answer}
-        assert stores[dataset].read_summary() == {"dataset": dataset}
+        # Not equality: the summary also carries the sampling settings now.
+        # What this test is about is that each dataset kept its own.
+        assert stores[dataset].read_summary()["dataset"] == dataset
 
 
 def test_two_models_keep_their_own_records(monkeypatch, tmp_path):
@@ -202,7 +205,7 @@ def test_two_models_keep_their_own_records(monkeypatch, tmp_path):
         store = build_store(InferenceConfig(run_name=run, results_dir=str(tmp_path)))
         assert store.directory == tmp_path / "med_qa" / "single-step" / run
         assert store.read()["0"]["predicted_option"] == answer
-        assert store.read_summary() == {"model": run}
+        assert store.read_summary()["model"] == run
 
 
 def test_two_datasets_keep_their_own_candidates_and_verdicts(monkeypatch, tmp_path):
@@ -325,3 +328,50 @@ async def test_a_workflow_reads_back_what_it_wrote_either_way(
     ).is_dir()
     assert (wrote_a_file, wrote_a_directory) == (layout == "one file",
                                                  layout != "one file")
+
+
+# --- what the run sampled with -------------------------------------------
+
+def test_the_summary_records_what_the_run_sampled_with(tmp_path):
+    """Two runs of one model differ by temperature and token budget more than
+    by anything else. Unrecorded, a directory can only be compared with
+    another by trusting its name."""
+    store = results_store.OneShotResults(
+        tmp_path, "a-run", "med_qa",
+        sampling={"temperature": 0.8, "max_tokens": 4096, "n_attempts": 3},
+    )
+    store.save({"results": [], "summary": {"accuracy": 0.7}})
+
+    written = json.loads(store.summary_path.read_text())
+    assert written["accuracy"] == 0.7
+    assert written["sampling"]["temperature"] == 0.8
+    assert written["sampling"]["max_tokens"] == 4096
+
+
+def test_a_store_without_sampling_writes_the_summary_unchanged(tmp_path):
+    store = results_store.OneShotResults(tmp_path, "a-run", "med_qa")
+    store.save({"results": [], "summary": {"accuracy": 0.7}})
+    assert json.loads(store.summary_path.read_text()) == {"accuracy": 0.7}
+
+
+def test_a_mid_run_save_does_not_erase_the_summary(tmp_path):
+    # Unchanged behaviour, guarded because the merge above rewrote this path.
+    store = results_store.OneShotResults(
+        tmp_path, "a-run", "med_qa", sampling={"temperature": 0.8})
+    store.save({"results": [], "summary": {"accuracy": 0.7}})
+    store.save({"results": [], "summary": None})
+    assert json.loads(store.summary_path.read_text())["accuracy"] == 0.7
+
+
+def test_sampling_leaves_out_what_a_config_does_not_have(tmp_path):
+    """A judge has a temperature and no n_candidates; a generator the other
+    way round. Absent fields must not appear as nulls that read like a
+    setting of None."""
+    class Judgeish:
+        resolved_model_name = "gemini-3.8-flash"
+        temperature = 1.0
+        max_tokens = 512
+
+    found = results_store.sampling_of(Judgeish())
+    assert found == {"model": "gemini-3.8-flash", "temperature": 1.0,
+                     "max_tokens": 512}

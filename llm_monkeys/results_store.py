@@ -173,14 +173,32 @@ def per_record(config: Any) -> Any:
     results_dir = config.results_dir
     run_name = config.resolved_run_name
     dataset = dataset_dir_for(getattr(config, "dataset_name", None))
+    sampling = sampling_of(config)
     if hasattr(config, "resolved_judge_name"):
         dataset = _dataset_holding(results_dir, run_name, dataset)
         return VerificationResults(
-            results_dir, run_name, config.resolved_judge_name, dataset
+            results_dir, run_name, config.resolved_judge_name, dataset, sampling
         )
     if hasattr(config, "n_candidates"):
-        return CandidateResults(results_dir, run_name, dataset)
-    return OneShotResults(results_dir, run_name, dataset)
+        return CandidateResults(results_dir, run_name, dataset, sampling)
+    return OneShotResults(results_dir, run_name, dataset, sampling)
+
+
+# What makes two runs of the same model produce different answers. Read off
+# the configuration rather than passed in, so a caller cannot forget it.
+SAMPLING_FIELDS = ("resolved_model_name", "temperature", "max_tokens",
+                   "n_attempts", "n_candidates", "concurrency",
+                   "dataset_name", "dataset_split")
+
+
+def sampling_of(config: Any) -> dict[str, Any]:
+    """The settings that decide what a run produces, as far as it has them."""
+    found = {}
+    for field in SAMPLING_FIELDS:
+        value = getattr(config, field, None)
+        if value is not None:
+            found["model" if field == "resolved_model_name" else field] = value
+    return found
 
 
 def dataset_dir_for(dataset_name: str | None) -> str:
@@ -263,10 +281,12 @@ class _Results:
     section: str = ""
 
     def __init__(self, results_dir: str | Path, run_name: str,
-                 dataset: str = DEFAULT_DATASET_DIR) -> None:
+                 dataset: str = DEFAULT_DATASET_DIR,
+                 sampling: dict[str, Any] | None = None) -> None:
         self.results_dir = Path(results_dir)
         self.run_name = run_name
         self.dataset = dataset or DEFAULT_DATASET_DIR
+        self.sampling = sampling or {}
         self._written: set[tuple[str, int]] = set()
 
     def __str__(self) -> str:
@@ -314,9 +334,19 @@ class _Results:
 
         Writing the None through would erase the summary describing everything
         finished so far, which is what a resumed run needs to find.
+
+        The sampling settings are added here because nothing else records
+        them. Two runs of one model differ by temperature and token budget
+        more than by anything else, and without them written down a directory
+        can only be compared with another by trusting its name - which is how
+        a comparison between runs that sampled differently gets published as
+        a difference between models.
         """
-        if summary is not None:
-            _write_json(self.summary_path, summary)
+        if summary is None:
+            return
+        if self.sampling and isinstance(summary, dict):
+            summary = {**summary, "sampling": self.sampling}
+        _write_json(self.summary_path, summary)
 
     def read_summary(self) -> Any:
         path = self.summary_path
@@ -329,8 +359,9 @@ class OneShotResults(_Results):
     section = SINGLE_STEP
 
     def __init__(self, results_dir: str | Path, run_name: str,
-                 dataset: str = DEFAULT_DATASET_DIR) -> None:
-        super().__init__(results_dir, run_name, dataset)
+                 dataset: str = DEFAULT_DATASET_DIR,
+                 sampling: dict[str, Any] | None = None) -> None:
+        super().__init__(results_dir, run_name, dataset, sampling)
         self._stored: dict[str, Any] = {}
 
     def question_path(self, question_id: int | str) -> Path:
@@ -481,8 +512,9 @@ class VerificationResults(_Results):
     section = FACTS_PIPELINE
 
     def __init__(self, results_dir: str | Path, run_name: str, judge_name: str,
-                 dataset: str = DEFAULT_DATASET_DIR) -> None:
-        super().__init__(results_dir, run_name, dataset)
+                 dataset: str = DEFAULT_DATASET_DIR,
+                 sampling: dict[str, Any] | None = None) -> None:
+        super().__init__(results_dir, run_name, dataset, sampling)
         self.judge_name = judge_name
         self.candidates = CandidateResults(results_dir, run_name, dataset)
         self._outcomes: dict[str, Any] = {}
