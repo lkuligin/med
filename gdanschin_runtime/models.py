@@ -26,6 +26,12 @@ class BaseModel:
     max_tokens: int
     note: str = ""
     extra: dict[str, Any] = field(default_factory=dict)
+    # Set when the model is served from our own GPUs instead of the gateway.
+    # The value is an OpenAI-compatible base URL, and gateway_model is then the
+    # name that endpoint answers to. Nothing here imports gpu_serving: the only
+    # thing the two share is the URL, which is what makes the serving package
+    # separable.
+    base_url: str = ""
 
 
 @dataclass(frozen=True)
@@ -68,6 +74,16 @@ BASE_MODELS: dict[str, BaseModel] = {
         max_tokens=4096,
         note="thinking disabled; with it on the whole budget goes to reasoning",
     ),
+    "gemma-4-26b-local": BaseModel(
+        name="gemma-4-26b-local",
+        gateway_model="google/gemma-4-26B-A4B-it",
+        base_url="http://127.0.0.1:8000/v1",
+        max_tokens=1024,
+        note="the same weights as gemma-4-26b, served on our own cards. A "
+             "separate entry, not a flag, because the run name is the results "
+             "directory: mixing the two backends into one directory would "
+             "destroy the comparison they exist for",
+    ),
     "qwen3.8-27b-nr": BaseModel(
         name="qwen3.8-27b-nr",
         gateway_model="qwen3.8-27b-noreasoning",
@@ -91,7 +107,8 @@ def describe() -> None:
     """Print the registry."""
     print("base models (generate candidates):")
     for m in BASE_MODELS.values():
-        print(f"  {m.name:20} {m.gateway_model:26} max_tokens={m.max_tokens}")
+        where = f" @ {m.base_url}" if m.base_url else ""
+        print(f"  {m.name:20} {m.gateway_model:26} max_tokens={m.max_tokens}{where}")
         if m.note:
             print(f"    {m.note}")
     print("\njudges (verify facts):")

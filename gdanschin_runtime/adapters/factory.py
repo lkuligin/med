@@ -21,6 +21,7 @@ from typing import Any
 
 from gdanschin_runtime import _bootstrap
 from gdanschin_runtime.gateway import completion_kwargs
+from gdanschin_runtime.models import BASE_MODELS
 
 # llm_monkeys names models for Vertex AI. Map those onto gateway names so the
 # reference's own defaults and --model aliases keep working unchanged.
@@ -57,12 +58,28 @@ def gateway_name(model_name: str) -> str:
     return MODEL_MAP.get(stripped, stripped)
 
 
+# Models we serve ourselves, keyed by the name their endpoint answers to.
+# Checked before the gateway, because those names contain a slash and would
+# otherwise be read as "provider/model" and routed somewhere wrong.
+LOCAL_MODELS = {m.gateway_model: m for m in BASE_MODELS.values() if m.base_url}
+
+
 def build(config: Any):
-    """Build an ADK model for `config`, served by the gateway."""
+    """Build an ADK model for `config`, served by the gateway or by our GPUs."""
     from google.adk.models.lite_llm import LiteLlm
 
-    kwargs = completion_kwargs(gateway_name(config.resolved_model_name))
+    name = config.resolved_model_name
+    local = LOCAL_MODELS.get(name) or LOCAL_MODELS.get(
+        name.removeprefix("vertex_ai/"))
+    if local is not None:
+        # SGLang speaks the OpenAI dialect, so litellm needs the openai prefix
+        # and some key; the server does not check it. No token here on purpose:
+        # this endpoint is on loopback and there is nothing to authenticate to.
+        return LiteLlm(model=f"openai/{local.gateway_model}",
+                       api_base=local.base_url, api_key="local", **local.extra)
+
+    kwargs = completion_kwargs(gateway_name(name))
     return LiteLlm(**kwargs)
 
 
-__all__ = ["build", "gateway_name", "MODEL_MAP"]
+__all__ = ["build", "gateway_name", "MODEL_MAP", "LOCAL_MODELS"]

@@ -32,7 +32,11 @@ POOLS = {"internal": ("https://internal.test", "token-internal"),
 # Where each name we run today is served. Kept as data rather than derived, so
 # that a model moving pools has to be written down deliberately - which is the
 # only way anyone would notice it moved.
+# "local" means no gateway at all: the model is served from our own GPUs and
+# the entry carries a base_url. It is written down here too, so that moving a
+# model onto or off our hardware is as deliberate as moving it between pools.
 EXPECTED_POOL = {
+    "google/gemma-4-26B-A4B-it": "local",
     "gemma-4-26b-internal": "internal",
     "gpt-oss-120b": "internal",
     "deepseek-v4-flash": "internal",
@@ -64,7 +68,8 @@ def pool_of(model: str) -> str:
     raise AssertionError(f"neither pool: {api_base}")
 
 
-@pytest.mark.parametrize("model,expected", sorted(EXPECTED_POOL.items()))
+@pytest.mark.parametrize("model,expected", sorted(
+    (m, p) for m, p in EXPECTED_POOL.items() if p != "local"))
 def test_each_model_is_served_by_the_pool_it_is_meant_to_be(model, expected):
     assert pool_of(model) == expected
 
@@ -75,9 +80,40 @@ def test_every_model_in_the_registry_has_a_pool_written_down(entry):
     """A new entry has to say where it is served, rather than inherit whichever
     pool the neighbouring models happen to use."""
     assert entry.gateway_model in EXPECTED_POOL, (
-        f"{entry.name} is not in EXPECTED_POOL: say which gateway serves it"
+        f"{entry.name} is not in EXPECTED_POOL: say which gateway serves it, "
+        f"or 'local' if we serve it ourselves"
     )
-    assert pool_of(entry.gateway_model) == EXPECTED_POOL[entry.gateway_model]
+    expected = EXPECTED_POOL[entry.gateway_model]
+
+    # The two declarations have to agree. An entry that says "local" here but
+    # carries no base_url would be sent to a gateway that does not serve it;
+    # one with a base_url but a gateway pool here would spend a quota nobody
+    # meant to spend.
+    # getattr, because only base models can be served locally today; a judge
+    # has no base_url field at all, and that is itself the answer.
+    base_url = getattr(entry, "base_url", "")
+    assert (expected == "local") == bool(base_url), (
+        f"{entry.name}: EXPECTED_POOL says {expected!r} but base_url is "
+        f"{base_url!r}"
+    )
+    if expected == "local":
+        return
+    assert pool_of(entry.gateway_model) == expected
+
+
+def test_a_locally_served_model_never_reaches_a_gateway():
+    """The whole point of the separate entry: our own GPUs, our own results
+    directory, and no gateway quota spent. Routed on base_url, before any
+    provider is inferred - the served name contains a slash, which would
+    otherwise be read as "provider/model" and sent to the Gemini proxy."""
+    from gdanschin_runtime.adapters import factory
+
+    class Config:
+        resolved_model_name = "google/gemma-4-26B-A4B-it"
+
+    built = factory.build(Config())
+    assert built.model == "openai/google/gemma-4-26B-A4B-it"
+    assert built._additional_args["api_base"] == "http://127.0.0.1:8000/v1"
 
 
 def test_the_pool_follows_the_provider_not_the_job():
