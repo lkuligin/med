@@ -43,6 +43,10 @@ class ServedModel:
     context_length: int = 32768
     mem_fraction: float = 0.85
     sglang_args: tuple[str, ...] = ()
+    # Sent with every probe request. Some models answer entirely inside a
+    # thinking block unless told not to, which leaves content empty and makes
+    # a verification that omits this test a configuration nobody runs.
+    request_extras: dict[str, Any] = field(default_factory=dict)
     note: str = ""
 
     def replicas(self, cards: int) -> int:
@@ -117,6 +121,46 @@ SERVABLE: dict[str, ServedModel] = {
         ),
         note="the smaller of the two GPT-OSS models; there is no third",
     ),
+    "qwen3.6-27b": ServedModel(
+        name="qwen3.6-27b",
+        weights="Qwen/Qwen3.6-27B-FP8",
+        served_name="Qwen/Qwen3.6-27B-FP8",
+        weights_gb=28,
+        context_length=65536,
+        sglang_args=(
+            "--trust-remote-code",
+            "--linear-attn-backend", "triton",
+            "--mamba-ssm-dtype", "bfloat16",
+            "--reasoning-parser", "qwen3",
+            "--tool-call-parser", "qwen3_coder",
+        ),
+        request_extras={"chat_template_kwargs": {"enable_thinking": False}},
+        note="the FP8 the gateway serves, and the exact size twin of "
+             "Qwen3.8-27B-FP8 - same family one generation apart, which is "
+             "the cleanest generation-over-generation comparison this box "
+             "can make. Flags from the production overlay qwen36-27b-*.yaml, "
+             "which unlike the 3.8 recipe names the linear-attention backend.",
+    ),
+    "qwen3.6-35b-a3b": ServedModel(
+        name="qwen3.6-35b-a3b",
+        weights="Qwen/Qwen3.6-35B-A3B-FP8",
+        served_name="Qwen/Qwen3.6-35B-A3B-FP8",
+        weights_gb=35,
+        context_length=65536,
+        sglang_args=(
+            "--trust-remote-code",
+            "--kv-cache-dtype", "fp8_e4m3",
+            "--attention-backend", "flashinfer",
+            "--page-size", "64",
+            "--reasoning-parser", "qwen3",
+            "--tool-call-parser", "qwen3_coder",
+        ),
+        request_extras={"chat_template_kwargs": {"enable_thinking": False}},
+        note="already on the box and never served. The reference playground "
+             "script for it also sets EAGLE speculative decoding, which is "
+             "left out here: that is a throughput tuning for a production "
+             "SLA, and it has never been run on this hardware.",
+    ),
     "qwen3.8-27b": ServedModel(
         name="qwen3.8-27b",
         weights="Qwen/Qwen3.8-27B-FP8",
@@ -135,6 +179,11 @@ SERVABLE: dict[str, ServedModel] = {
             "--mamba-radix-cache-strategy", "extra_buffer",
             "--mamba-ssm-dtype", "float32",
         ),
+        # How the gateway serves it (-noreasoning), and therefore how we run
+        # it. Unlike 3.5 this model does answer into content by default, so
+        # the probe passed either way - which is exactly why a probe should
+        # test the configuration in use rather than a convenient one.
+        request_extras={"chat_template_kwargs": {"enable_thinking": False}},
         note="FP8 to match what the gateway serves; hybrid GDN, so the mamba "
              "flags are not optional. Weights are not on the box yet.",
     ),
@@ -160,7 +209,10 @@ def _qwen35_small(label: str, weights_gb: float) -> ServedModel:
         served_name=repo,
         weights_gb=weights_gb,
         sglang_args=("--trust-remote-code", "--reasoning-parser", "qwen3"),
-        note="smallest Qwen generation that has small models; parsers unverified",
+        # Measured on 0.8B: without this the whole answer arrives in
+        # reasoning_content and content is empty, so every reply looks blank.
+        request_extras={"chat_template_kwargs": {"enable_thinking": False}},
+        note="Qwen3.5 answers inside a thinking block unless told not to",
     )
 
 

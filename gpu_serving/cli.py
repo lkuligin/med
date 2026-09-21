@@ -51,8 +51,10 @@ def _verify(args: argparse.Namespace) -> int:
         print("no server is running", file=sys.stderr)
         return 1
     try:
+        model = SERVABLE.get(state.model)
         result = check.verify(settings.base_url, state.served_name,
-                              max_tokens=args.max_tokens)
+                              max_tokens=args.max_tokens,
+                              extra_body=model.request_extras if model else None)
     except check.NotAnswering as error:
         print(error, file=sys.stderr)
         return 1

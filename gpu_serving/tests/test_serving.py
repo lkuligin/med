@@ -343,3 +343,16 @@ def test_an_unreachable_endpoint_is_reported_not_raised_raw(monkeypatch):
     monkeypatch.setattr(check_module.urllib.request, "urlopen", refused)
     with pytest.raises(check_module.NotAnswering, match="still be coming up"):
         check_module.verify("http://127.0.0.1:8000", "some/model")
+
+
+def test_a_model_that_needs_a_request_setting_declares_it():
+    # Qwen3.5 answers inside a thinking block unless told not to: content
+    # comes back empty and every reply looks blank. Verified on 0.8B.
+    for name in ("qwen3.5-0.8b", "qwen3.5-2b", "qwen3.5-4b", "qwen3.5-9b"):
+        extras = SERVABLE[name].request_extras
+        assert extras["chat_template_kwargs"]["enable_thinking"] is False, name
+
+
+def test_models_that_need_nothing_extra_say_nothing():
+    for name in ("gemma-4-26b", "gemma-4-e2b", "gpt-oss-20b", "gpt-oss-120b"):
+        assert SERVABLE[name].request_extras == {}, name
