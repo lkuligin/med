@@ -50,9 +50,23 @@ JUDGE = os.getenv("MEDQA_JUDGE_MODEL", "gemini-3.8-flash")
 # difficult ones, and the directory the runs are kept in - a plan cannot be
 # half one dataset and half another, so it is read once, here.
 DATASET_NAME = os.getenv("MEDQA_DATASET", "bigbio/med_qa")
-DATASET = dataset_dir_for(DATASET_NAME)
-DIFFICULT_QUESTIONS = ("difficult_questions_mb.csv" if DATASET == "medbullets"
-                       else "difficult_questions.csv")
+MEDBULLETS = "mkieffer/Medbullets"
+MODELS = ("gemma-4-26b", "gpt-oss-120b", "qwen3.8-27b-nr")
+
+# A model's budget in models.py was measured on MedQA. MedBullets asks longer
+# questions, so the budget is raised here rather than there: the MedQA runs a
+# result is compared against were generated with the old one, and changing it
+# in the registry would quietly change them too the next time they are run.
+MAX_TOKENS: dict[tuple[str, str], int] = {
+    ("medbullets", "gemma-4-26b"): 4096,
+}
+
+
+def difficult_file(dataset: str) -> str:
+    """The list of questions the pipeline works on for this dataset."""
+    from gdanschin_runtime.fetch_dataset import KNOWN
+
+    return KNOWN[dataset_dir_for(dataset)].difficult.name
 # Temperature comes from the judge's entry in models.py, and this overrides it
 # for one run without inventing a registry entry for a setting being tried out.
 # A judge run at a temperature other than its own is stored under a name of its
@@ -86,29 +100,69 @@ class Step:
     stage: str
     name: str
     base: str
-    kind: str           # one-shot | candidates | verdicts
+    kind: str           # one-shot | one-shot-full | candidates | verdicts
     target: int = 0     # candidates per question, for the generator
+    dataset: str = DATASET_NAME     # the dataset this step is about
 
     @property
     def label(self) -> str:
         return f"{self.stage} / {self.name}"
 
+    @property
+    def dataset_dir(self) -> str:
+        return dataset_dir_for(self.dataset)
+
+    @property
+    def run_name(self) -> str:
+        """Where this step's results are stored.
+
+        A run over a whole split is kept apart from a run over the questions
+        the pipeline works on: same model, different coverage, and blending
+        them would leave a directory nothing could describe.
+        """
+        return f"{self.base}-full" if self.kind == "one-shot-full" else self.base
+
+    @property
+    def max_tokens(self) -> int:
+        """The output budget this step runs with."""
+        return MAX_TOKENS.get((self.dataset_dir, self.base),
+                              BASE_MODELS[self.base].max_tokens)
+
+    @property
+    def questions(self) -> int:
+        """How many questions this step covers."""
+        from gdanschin_runtime.fetch_dataset import KNOWN
+
+        known = KNOWN[self.dataset_dir]
+        if self.kind == "one-shot-full":
+            return known.rows
+        return len(_question_ids(self.dataset))
+
     def command(self) -> list[str]:
         model = BASE_MODELS[self.base]
         if self.kind == "one-shot":
             return [PYTHON, str(REPO / "gdanschin_runtime" / "run_step1.py"),
-                    "--base", self.base, "--max-tokens", str(model.max_tokens),
-                    "--dataset", DATASET_NAME,
-                    "--difficult-questions", DIFFICULT_QUESTIONS,
+                    "--base", self.base, "--max-tokens", str(self.max_tokens),
+                    "--dataset", self.dataset,
+                    "--difficult-questions", difficult_file(self.dataset),
                     "--concurrency", str(GEN_CONCURRENCY)]
+        if self.kind == "one-shot-full":
+            # Step 1 over the whole split, which run_step1.py cannot do: it
+            # runs the list the pipeline works on, by design.
+            return [PYTHON, "-m", "cli",
+                    "--model", model.gateway_model, "--run-name", self.run_name,
+                    "--dataset", self.dataset, "--n-attempts", "3",
+                    "--concurrency", str(GEN_CONCURRENCY),
+                    "--max-tokens", str(self.max_tokens),
+                    "--temperature", "0.8"]
         if self.kind == "candidates":
             return [PYTHON, "-m", "inference.cli",
                     "--model", model.gateway_model, "--run-name", self.base,
-                    "--difficult-questions", DIFFICULT_QUESTIONS,
-                    "--dataset", DATASET_NAME,
+                    "--difficult-questions", difficult_file(self.dataset),
+                    "--dataset", self.dataset,
                     "--n-candidates", str(self.target),
                     "--concurrency", str(GEN_CONCURRENCY),
-                    "--max-tokens", str(model.max_tokens)]
+                    "--max-tokens", str(self.max_tokens)]
         # --judge-name only names the directory the verdicts go in. Without the
         # rest of the entry the verifier keeps its own defaults, so a judge
         # named for one setting would quietly have run at another.
@@ -118,15 +172,16 @@ class Step:
                 "--model", judge.gateway_model,
                 "--temperature", str(judge_temperature()),
                 "--max-tokens", str(judge.max_tokens),
-                "--dataset", DATASET_NAME,
+                "--dataset", self.dataset,
                 "--concurrency", str(JUDGE_CONCURRENCY)]
 
-    def done_and_total(self, questions: int) -> tuple[float, float, str]:
+    def done_and_total(self) -> tuple[float, float, str]:
         """(done, total, unit) for the progress line."""
-        if self.kind == "one-shot":
-            store = OneShotResults(RESULTS, self.base, DATASET)
+        questions = self.questions
+        if self.kind in ("one-shot", "one-shot-full"):
+            store = OneShotResults(RESULTS, self.run_name, self.dataset_dir)
             return len(store.read()), questions, "questions"
-        candidates = CandidateResults(RESULTS, self.base, DATASET)
+        candidates = CandidateResults(RESULTS, self.base, self.dataset_dir)
         ids = candidates.questions()
         if self.kind == "candidates":
             stored = sum(candidates.candidate_count(q) for q in ids)
@@ -135,40 +190,67 @@ class Step:
         return judged, questions, "questions judged"
 
 
-def plan(k_first: int = 20, k_second: int = 50) -> list[Step]:
-    """The stages, in the order they run."""
+def plan() -> list[Step]:
+    """The stages, in the order they run.
+
+    Judging is started alongside each generation stage - the two use different
+    gateways, so it costs the generator no throughput - and each dataset then
+    gets a pass of its own afterwards for whatever the last one missed.
+    """
     steps: list[Step] = []
-    for base in ("qwen3.8-27b-nr", "gpt-oss-120b"):
-        stage = f"{base} k={k_first}"
+
+    # 1. MedBullets candidates, every question, fifty each.
+    for base in MODELS:
+        stage = f"medbullets {base} k=50"
         steps += [
-            Step(stage, "single-step", base, "one-shot"),
-            Step(stage, f"candidates k={k_first}", base, "candidates", k_first),
-            Step(stage, "verdicts", base, "verdicts"),
+            Step(stage, "candidates k=50", base, "candidates", 50, MEDBULLETS),
+            Step(stage, "verdicts", base, "verdicts", dataset=MEDBULLETS),
         ]
-    for base in ("gemma-4-26b", "qwen3.8-27b-nr", "gpt-oss-120b"):
-        stage = f"{base} k={k_second}"
+
+    # 2. MedQA step 1 over the whole split, which is what makes the one-shot
+    #    numbers comparable between the two datasets.
+    for base in MODELS:
+        steps.append(Step(f"med_qa {base} step 1 (full split)", "single-step full",
+                          base, "one-shot-full", dataset=DATASET_NAME))
+
+    # 3. MedBullets verdicts at k=50, a pass of its own.
+    for base in MODELS:
+        steps.append(Step(f"medbullets {base} verdicts k=50", "verdicts",
+                          base, "verdicts", dataset=MEDBULLETS))
+
+    # 4. MedBullets candidates from fifty to a hundred. The generator tops each
+    #    question up, so this adds the second fifty rather than redoing the first.
+    for base in MODELS:
+        stage = f"medbullets {base} k=100"
         steps += [
-            Step(stage, f"candidates k={k_second}", base, "candidates", k_second),
-            Step(stage, "verdicts", base, "verdicts"),
+            Step(stage, "candidates k=100", base, "candidates", 100, MEDBULLETS),
+            Step(stage, "verdicts", base, "verdicts", dataset=MEDBULLETS),
         ]
+
+    # 5. MedBullets verdicts over the second fifty. No filtering is needed: the
+    #    verifier skips questions that already found a valid candidate and
+    #    continues the rest from the candidate it stopped at.
+    for base in MODELS:
+        steps.append(Step(f"medbullets {base} verdicts k=100", "verdicts",
+                          base, "verdicts", dataset=MEDBULLETS))
+
     return steps
 
 
-def remaining_candidates(step: Step, questions: int) -> int:
+def remaining_candidates(step: Step) -> int:
     """How many candidates this step still has to generate."""
     if step.kind != "candidates":
         return 0
-    store = CandidateResults(RESULTS, step.base, DATASET)
+    store = CandidateResults(RESULTS, step.base, step.dataset_dir)
     stored = {q: store.candidate_count(q) for q in store.questions()}
     return sum(max(step.target - stored.get(str(q), 0), 0)
-               for q in _question_ids(questions))
+               for q in _question_ids(step.dataset))
 
 
-def _question_ids(questions: int) -> list[str]:
+def _question_ids(dataset: str) -> list[str]:
     from inference._dataset import load_difficult_question_ids
 
-    ids = load_difficult_question_ids(MONKEYS / DIFFICULT_QUESTIONS)
-    return list(ids)[:questions]
+    return list(load_difficult_question_ids(MONKEYS / difficult_file(dataset)))
 
 
 def _rate(base: str, rates: dict[str, float]) -> float:
@@ -176,8 +258,7 @@ def _rate(base: str, rates: dict[str, float]) -> float:
         base, DEFAULT_SECONDS_PER_CANDIDATE))
 
 
-def forecast(steps: list[Step], questions: int,
-             rates: dict[str, float]) -> list[tuple[Step, float]]:
+def forecast(steps: list[Step], rates: dict[str, float]) -> list[tuple[Step, float]]:
     """Seconds each step still needs, walking the plan in order.
 
     Later stages are estimated against what the earlier ones will have
@@ -185,21 +266,25 @@ def forecast(steps: list[Step], questions: int,
     generates thirty candidates a question, not fifty, and a forecast that
     missed that would be out by most of a day.
     """
-    projected: dict[str, int] = {}
+    projected: dict[tuple[str, str], int] = {}
     out: list[tuple[Step, float]] = []
     for step in steps:
+        questions = step.questions
         if step.kind == "verdicts":
             seconds = 0.0  # judged alongside generation, so it adds no wall clock
-        elif step.kind == "one-shot":
-            stored = len(OneShotResults(RESULTS, step.base, DATASET).read())
-            seconds = max(questions - stored, 0) * SECONDS_PER_ONE_SHOT_QUESTION
+        elif step.kind in ("one-shot", "one-shot-full"):
+            stored = len(OneShotResults(RESULTS, step.run_name, step.dataset_dir).read())
+            attempts = 3 if step.kind == "one-shot-full" else 1
+            seconds = (max(questions - stored, 0)
+                       * SECONDS_PER_ONE_SHOT_QUESTION * attempts)
         else:
-            have = projected.get(step.base)
+            key = (step.base, step.dataset_dir)
+            have = projected.get(key)
             if have is None:
-                have = stored_candidates(step.base)
+                have = stored_candidates(step.base, step.dataset_dir)
             wanted = step.target * questions
             seconds = max(wanted - have, 0) * _rate(step.base, rates)
-            projected[step.base] = max(have, wanted)
+            projected[key] = max(have, wanted)
         out.append((step, seconds))
     return out
 
@@ -218,12 +303,12 @@ def difficult_total() -> int:
     return len(load_difficult_question_ids(MONKEYS / DIFFICULT_QUESTIONS))
 
 
-def watch(step: Step, questions: int, started: float, stop: threading.Event,
+def watch(step: Step, started: float, stop: threading.Event,
           rates: dict[str, float], rest: list[Step] | None = None) -> None:
     """Log progress, what the rate so far says is left, and the plan's own eta."""
-    first_done, _, _ = step.done_and_total(questions)
+    first_done, _, _ = step.done_and_total()
     while not stop.wait(REPORT_EVERY):
-        done, total, unit = step.done_and_total(questions)
+        done, total, unit = step.done_and_total()
         elapsed = time.time() - started
         # Rate over this run only: what was already stored when the step began
         # was not produced now, and counting it would flatter the estimate.
@@ -237,7 +322,7 @@ def watch(step: Step, questions: int, started: float, stop: threading.Event,
         left = max(total - done, 0)
         eta = (f", eta {timedelta(seconds=int(left * per_unit))}"
                if per_unit and left else "")
-        plan_left = sum(sec for _, sec in forecast(rest or [], questions, rates))
+        plan_left = sum(sec for _, sec in forecast(rest or [], rates))
         ahead = (f", then {timedelta(seconds=int(plan_left))} of plan left"
                  if plan_left else "")
         log(f"    {step.label}: {done:.0f}/{total:.0f} {unit}, "
@@ -246,8 +331,14 @@ def watch(step: Step, questions: int, started: float, stop: threading.Event,
 
 
 def step_log(step: Step) -> Path:
-    name = {"one-shot": "step1", "candidates": "step2", "verdicts": "step3"}[step.kind]
-    return REPO / "logs" / f"{name}_{step.base}.log"
+    """Where a step's own output goes: one file per step, model and dataset.
+
+    The dataset is in the name because the plan spans two of them, and a log
+    that mixed them would be unreadable exactly when it is needed.
+    """
+    name = {"one-shot": "step1", "one-shot-full": "step1-full",
+            "candidates": "step2", "verdicts": "step3"}[step.kind]
+    return REPO / "logs" / f"{name}_{step.dataset_dir}_{step.base}.log"
 
 
 def spawn(step: Step) -> subprocess.Popen:
@@ -262,13 +353,13 @@ def spawn(step: Step) -> subprocess.Popen:
                             stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
 
 
-def stored_candidates(base: str) -> int:
+def stored_candidates(base: str, dataset: str) -> int:
     """How many candidates are on disk for a run, right now."""
-    store = CandidateResults(RESULTS, base, DATASET)
+    store = CandidateResults(RESULTS, base, dataset)
     return sum(store.candidate_count(q) for q in store.questions())
 
 
-def judge_while(alive: Callable[[], bool], step: Step, questions: int) -> None:
+def judge_while(alive: Callable[[], bool], step: Step) -> None:
     """Judge what has been generated so far, again and again, until generation
     stops - then once more for whatever the last pass missed.
 
@@ -291,7 +382,7 @@ def judge_while(alive: Callable[[], bool], step: Step, questions: int) -> None:
     judged_at = -1
     while True:
         generating = alive()
-        stored = stored_candidates(step.base)
+        stored = stored_candidates(step.base, step.dataset_dir)
 
         if stored == 0:
             if not generating:
@@ -307,7 +398,7 @@ def judge_while(alive: Callable[[], bool], step: Step, questions: int) -> None:
             code = spawn(step).wait()
             judged_at = stored
             failures = failures + 1 if code != 0 else 0
-            judged, total, _ = step.done_and_total(questions)
+            judged, total, _ = step.done_and_total()
             log(f"    {step.label}: pass over {stored} candidates finished, "
                 f"exit {code}, {timedelta(seconds=int(time.time() - started))}, "
                 f"{judged:.0f}/{total:.0f} questions judged")
@@ -326,14 +417,14 @@ def judge_while(alive: Callable[[], bool], step: Step, questions: int) -> None:
         time.sleep(JUDGE_CYCLE if not failures else JUDGE_CYCLE * 2)
 
 
-def run_step(step: Step, questions: int, rates: dict[str, float],
+def run_step(step: Step, rates: dict[str, float],
              rest: list[Step] | None = None, judge: Step | None = None) -> int:
     log(f"  START {step.label}"
         + (f"  (+ {judge.name} alongside)" if judge else ""))
     started = time.time()
     stop = threading.Event()
     watcher = threading.Thread(target=watch,
-                               args=(step, questions, started, stop, rates, rest),
+                               args=(step, started, stop, rates, rest),
                                daemon=True)
     watcher.start()
 
@@ -341,7 +432,7 @@ def run_step(step: Step, questions: int, rates: dict[str, float],
     if judge is not None:
         judging = threading.Thread(
             target=judge_while,
-            args=(lambda: process.poll() is None, judge, questions),
+            args=(lambda: process.poll() is None, judge),
             daemon=True,
         )
         judging.start()
@@ -351,7 +442,7 @@ def run_step(step: Step, questions: int, rates: dict[str, float],
 
     stop.set()
     watcher.join(timeout=5)
-    done, total, unit = step.done_and_total(questions)
+    done, total, unit = step.done_and_total()
     log(f"  END   {step.label}: exit {code}, {timedelta(seconds=int(time.time() - started))}, "
         f"{done:.0f}/{total:.0f} {unit}  (log: {step_log(step).relative_to(REPO)})")
     return code
@@ -361,12 +452,10 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--from", dest="start", type=int, default=1,
                         help="stage number to start at (see --list)")
-    parser.add_argument("--k-first", type=int, default=20)
-    parser.add_argument("--k-second", type=int, default=50)
     parser.add_argument("--list", action="store_true")
     args = parser.parse_args(argv)
 
-    steps = plan(args.k_first, args.k_second)
+    steps = plan()
     stages: list[str] = []
     for step in steps:
         if step.stage not in stages:
@@ -377,7 +466,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  {number}. {stage}")
             for step in steps:
                 if step.stage == stage:
-                    print(f"       {step.name}")
+                    print(f"       {step.name:22} {step.dataset_dir}, "
+                          f"{step.questions} questions")
         return 0
 
     for base in {step.base for step in steps}:
@@ -388,25 +478,24 @@ def main(argv: list[str] | None = None) -> int:
         print(f"unknown judge: {JUDGE}", file=sys.stderr)
         return 2
 
-    questions = difficult_total()
     rates: dict[str, float] = {}
     started = time.time()
     todo = [s for s in steps if stages.index(s.stage) + 1 >= args.start]
 
     log("=" * 72)
     judge_model = JUDGE_MODELS[JUDGE]
-    log(f"PLAN starts at stage {args.start}/{len(stages)}, {questions} questions, "
+    log(f"PLAN starts at stage {args.start}/{len(stages)}, "
         f"generation concurrency {GEN_CONCURRENCY}, judge {JUDGE} "
         f"({judge_model.gateway_model} at temperature {judge_temperature()}"
         + (" from MEDQA_JUDGE_TEMPERATURE" if JUDGE_TEMPERATURE is not None else "")
         + f") at {JUDGE_CONCURRENCY}, judging alongside generation every {JUDGE_CYCLE}s")
-    predicted = forecast(todo, questions, rates)
+    predicted = forecast(todo, rates)
     total_estimate = sum(seconds for _, seconds in predicted)
     for number, stage in enumerate(stages, 1):
         if number < args.start:
             continue
         stage_estimate = sum(sec for step, sec in predicted if step.stage == stage)
-        log(f"  forecast  stage {number}  {stage:22} "
+        log(f"  forecast  stage {number}  {stage:34} "
             f"{timedelta(seconds=int(stage_estimate))}")
     log(f"  forecast  whole plan {timedelta(seconds=int(total_estimate))}, "
         f"ending around {(datetime.now() + timedelta(seconds=total_estimate)):%a %H:%M}")
@@ -426,11 +515,11 @@ def main(argv: list[str] | None = None) -> int:
                 continue  # it runs alongside generation, below
             rest = todo[todo.index(step) + 1:]
             judge = judge_step if step.kind == "candidates" else None
-            run_step(step, questions, rates, rest, judge)
+            run_step(step, rates, rest, judge)
 
         # One more pass after generation, for whatever the last one missed.
         if judge_step is not None:
-            judge_while(lambda: False, judge_step, questions)
+            judge_while(lambda: False, judge_step)
 
         log(f"STAGE {number}/{len(stages)} done in "
             f"{timedelta(seconds=int(time.time() - stage_started))}")
