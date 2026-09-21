@@ -130,3 +130,32 @@ def test_with_no_list_a_chart_reads_the_whole_run(monkeypatch):
     store = FakeCandidates(["1", "2"])
 
     assert inspect_run._questions_on_list(store, "med_qa") == ["1", "2"]
+
+
+def test_step_1_is_found_under_the_full_run_beside_it(monkeypatch):
+    """A step 2 run is named for the model; the whole-split step 1 run of the
+    same model is named <model>-full, because one name for two coverages
+    leaves a directory nothing can describe. Every reader of a step 2 run
+    needs the step 1 next door, and finding it is not the reader's job."""
+    stored = {"qwen-local-full": {"1": answered(1)}}
+    monkeypatch.setattr(inspect_run, "OneShotResults",
+                        lambda root, run, dataset: FakeOneShot(
+                            stored.get(run, {})))
+
+    assert inspect_run._step1_run("qwen-local", "medbullets") == "qwen-local-full"
+
+
+def test_a_run_with_step_1_of_its_own_is_left_alone(monkeypatch):
+    stored = {"gemma": {"1": answered(1)}, "gemma-full": {"2": answered(1)}}
+    monkeypatch.setattr(inspect_run, "OneShotResults",
+                        lambda root, run, dataset: FakeOneShot(
+                            stored.get(run, {})))
+
+    assert inspect_run._step1_run("gemma", "medbullets") == "gemma"
+
+
+def test_a_model_with_no_step_1_anywhere_resolves_to_nothing(monkeypatch):
+    monkeypatch.setattr(inspect_run, "OneShotResults",
+                        lambda root, run, dataset: FakeOneShot({}))
+
+    assert inspect_run._step1_run("gemma", "medbullets") is None
