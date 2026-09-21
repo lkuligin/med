@@ -50,8 +50,12 @@ def _verify(args: argparse.Namespace) -> int:
     if state is None:
         print("no server is running", file=sys.stderr)
         return 1
-    result = check.verify(settings.base_url, state.served_name,
-                          max_tokens=args.max_tokens)
+    try:
+        result = check.verify(settings.base_url, state.served_name,
+                              max_tokens=args.max_tokens)
+    except check.NotAnswering as error:
+        print(error, file=sys.stderr)
+        return 1
     print(result.report())
     return 0 if result.ok else 1
 

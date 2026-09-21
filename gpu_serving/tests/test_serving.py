@@ -31,6 +31,7 @@ def settings(tmp_path) -> Settings:
         host="127.0.0.1",
         port=8000,
         run_dir=tmp_path / "run",
+        kernel_cache=tmp_path / "kernels",
     )
 
 
@@ -308,3 +309,37 @@ def test_a_verbose_model_is_not_a_broken_one():
                "the extraocular muscles and the pupil. IV Trochlear supplies "
                "the superior oblique muscle alone.")
     assert check_module.degenerate(verbose) is None
+
+
+def test_the_kernel_cache_is_named_and_outside_the_repository(settings, tmp_path):
+    # An FP8 model spends minutes warming DeepGEMM at startup. Paid once if
+    # the cache survives; paid every time if it lands where the mirror can
+    # delete it, or somewhere each start invents anew.
+    env = server_module.server_env(settings)
+    for name in ("SGLANG_CACHE_DIR", "DG_CACHE_HOME", "DG_JIT_CACHE_DIR"):
+        assert str(settings.kernel_cache) in env[name], name
+
+
+def test_the_default_kernel_cache_is_not_under_the_package():
+    # gpu_serving/ is mirrored with --delete; ~/.cache is not.
+    from gpu_serving.config import DEFAULTS
+    assert DEFAULTS["GPU_SERVING_KERNEL_CACHE"].startswith("~")
+
+
+def test_the_ready_timeout_allows_for_fp8_warmup():
+    # Qwen3.8-27B-FP8 was still warming DeepGEMM twelve minutes in. A limit
+    # set for bf16 models reports a failure that is not one.
+    assert server_module.READY_TIMEOUT >= 1800
+
+
+def test_an_unreachable_endpoint_is_reported_not_raised_raw(monkeypatch):
+    # A traceback here reads as "the server is broken"; an FP8 model that has
+    # not finished warming is neither broken nor answering.
+    import urllib.error
+
+    def refused(*args, **kwargs):
+        raise urllib.error.URLError("Connection refused")
+
+    monkeypatch.setattr(check_module.urllib.request, "urlopen", refused)
+    with pytest.raises(check_module.NotAnswering, match="still be coming up"):
+        check_module.verify("http://127.0.0.1:8000", "some/model")

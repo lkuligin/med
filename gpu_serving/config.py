@@ -44,6 +44,13 @@ DEFAULTS: dict[str, str] = {
     # listed in rsync-exclude.txt as remote-owned; without that entry it would
     # be removed under a running server on the next mirror.
     "GPU_SERVING_RUN_DIR": "run",
+    # Where SGLang keeps the kernels it compiles. Named explicitly rather than
+    # left to $HOME, because an FP8 model spends minutes at startup warming
+    # DeepGEMM and that work is only paid once if the cache survives. It must
+    # stay outside the mirrored repository: the sync runs with --delete, and a
+    # cache it did not know about would be removed between runs, silently
+    # turning a one-off cost into a recurring one.
+    "GPU_SERVING_KERNEL_CACHE": "~/.cache/sglang",
 }
 
 _LINE = re.compile(r'^\s*([A-Z_][A-Z0-9_]*)\s*=\s*"?(.*?)"?\s*$')
@@ -70,6 +77,7 @@ class Settings:
     host: str
     port: int
     run_dir: Path
+    kernel_cache: Path
 
     @property
     def models_root(self) -> Path:
@@ -113,6 +121,7 @@ def load() -> Settings:
         host=values["GPU_SERVING_HOST"],
         port=int(values["GPU_SERVING_PORT"]),
         run_dir=_path(values["GPU_SERVING_RUN_DIR"]),
+        kernel_cache=_path(values["GPU_SERVING_KERNEL_CACHE"]),
     )
 
 

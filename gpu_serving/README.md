@@ -99,5 +99,13 @@ resolves. That keeps cache snapshot paths out of the catalogue. Serving runs
 with `HF_HUB_OFFLINE=1`: starting a server is not the moment to find out a
 download is needed, and `fetch` is where that belongs.
 
+**Compiled kernels are cached, deliberately outside this directory.**
+`GPU_SERVING_KERNEL_CACHE` (default `~/.cache/sglang`) is handed to SGLang,
+its JIT layer and DeepGEMM, all three of which read a different variable. An
+FP8 checkpoint spends minutes at startup warming DeepGEMM — Qwen3.8-27B-FP8
+took far longer to become ready than the bf16 and MXFP4 models — and that is
+a one-off cost only while the cache survives. Under the repository the mirror
+would delete it between runs and the wait would return every time.
+
 **Cards 4–7 only.** Cards 0–3 on this box belong to other people. The
 allocation lives in `configs/serving.conf`, not in a flag someone can pass.

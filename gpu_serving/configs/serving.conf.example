@@ -32,3 +32,9 @@ GPU_SERVING_PORT="8000"
 # Runtime state and server logs. Relative to the package. Listed in
 # rsync-exclude.txt as remote-owned, so the mirror neither ships nor deletes it.
 GPU_SERVING_RUN_DIR="run"
+
+# Where SGLang keeps the kernels it compiles. An FP8 model spends minutes at
+# startup warming DeepGEMM; that cost is paid once if this survives between
+# runs. Keep it OUTSIDE the mirrored repository - the sync runs with --delete
+# and would otherwise remove it, making the wait recur every time.
+GPU_SERVING_KERNEL_CACHE="~/.cache/sglang"

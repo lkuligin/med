@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import json
 import re
+import urllib.error
 import urllib.request
 from dataclasses import dataclass
 
@@ -89,20 +90,41 @@ def degenerate(text: str) -> str | None:
     return None
 
 
+class NotAnswering(RuntimeError):
+    """Nothing is listening, which is not the same as answering badly."""
+
+
+def _unreachable(url: str, error: Exception) -> NotAnswering:
+    """A server still starting looks exactly like this, and saying so beats a
+    traceback: an FP8 model spends minutes warming before it binds the port,
+    and the reflex on seeing a stack trace is to restart something that was
+    working."""
+    return NotAnswering(
+        f"nothing answering at {url} ({error}). If a server was just started "
+        f"it may still be coming up - check 'serve.sh status' and the log "
+        f"before restarting it.")
+
+
 def _post(url: str, payload: dict, timeout: float = 120) -> dict:
     request = urllib.request.Request(
         url, data=json.dumps(payload).encode(),
         headers={"Content-Type": "application/json", "Authorization": "Bearer local"},
     )
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        return json.loads(response.read())
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return json.loads(response.read())
+    except (urllib.error.URLError, TimeoutError, ConnectionError, OSError) as error:
+        raise _unreachable(url, error) from None
 
 
 def _get(url: str, timeout: float = 30) -> dict:
     request = urllib.request.Request(
         url, headers={"Authorization": "Bearer local"})
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        return json.loads(response.read())
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return json.loads(response.read())
+    except (urllib.error.URLError, TimeoutError, ConnectionError, OSError) as error:
+        raise _unreachable(url, error) from None
 
 
 def _ask(base_url, model, prompt, max_tokens, extra_body):
@@ -171,4 +193,4 @@ def verify(base_url: str, expect_name: str, max_tokens: int = 256,
     )
 
 
-__all__ = ["verify", "Result", "PROBE"]
+__all__ = ["verify", "Result", "PROBE", "NotAnswering", "degenerate"]

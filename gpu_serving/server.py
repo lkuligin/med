@@ -41,7 +41,13 @@ from pathlib import Path
 from gpu_serving.catalog import SERVABLE, ServedModel
 from gpu_serving.config import Settings, load
 
-READY_TIMEOUT = 900       # weights load plus CUDA graph capture, worst case
+# Weights, CUDA graph capture, and - for an FP8 checkpoint - DeepGEMM
+# warming its kernels. That last one is the reason this is not minutes:
+# Qwen3.8-27B-FP8 was still warming at twelve minutes, where the bf16 Gemma
+# was ready in 87 seconds and MXFP4 gpt-oss in 151. Timing out early does not
+# stop the server, which is detached and keeps coming up; it just reports a
+# failure that is not one, and teaches whoever sees it to ignore the check.
+READY_TIMEOUT = 2400
 FREE_TIMEOUT = 180        # how long the driver may take to report cards free
 POLL = 3
 
@@ -187,6 +193,12 @@ def server_env(settings: Settings) -> dict[str, str]:
         # purpose: serving is not the moment to discover that a download is
         # needed, and "serve.sh fetch" is where that belongs.
         "HF_HOME": str(settings.hf_home),
+        # All three, because SGLang, its JIT layer and DeepGEMM each read
+        # their own. Leaving any of them unset puts part of the cache
+        # somewhere the rest is not.
+        "SGLANG_CACHE_DIR": str(settings.kernel_cache),
+        "DG_CACHE_HOME": str(settings.kernel_cache),
+        "DG_JIT_CACHE_DIR": str(settings.kernel_cache / "deep_gemm"),
         "HF_HUB_OFFLINE": "1",
         "TRANSFORMERS_OFFLINE": "1",
     }
@@ -284,7 +296,9 @@ def wait_ready(settings: Settings | None = None, timeout: int = READY_TIMEOUT) -
         time.sleep(POLL)
 
     raise TimeoutError(
-        f"not ready after {timeout}s; last lines of {state.log}:\n{log_tail(state)}"
+        f"not ready after {timeout}s. The server is detached and may still be "
+        f"coming up - check with 'serve.sh verify' before restarting anything. "
+        f"Last lines of {state.log}:\n{log_tail(state)}"
     )
 
 
