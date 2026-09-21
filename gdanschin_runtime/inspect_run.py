@@ -775,13 +775,16 @@ def compare_step1(runs: list[str] | None = None, plot: bool = True,
             for m in measured}
 
 
-def _difficult_total(dataset: str | None = None, default: int | None = None) -> int:
-    """How many questions a run covers.
+def _difficult_ids(dataset: str | None = None) -> list[str] | None:
+    """The questions a run covers, or None when the dataset has no list yet.
 
-    The list of difficult questions when the dataset has one; otherwise the
-    whole split, because a run on a dataset whose list has not been built yet
-    covers all of it. Falling back to another dataset's number is how a bar
-    ends up reading 483/308.
+    The ids rather than a count, because a run may hold questions the current
+    list no longer names - a list can be shortened between runs, and nothing
+    stored is ever thrown away - and only the ids tell the two apart.
+
+    None rather than a guess: a caller that has no list should fall back to
+    what the run itself holds. Falling back to another dataset's number is how
+    a bar ends up reading 483/308.
     """
     from inference._dataset import load_difficult_question_ids
 
@@ -794,15 +797,8 @@ def _difficult_total(dataset: str | None = None, default: int | None = None) -> 
     for name in names:
         path = _bootstrap.LLM_MONKEYS_ROOT / name
         if path.is_file():
-            return len(load_difficult_question_ids(path))
-    if default is not None:
-        return default
-    if known and known.rows:
-        return known.rows
-    raise FileNotFoundError(
-        f"no question count for {dataset}: neither a difficult-questions list "
-        f"nor a known split size. Pass total=<n>."
-    )
+            return [str(q) for q in load_difficult_question_ids(path)]
+    return None
 
 
 def _split_size(dataset: str | None = None, default: int | None = None) -> int:
@@ -853,6 +849,17 @@ def _progress_numbers(base: str | None, judge: str | None,
     candidates = CandidateResults(RESULTS_DIR, base, dataset)
     questions = candidates.questions()
     counts = [candidates.candidate_count(q) for q in questions]
+    # Steps 2 and 3 both cover the list the run was given, and are both counted
+    # against it, so the bars are read down the page as one run. The run may
+    # hold more than the list - a list can be shortened between runs, and
+    # nothing stored is ever thrown away - and those questions are left out of
+    # every count rather than inflating one of them: counting what the run
+    # holds against the list it is working now is how a finished step comes to
+    # report 308/165, and counting either against what is in the store is worse
+    # still, because that denominator grows while generation runs.
+    listed = None if total is not None else _difficult_ids(dataset)
+    wanted = questions if listed is None else listed
+    on_list = [candidates.candidate_count(q) for q in wanted]
     # A question's directory appears with its first candidate, so counting
     # directories would report a question as done the moment it starts. Only
     # the ones that reached the target count are finished.
@@ -862,7 +869,7 @@ def _progress_numbers(base: str | None, judge: str | None,
     # answers every question in the split, while steps 2 and 3 work through the
     # list they were given. Reporting one against the other is how a bar reads
     # 300/135.
-    pipeline_total = total if total is not None else _difficult_total(dataset)
+    pipeline_total = total if total is not None else len(wanted)
     if total is None:
         from gdanschin_runtime.fetch_dataset import KNOWN
 
@@ -875,9 +882,9 @@ def _progress_numbers(base: str | None, judge: str | None,
     return {
         "base": base, "judge": judge, "dataset": dataset,
         "answered": answered, "attempts": attempts,
-        "generated": sum(1 for n in counts if n >= target) if target else 0,
-        "started": len(questions),
-        "judged": sum(1 for q in questions
+        "generated": sum(1 for n in on_list if n >= target) if target else 0,
+        "started": sum(1 for n in on_list if n),
+        "judged": sum(1 for q in wanted
                       if judge and (candidates.question_dir(q) / judge).is_dir()),
         "stored": sum(counts), "target": target,
         "total": total, "pipeline_total": pipeline_total,

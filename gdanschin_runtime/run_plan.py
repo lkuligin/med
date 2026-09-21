@@ -176,18 +176,25 @@ class Step:
                 "--concurrency", str(JUDGE_CONCURRENCY)]
 
     def done_and_total(self) -> tuple[float, float, str]:
-        """(done, total, unit) for the progress line."""
-        questions = self.questions
+        """(done, total, unit) for the progress line.
+
+        Measured against the questions the step covers, which for steps 2 and 3
+        is the list the run was given. A run can hold more than the list - a
+        list can be shortened between runs, and nothing stored is ever thrown
+        away - and counting what it holds against the list it is working now is
+        how a finished stage came to report 308/165.
+        """
         if self.kind in ("one-shot", "one-shot-full"):
             store = OneShotResults(RESULTS, self.run_name, self.dataset_dir)
-            return len(store.read()), questions, "questions"
+            return len(store.read()), self.questions, "questions"
         candidates = CandidateResults(RESULTS, self.base, self.dataset_dir)
-        ids = candidates.questions()
+        wanted = _question_ids(self.dataset)
         if self.kind == "candidates":
-            stored = sum(candidates.candidate_count(q) for q in ids)
-            return stored, questions * self.target, "candidates"
-        judged = sum(1 for q in ids if (candidates.question_dir(q) / JUDGE).is_dir())
-        return judged, questions, "questions judged"
+            stored = sum(candidates.candidate_count(q) for q in wanted)
+            return stored, len(wanted) * self.target, "candidates"
+        judged = sum(1 for q in wanted
+                     if (candidates.question_dir(q) / JUDGE).is_dir())
+        return judged, len(wanted), "questions judged"
 
 
 def plan() -> list[Step]:
@@ -281,7 +288,8 @@ def forecast(steps: list[Step], rates: dict[str, float]) -> list[tuple[Step, flo
             key = (step.base, step.dataset_dir)
             have = projected.get(key)
             if have is None:
-                have = stored_candidates(step.base, step.dataset_dir)
+                have = stored_for_questions(step.base, step.dataset_dir,
+                                            _question_ids(step.dataset))
             wanted = step.target * questions
             seconds = max(wanted - have, 0) * _rate(step.base, rates)
             projected[key] = max(have, wanted)
@@ -354,9 +362,24 @@ def spawn(step: Step) -> subprocess.Popen:
 
 
 def stored_candidates(base: str, dataset: str) -> int:
-    """How many candidates are on disk for a run, right now."""
+    """How many candidates are on disk for a run, right now.
+
+    Everything the run holds, which is what the verifier will walk - use
+    stored_for_questions() for the work a generation step still has to do.
+    """
     store = CandidateResults(RESULTS, base, dataset)
     return sum(store.candidate_count(q) for q in store.questions())
+
+
+def stored_for_questions(base: str, dataset: str, ids: list[str]) -> int:
+    """How many candidates are on disk for the questions a step covers.
+
+    A run generated against a longer list keeps those questions, and counting
+    them would make a run that has every question of the current list at fifty
+    look like it was most of the way to a hundred.
+    """
+    store = CandidateResults(RESULTS, base, dataset)
+    return sum(store.candidate_count(q) for q in ids)
 
 
 def judge_while(alive: Callable[[], bool], step: Step) -> None:
