@@ -119,6 +119,61 @@ BASE_MODELS: dict[str, BaseModel] = {
              "the name. Budget matches the gateway entry's, which records a "
              "peak near 2900 tokens.",
     ),
+    "qwen3.5-4b-nr-local": served_locally(
+        "qwen3.5-4b-nr-local", "Qwen/Qwen3.5-4B", max_tokens=4096,
+        note="same family, same thinking switch as the rest of Qwen3.5.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+    ),
+    "qwen3.5-9b-nr-local": served_locally(
+        "qwen3.5-9b-nr-local", "Qwen/Qwen3.5-9B", max_tokens=4096,
+        note="the largest of the small Qwen, and the last rung of that ladder.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+    ),
+    "qwen3.6-27b-nr-local": served_locally(
+        "qwen3.6-27b-nr-local", "Qwen/Qwen3.6-27B-FP8", max_tokens=4096,
+        note="the size twin of qwen3.8-27b-nr-local: same family, same FP8, "
+             "same dense 27B, one generation earlier. The gateway serves it "
+             "too but has no run here, so the comparison that matters is "
+             "against 3.8 rather than against the gateway.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+    ),
+    "qwen3.6-35b-a3b-nr-local": served_locally(
+        "qwen3.6-35b-a3b-nr-local", "Qwen/Qwen3.6-35B-A3B-FP8", max_tokens=4096,
+        note="35 GB on disk but roughly 3B active per token - the lightest "
+             "of the large models by compute, lighter than gpt-oss-20b. "
+             "Judge it as a cheap MoE, not as a 35B model.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+    ),
+    "qwen3.5-2b-nr-local": served_locally(
+        "qwen3.5-2b-nr-local", "Qwen/Qwen3.5-2B", max_tokens=4096,
+        note="same family and the same thinking switch as 0.8B, for the same "
+             "measured reason: served as-is the answer lands in "
+             "reasoning_content and content comes back empty.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+    ),
+    "qwen3.5-0.8b-nr-local": served_locally(
+        "qwen3.5-0.8b-nr-local", "Qwen/Qwen3.5-0.8B", max_tokens=4096,
+        note="the smallest model we can serve, and the first where the smoke "
+             "run found something: served as-is it answers entirely inside a "
+             "thinking block, so content comes back empty and every reply "
+             "looks blank. Measured - 1075 characters in reasoning_content "
+             "and nothing in content, the same 1075 in content once thinking "
+             "is off. Hence -nr, as for Qwen3.8.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+    ),
+    "gpt-oss-20b-local": served_locally(
+        "gpt-oss-20b-local", "openai/gpt-oss-20b", max_tokens=4096,
+        note="the smaller GPT-OSS; there is no third size. No gateway "
+             "counterpart, so it is compared against the other local models "
+             "and gemini. Same reasoning parser as the 120B.",
+    ),
+    "gemma-4-e2b-local": served_locally(
+        "gemma-4-e2b-local", "google/gemma-4-E2B-it", max_tokens=4096,
+        note="the smallest Gemma 4. No gateway counterpart, so the comparison "
+             "is against the other local models and gemini. Budget starts "
+             "generous because nothing has measured this model's peak yet - "
+             "the smoke run is what settles it.",
+    ),
     "qwen3.8-27b-nr-local": served_locally(
         "qwen3.8-27b-nr-local", "Qwen/Qwen3.8-27B-FP8", max_tokens=4096,
         note="the FP8 checkpoint the gateway serves, on our own cards. The "
