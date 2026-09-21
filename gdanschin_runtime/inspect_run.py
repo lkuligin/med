@@ -628,9 +628,19 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     # reached. The per-section lines below are restricted to matching question
     # sets so they can be compared with each other; this one says how the model
     # does on its own, over the whole run.
-    if base:
+    # Say why the block is missing rather than leave it out in silence: the two
+    # reasons look identical on screen and are fixed differently.
+    if not base:
+        print("  WHOLE SPLIT not shown: this result does not carry a run name."
+              "\n    load() attaches one; a plain list of records does not."
+              " Pass base='<run>'.\n")
+    else:
         records = OneShotResults(RESULTS_DIR, base, dataset).read()
-        if records:
+        if not records:
+            print(f"  WHOLE SPLIT not shown: no step 1 run stored as "
+                  f"{base!r} in {dataset}.\n    one_shot_runs('{dataset}') "
+                  f"lists the ones there are.\n")
+        else:
             whole = _one_shot(base, list(records), dataset)
             print(f"  WHOLE SPLIT, {whole.covered} questions")
             _line(STEP_1, whole.attempt0 * whole.covered / 100, whole.covered)
