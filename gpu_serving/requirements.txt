@@ -6,8 +6,15 @@
 # box were verified against.
 sglang==0.5.19
 
-# The data-parallel launcher. sglang_router.launch_server puts one endpoint in
-# front of several replicas and routes by prefix-cache affinity, which is what
-# makes repeated sampling of one question cheap. 0.3.2 is what resolved
-# against sglang 0.5.19 on the box, so it is pinned rather than left to drift.
-sglang-router==0.3.2
+# No sglang-router. It would put a prefix-cache-aware router in front of the
+# replicas, which is the better dispatch for repeated sampling, but its latest
+# release (0.3.2, the only one newer than our sglang) imports
+# sglang.srt.utils.is_port_available, which 0.5.19 no longer exports, so it
+# raises ImportError before serving anything. SGLang's own --dp-size does the
+# same job with simpler dispatch. Revisit when the router catches up.
+
+# SGLang JIT-compiles kernels while capturing CUDA graphs, and the compiler it
+# shells out to is ninja. It is not declared by sglang itself, so without this
+# every launch loads the weights, starts all replicas, and only then dies with
+# FileNotFoundError: 'ninja' - several minutes in, at the last step.
+ninja

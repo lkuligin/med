@@ -45,6 +45,10 @@ READY_TIMEOUT = 900       # weights load plus CUDA graph capture, worst case
 FREE_TIMEOUT = 180        # how long the driver may take to report cards free
 POLL = 3
 
+# The module the server runs as, and the fingerprint used to recognise its
+# process later. Named once so the command and the check cannot drift apart.
+LAUNCHER = "sglang.launch_server"
+
 
 class NoDriver(RuntimeError):
     """The GPU driver cannot be queried here."""
@@ -75,19 +79,50 @@ def read_state(settings: Settings | None = None) -> State | None:
     if not path.is_file():
         return None
     state = State(**json.loads(path.read_text()))
-    # A stale file outlives a crashed server; treat a dead pid as nothing running.
+    # A stale file outlives a crashed server, so the pid it names has to be
+    # checked - and checked properly. os.kill(pid, 0) is not enough: it
+    # succeeds for a zombie, whose process has exited and is only waiting to be
+    # reaped, and it succeeds for whatever unrelated program later inherits
+    # that number. Both would have us report a server that is not there.
+    return state if _alive(state.pid) else None
+
+
+def _alive(pid: int) -> bool:
+    """Is this pid a live server of ours?"""
+    stat = Path(f"/proc/{pid}/stat")
+    if stat.is_file():
+        try:
+            # Everything after the executable name, which itself may contain
+            # spaces and is parenthesised; the state letter is the first field.
+            state_letter = stat.read_text().rsplit(") ", 1)[-1].split()[0]
+            if state_letter == "Z":
+                return False
+            cmdline = Path(f"/proc/{pid}/cmdline").read_bytes()
+        except (OSError, IndexError):
+            return False
+        return LAUNCHER.encode() in cmdline.replace(b"\0", b" ")
+
+    # No /proc: not Linux, so not a box we serve on. Fall back to the weaker
+    # check rather than claiming to know.
     try:
-        os.kill(state.pid, 0)
+        os.kill(pid, 0)
     except OSError:
-        return None
-    return state
+        return False
+    return True
 
 
 def launch_argv(model: ServedModel, settings: Settings) -> list[str]:
-    """The exact command that serves `model`. Pure, so it can be tested dry."""
+    """The exact command that serves `model`. Pure, so it can be tested dry.
+
+    Data parallelism comes from SGLang's own --dp-size rather than the separate
+    sglang-router package. The router would add prefix-cache-aware dispatch,
+    which suits repeated sampling of one question, but its latest release
+    (0.3.2) imports a symbol sglang 0.5.19 no longer exports and cannot start
+    at all. Worth revisiting when the package catches up.
+    """
     replicas = model.replicas(len(settings.cards))
     return [
-        str(settings.python), "-m", "sglang_router.launch_server",
+        str(settings.python), "-m", LAUNCHER,
         "--model-path", str(settings.models_root / model.weights),
         "--served-model-name", model.served_name,
         "--tp-size", str(model.tp),
@@ -98,6 +133,25 @@ def launch_argv(model: ServedModel, settings: Settings) -> list[str]:
         "--host", settings.host,
         "--port", str(settings.port),
     ]
+
+
+def server_env(settings: Settings) -> dict[str, str]:
+    """The environment the server runs in. Pure, so a test can read it.
+
+    Running .venv/bin/python directly is not the same as activating the venv:
+    the interpreter is right, but the venv's bin directory is not on PATH, so
+    any tool it provides as a console script is invisible. SGLang shells out to
+    ninja while capturing CUDA graphs, which made this surface as
+    FileNotFoundError several minutes into a launch that had already loaded the
+    weights and started every replica.
+    """
+    bin_dir = str(settings.venv / "bin")
+    return {
+        **os.environ,
+        "CUDA_VISIBLE_DEVICES": ",".join(str(c) for c in settings.cards),
+        "VIRTUAL_ENV": str(settings.venv),
+        "PATH": f"{bin_dir}:{os.environ.get('PATH', '')}",
+    }
 
 
 def start(name: str, settings: Settings | None = None) -> State:
@@ -121,10 +175,7 @@ def start(name: str, settings: Settings | None = None) -> State:
 
     settings.run_dir.mkdir(parents=True, exist_ok=True)
     log = settings.run_dir / f"{name}.log"
-    env = {
-        **os.environ,
-        "CUDA_VISIBLE_DEVICES": ",".join(str(c) for c in settings.cards),
-    }
+    env = server_env(settings)
     argv = launch_argv(model, settings)
     with log.open("ab") as handle:
         handle.write(f"\n=== {time.strftime('%F %T')} {' '.join(argv)}\n".encode())
@@ -259,5 +310,5 @@ def stop(settings: Settings | None = None, timeout: int = FREE_TIMEOUT) -> None:
 
 __all__ = [
     "State", "start", "stop", "wait_ready", "read_state", "launch_argv",
-    "log_tail", "cards_free", "NoDriver",
+    "log_tail", "cards_free", "NoDriver", "LAUNCHER", "server_env",
 ]

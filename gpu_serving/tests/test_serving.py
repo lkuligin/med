@@ -7,6 +7,9 @@ before anything is launched on a shared machine.
 
 from __future__ import annotations
 
+import json
+import pathlib
+
 import pytest
 
 from gpu_serving.catalog import SERVABLE, ServedModel
@@ -158,3 +161,63 @@ def test_unknown_fields_do_not_break_the_parser():
 
 def test_a_log_with_no_decoding_says_so():
     assert "nothing was generated" in logs.summarise("[t] starting up\n").render()
+
+
+# --- is that pid really our server? ---------------------------------------
+
+def _write_state(settings, pid):
+    settings.run_dir.mkdir(parents=True, exist_ok=True)
+    (settings.run_dir / "server.json").write_text(json.dumps({
+        "model": "gemma-4-26b", "served_name": "google/gemma-4-26B-A4B-it",
+        "pid": pid, "port": 8000, "cards": [4, 5, 6, 7], "replicas": 4,
+        "log": "/dev/null", "started_at": 0.0}))
+
+
+def test_a_zombie_is_not_a_running_server(settings, monkeypatch, tmp_path):
+    # os.kill(pid, 0) succeeds for a process that has exited and is waiting to
+    # be reaped. Believing it left "up" refusing to start over a dead server.
+    proc = tmp_path / "proc" / "999"
+    proc.mkdir(parents=True)
+    (proc / "stat").write_text("999 (python) Z 1 999 0 0 -1 0 0 0\n")
+    (proc / "cmdline").write_bytes(b"python\0-m\0sglang.launch_server\0")
+    monkeypatch.setattr(server_module, "Path",
+                        lambda p: tmp_path / p.lstrip("/") if str(p).startswith("/proc")
+                        else pathlib.Path(p))
+    _write_state(settings, 999)
+    assert server_module.read_state(settings) is None
+
+
+def test_a_recycled_pid_is_not_our_server(settings, monkeypatch, tmp_path):
+    # The number outlived the server and now belongs to something else.
+    proc = tmp_path / "proc" / "999"
+    proc.mkdir(parents=True)
+    (proc / "stat").write_text("999 (vim) S 1 999 0 0 -1 0 0 0\n")
+    (proc / "cmdline").write_bytes(b"vim\0notes.txt\0")
+    monkeypatch.setattr(server_module, "Path",
+                        lambda p: tmp_path / p.lstrip("/") if str(p).startswith("/proc")
+                        else pathlib.Path(p))
+    _write_state(settings, 999)
+    assert server_module.read_state(settings) is None
+
+
+def test_our_own_live_server_is_recognised(settings, monkeypatch, tmp_path):
+    proc = tmp_path / "proc" / "999"
+    proc.mkdir(parents=True)
+    (proc / "stat").write_text("999 (python) S 1 999 0 0 -1 0 0 0\n")
+    (proc / "cmdline").write_bytes(b"python\0-m\0sglang.launch_server\0--dp-size\0004\0")
+    monkeypatch.setattr(server_module, "Path",
+                        lambda p: tmp_path / p.lstrip("/") if str(p).startswith("/proc")
+                        else pathlib.Path(p))
+    _write_state(settings, 999)
+    state = server_module.read_state(settings)
+    assert state is not None and state.model == "gemma-4-26b"
+
+
+def test_the_server_can_find_its_own_tools(settings):
+    # SGLang shells out to ninja from the venv while capturing CUDA graphs.
+    # Running .venv/bin/python does not put .venv/bin on PATH, so without this
+    # the launch dies at the last step, minutes in.
+    env = server_module.server_env(settings)
+    assert env["PATH"].startswith(str(settings.venv / "bin") + ":")
+    assert env["VIRTUAL_ENV"] == str(settings.venv)
+    assert env["CUDA_VISIBLE_DEVICES"] == "4,5,6,7"
