@@ -13,8 +13,16 @@ land in the same directory.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from typing import Any
+
+
+# Where a model we serve ourselves answers. Named once: a second server on
+# another port, or a tunnel from a laptop, is then one variable rather than an
+# edit to every entry. gpu_serving is not imported for this - the URL is the
+# entire contract between the two, which is what keeps that package separable.
+LOCAL_BASE_URL = os.environ.get("MEDQA_LOCAL_BASE_URL", "http://127.0.0.1:8000/v1")
 
 
 @dataclass(frozen=True)
@@ -50,6 +58,27 @@ class JudgeModel:
 # raise: the reply comes back truncated or empty, the fact parser finds nothing,
 # and the candidate is quietly worthless. The values below leave roughly a
 # factor of two over the largest response seen on difficult questions.
+def served_locally(name: str, served_name: str, max_tokens: int,
+                   note: str = "", **extra: Any) -> BaseModel:
+    """Declare a model served from our own GPUs rather than the gateway.
+
+    The name is the results directory, so a locally served model gets its own
+    entry rather than a flag on an existing one: one switch would mix both
+    backends into the same directory and destroy the comparison the local run
+    exists to make. The "-local" suffix is the convention that makes the pair
+    obvious in a listing.
+
+    `served_name` is what the endpoint answers to - read it from /v1/models
+    rather than guessing, since it is set by --served-model-name on the server
+    and need not match any name used here.
+    """
+    if not name.endswith("-local"):
+        raise ValueError(f"{name!r}: locally served entries end in -local, so "
+                         f"that a results directory says where it came from")
+    return BaseModel(name=name, gateway_model=served_name, max_tokens=max_tokens,
+                     note=note, base_url=LOCAL_BASE_URL, extra=extra)
+
+
 BASE_MODELS: dict[str, BaseModel] = {
     "gemma-4-26b": BaseModel(
         name="gemma-4-26b",
@@ -74,15 +103,10 @@ BASE_MODELS: dict[str, BaseModel] = {
         max_tokens=4096,
         note="thinking disabled; with it on the whole budget goes to reasoning",
     ),
-    "gemma-4-26b-local": BaseModel(
-        name="gemma-4-26b-local",
-        gateway_model="google/gemma-4-26B-A4B-it",
-        base_url="http://127.0.0.1:8000/v1",
-        max_tokens=1024,
-        note="the same weights as gemma-4-26b, served on our own cards. A "
-             "separate entry, not a flag, because the run name is the results "
-             "directory: mixing the two backends into one directory would "
-             "destroy the comparison they exist for",
+    "gemma-4-26b-local": served_locally(
+        "gemma-4-26b-local", "google/gemma-4-26B-A4B-it", max_tokens=1024,
+        note="the same weights as gemma-4-26b, on our own cards; 13/20 against "
+             "the gateway's 11/20 on the first twenty difficult questions",
     ),
     "qwen3.8-27b-nr": BaseModel(
         name="qwen3.8-27b-nr",

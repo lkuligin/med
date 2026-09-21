@@ -19,6 +19,7 @@ import sys
 
 from gdanschin_runtime import _bootstrap  # noqa: F401
 
+from gdanschin_runtime.local_endpoint import EndpointNotReady, require_ready
 from gdanschin_runtime.models import BASE_MODELS
 
 from config import InferenceConfig, resolve_dataset_name
@@ -80,6 +81,17 @@ def main(argv: list[str] | None = None) -> int:
         print(f"unknown base model: {unknown.args[0]}   "
               f"(known: {', '.join(BASE_MODELS)})", file=sys.stderr)
         return 2
+
+    # Before the dataset, so a server that is down costs a second rather than
+    # a loaded dataset and a wall of per-question failures - and so a server
+    # running the WRONG model is caught at all, which it otherwise is not: it
+    # would fill a directory with plausible answers under another model's name.
+    if args.base:
+        try:
+            require_ready(BASE_MODELS[args.base])
+        except EndpointNotReady as not_ready:
+            print(not_ready, file=sys.stderr)
+            return 3
 
     questions = load_difficult_questions(csv_path=args.difficult_questions,
                                          dataset_name=config.dataset_name,
