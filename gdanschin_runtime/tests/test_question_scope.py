@@ -26,8 +26,12 @@ class FakeOneShot:
         return self.records
 
 
-def answered(correct: int, attempts: int = 1) -> dict:
-    return {"correct_attempts": correct, "total_attempts": attempts}
+def answered(correct: int, attempts: int = 1,
+             opening: bool | None = None) -> dict:
+    """A one-shot record: the tally, and how the first attempt went."""
+    first = correct > 0 if opening is None else opening
+    return {"correct_attempts": correct, "total_attempts": attempts,
+            "attempts": [{"attempt_index": 0, "is_correct": first}]}
 
 
 def test_a_padded_id_and_a_bare_one_are_the_same_question(monkeypatch):
@@ -36,22 +40,34 @@ def test_a_padded_id_and_a_bare_one_are_the_same_question(monkeypatch):
     monkeypatch.setattr(inspect_run, "OneShotResults",
                         FakeOneShot({str(i): answered(1) for i in range(1, 10)}))
 
-    rate, covered = inspect_run._one_shot(
+    measured = inspect_run._one_shot(
         "gemma-4-26b", [f"{i:03d}" for i in range(1, 10)], "medbullets")
 
-    assert covered == 9, "every question of the list has a one-shot answer"
-    assert rate == 100.0
+    assert measured.covered == 9, "every question of the list has an answer"
+    assert measured.attempt0 == 100.0
 
 
 def test_a_question_with_no_one_shot_answer_is_left_out(monkeypatch):
     monkeypatch.setattr(inspect_run, "OneShotResults",
                         FakeOneShot({"1": answered(1), "2": answered(0)}))
 
-    rate, covered = inspect_run._one_shot(
+    measured = inspect_run._one_shot(
         "gemma-4-26b", ["001", "002", "003"], "medbullets")
 
-    assert covered == 2, "003 was never answered, so it counts neither way"
-    assert rate == 50.0
+    assert measured.covered == 2, "003 was never answered, so it counts neither way"
+    assert measured.averaged == 50.0
+
+
+def test_the_first_attempt_is_not_the_average_of_the_attempts(monkeypatch):
+    """The author's baseline is attempt 0 alone, so it is measured that way
+    rather than labelled that way and computed as something else."""
+    monkeypatch.setattr(inspect_run, "OneShotResults",
+                        FakeOneShot({"1": answered(2, attempts=3, opening=False)}))
+
+    measured = inspect_run._one_shot("gemma-4-26b", ["001"], "medbullets")
+
+    assert measured.attempt0 == 0.0, "the first attempt was wrong"
+    assert round(measured.averaged, 1) == 66.7, "two of its three were right"
 
 
 def test_a_run_is_read_over_the_list_not_over_what_it_holds(monkeypatch):

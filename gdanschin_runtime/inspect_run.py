@@ -26,7 +26,7 @@ import statistics
 import textwrap
 from collections import Counter
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 from gdanschin_runtime import _bootstrap  # noqa: F401
 
@@ -462,6 +462,11 @@ def _baselines(results: list[dict]) -> dict[str, float]:
         "single": statistics.mean(p["share"] for p in per_q) * 100 if per_q else 0.0,
         "vote": sum(p["vote"] for p in per_q) / n * 100,
         "unverified": sum(p["any"] for p in per_q) / n * 100,
+        # The same three as counts. "On average" counts a question by the share
+        # of its candidates that were right, so its total is fractional.
+        "single_hits": sum(p["share"] for p in per_q),
+        "vote_hits": float(sum(p["vote"] for p in per_q)),
+        "any_hits": float(sum(p["any"] for p in per_q)),
     }
 
 
@@ -479,13 +484,25 @@ def _norm_id(qid: Any) -> str:
     return (text.lstrip("0") or "0") if text.isdigit() else text
 
 
-def _one_shot(base: str | None, qids, dataset: str | None = None) -> tuple[float, int] | None:
-    """One-shot accuracy over the given questions, or None if none are stored.
+class OneShot(NamedTuple):
+    """Step 1 measured two ways, because the two answer different questions.
 
-    Averaged over attempts rather than taken from the record's is_correct, so
-    that a run with several attempts per question is measured the same way as
-    "single candidate, on average" below it. With one attempt the two agree.
+    `attempt0` is the first attempt and nothing else, which is what the
+    author's "Single-Shot Attempt 0" means and what a baseline against the
+    pipeline should be: one call, one answer.
+
+    `averaged` is the share of attempts that were right, which is the
+    like-for-like partner of "on average" over candidates. With one attempt
+    per question the two are the same number.
     """
+
+    averaged: float
+    attempt0: float
+    covered: int
+
+
+def _one_shot(base: str | None, qids, dataset: str | None = None) -> OneShot | None:
+    """One-shot accuracy over the given questions, or None if none are stored."""
     if not base:
         return None
     records = OneShotResults(RESULTS_DIR, base, _ds(dataset)).read()
@@ -493,25 +510,70 @@ def _one_shot(base: str | None, qids, dataset: str | None = None) -> tuple[float
     picked = [by_id[_norm_id(q)] for q in qids if _norm_id(q) in by_id]
     if not picked:
         return None
-    rate = statistics.mean(
+    averaged = statistics.mean(
         (r.get("correct_attempts") or 0) / max(r.get("total_attempts") or 1, 1)
         for r in picked
     )
-    return rate * 100, len(picked)
+    first = []
+    for r in picked:
+        attempts = r.get("attempts") or []
+        opening = next((a for a in attempts if a.get("attempt_index") == 0), None)
+        # A record written before attempts were kept one by one only has the
+        # tally, and then the first attempt cannot be told from the rest.
+        first.append(bool(opening.get("is_correct")) if opening
+                     else bool(r.get("is_correct")))
+    return OneShot(averaged * 100,
+                   sum(first) / len(first) * 100,
+                   len(picked))
+
+
+# The names the author's analyzer prints, so that a number of ours can be put
+# beside a number of his without anyone having to work out which is which.
+STEP_1 = "Step 1 Baseline (Single-Shot Attempt 0)"
+STEP_1_MEAN = "Step 1 Baseline (averaged over attempts)"
+STEP_2_AVERAGE = "Step 2 Facts extraction Pipeline (On Average)"
+STEP_2_VOTE = "Step 2 Facts extraction Pipeline (Majority vote)"
+STEP_3 = "Step 3 Verifier (First Valid Candidate)"
+STEP_3_HYBRID = "Step 3 Verifier (First Valid, else Majority vote)"
+CEILING = "Unverified Baseline (Generator Pass@k)"
+# What the author's plot legend calls the same lines.
+PLOT_VERIFIED = "First Valid Candidate (Rejection Sampling Policy)"
+PLOT_ONE_SHOT = "Single-Shot Baseline (First Attempt)"
+LABEL = 50
+
+
+def _score(hits: float, n: int) -> str:
+    """A rate written as the percentage and the count it came from.
+
+    A percentage on its own hides how much is behind it: 46.1% over 165
+    questions and 46.1% over 12 are the same string and not the same claim.
+    """
+    if not n:
+        return "  n/a"
+    count = f"{hits:.0f}" if abs(hits - round(hits)) < 0.05 else f"{hits:.1f}"
+    return f"{hits / n * 100:5.1f}% ({count}/{n})"
+
+
+def _line(label: str, hits: float, n: int, indent: str = "    ",
+          note: str = "") -> None:
+    print(f"{indent}• {label:<{LABEL}}: {_score(hits, n)}{note}")
 
 
 def _print_baselines(b: dict, indent: str = "    ",
                      one_shot: tuple[float, int] | None = None) -> None:
     if one_shot is not None:
-        rate, covered = one_shot
+        covered = one_shot.covered
         # Step 1 can cover fewer questions than step 2 has reached, and then it
         # is not the same measurement - say so rather than let the numbers sit
         # in one column as though they were comparable.
         note = "" if covered == b["n"] else f"   (only {covered} of {b['n']} questions)"
-        print(f"{indent}one shot, no candidates        {rate:5.1f}%{note}")
-    print(f"{indent}single candidate, on average    {b['single']:5.1f}%")
-    print(f"{indent}majority vote                   {b['vote']:5.1f}%")
-    print(f"{indent}unverified: any correct in k    {b['unverified']:5.1f}%   (ceiling for any selector)")
+        _line(STEP_1, one_shot.attempt0 * covered / 100, covered, indent, note)
+        if abs(one_shot.averaged - one_shot.attempt0) > 0.05:
+            _line(STEP_1_MEAN, one_shot.averaged * covered / 100, covered,
+                  indent, note)
+    _line(STEP_2_AVERAGE, b["single_hits"], b["n"], indent)
+    _line(STEP_2_VOTE, b["vote_hits"], b["n"], indent)
+    _line(CEILING, b["any_hits"], b["n"], indent, "   (ceiling for any selector)")
 
 
 def accuracy(results: list[dict], verified: list[dict] | str | Path | None = None,
@@ -538,8 +600,10 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
         records = OneShotResults(RESULTS_DIR, base, dataset).read()
         if records:
             whole = _one_shot(base, list(records), dataset)
-            print(f"  STEP 1, WHOLE RUN ({whole[1]} questions answered once)")
-            print(f"    one shot, no candidates       {whole[0]:5.1f}%")
+            print(f"  STEP 1, WHOLE RUN ({whole.covered} questions answered once)")
+            _line(STEP_1, whole.attempt0 * whole.covered / 100, whole.covered)
+            if abs(whole.averaged - whole.attempt0) > 0.05:
+                _line(STEP_1_MEAN, whole.averaged * whole.covered / 100, whole.covered)
             print()
     sizes = sorted(len(q.get("candidates") or []) for q in results)
     spread = (f"{sizes[0]} candidates each" if sizes and sizes[0] == sizes[-1]
@@ -586,10 +650,11 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     print(f"\n  QUESTIONS THROUGH BOTH STEPS ({n})")
     _print_baselines(_baselines(both),
                      one_shot=_one_shot(base, [q["question_id"] for q in both], dataset))
-    print(f"    first fully verified candidate  {first_valid_right / n * 100:5.1f}%   <- the metric")
-    print(f"    verified, else majority vote    {hybrid_right / n * 100:5.1f}%   <- hybrid")
-    print(f"    (a valid candidate was found for {found}/{n}; when found it was right "
-          f"{first_valid_right / max(found, 1) * 100:.0f}% of the time)")
+    _line(STEP_3, first_valid_right, n, note="   <- the metric")
+    _line(STEP_3_HYBRID, hybrid_right, n, note="   <- hybrid")
+    _line("Valid Coverage", found, n,
+          note=f"   (when found it was right "
+               f"{first_valid_right / max(found, 1) * 100:.0f}% of the time)")
     if fell_back:
         print(f"    (the fallback fired {fell_back} times and the vote was right {fallback_right})")
 
@@ -1175,19 +1240,27 @@ def verified_curve(base: str | None = None, judge: str | None = None,
             2, 1, figsize=(9, 8), sharex=True,
             gridspec_kw={"height_ratios": [3, 1]},
         )
+        n = len(questions)
+
+        def legend(name: str, at_last_k: float) -> str:
+            """A line's name and where it ends up, as a rate and a count."""
+            return f"{name}: {_score(at_last_k * n / 100, n).strip()}"
+
         ax.plot(ks, curves["any correct"], "s--", color="#9467bd", alpha=0.7,
-                label="any correct in k (ceiling)")
+                label=legend(CEILING, curves["any correct"][-1]))
         ax.plot(ks, curves["verified, else vote"], "^-", color="#2ca02c",
-                label="verified, else majority vote")
+                label=legend("First Valid, else Majority vote",
+                             curves["verified, else vote"][-1]))
         ax.plot(ks, curves["verified"], "o-", color="#1f77b4",
-                label="first fully verified candidate")
+                label=legend(PLOT_VERIFIED, curves["verified"][-1]))
         ax.plot(ks, curves["majority vote"], "-", color="#ff7f0e",
-                label="majority vote")
+                label=legend("Majority vote", curves["majority vote"][-1]))
         ax.plot(ks, curves["single candidate"], "-", color="#8c564b", alpha=0.8,
-                label="single candidate, on average")
+                label=legend("Facts extraction Pipeline (On Average)",
+                             curves["single candidate"][-1]))
         if one_shot is not None:
-            ax.axhline(one_shot[0], ls=":", color="#888888",
-                       label=f"one shot, no candidates ({one_shot[0]:.1f}%)")
+            ax.axhline(one_shot.attempt0, ls=":", color="#888888",
+                       label=legend(PLOT_ONE_SHOT, one_shot.attempt0))
         ax.set_ylabel("% of questions answered correctly")
         ax.set_title(f"{base}, judged by {judge}  ({len(questions)} questions)")
         ax.grid(alpha=0.3)
@@ -1205,7 +1278,8 @@ def verified_curve(base: str | None = None, judge: str | None = None,
         plt.show()
 
     return {k: {**{name: values[i] for name, values in curves.items()},
-                "judged": cost["judged by verifier"][i]}
+                "judged": cost["judged by verifier"][i],
+                "questions": len(questions)}
             for i, k in enumerate(ks)}
 
 
@@ -1255,16 +1329,22 @@ def monkeys_curve(base: str | None = None, judge: str | None = None,
 
         ks = sorted(curve)
         fig, ax = plt.subplots(figsize=(9, 5))
+        n = rows[ks[-1]]["questions"]
+
+        def legend(name: str, at_last_k: float) -> str:
+            return f"{name}: {_score(at_last_k * n / 100, n).strip()}"
+
         ax.plot(ks, [curve[k] for k in ks], "o-", color="#1f77b4",
-                label="first verified")
+                label=legend(PLOT_VERIFIED, curve[ks[-1]]))
         if majority_vote:
             ax.plot(ks, [vote[k] for k in ks], "s-", color="#ff7f0e", alpha=0.9,
-                    label=f"majority vote ({vote[ks[-1]]:.1f}%)")
+                    label=legend("Majority vote", vote[ks[-1]]))
         ax.plot(ks, [single[k] for k in ks], "--", color="#8c564b", alpha=0.8,
-                label=f"single candidate, on average ({single[ks[-1]]:.1f}%)")
+                label=legend("Facts extraction Pipeline (On Average)",
+                             single[ks[-1]]))
         if one_shot is not None:
-            ax.axhline(one_shot[0], ls="--", color="red",
-                       label=f"single shot baseline ({one_shot[0]:.1f}%)")
+            ax.axhline(one_shot.attempt0, ls="--", color="red",
+                       label=legend(PLOT_ONE_SHOT, one_shot.attempt0))
         ax.set_xlabel("candidates considered (k)")
         ax.set_ylabel("% of questions answered correctly")
         ax.set_title(f"{base}, judged by {judge}  ({counted} questions)")
