@@ -16,7 +16,6 @@ MEANT_TO_BE_JUDGED = {
     "qwen3.6-35b-a3b-nr-local",
     "qwen3.5-9b-nr-local",
     "qwen3.5-4b-nr-local",
-    "gemma-4-e2b-local",
 }
 
 EXPECTED_K = {
@@ -70,3 +69,80 @@ def test_candidates_are_asked_of_the_local_endpoint(  ):
     assert command[command.index("--n-candidates") + 1] == str(target.k)
     # The served name, not the registry key: that is what the endpoint answers to.
     assert command[command.index("--model") + 1] == BASE_MODELS[target.base].gateway_model
+
+
+# --- the unattended driver ------------------------------------------------
+
+def test_the_driver_judges_only_what_the_table_marks(monkeypatch):
+    """The driver is the thing that will run for thirty hours with nobody
+    watching, so it is the thing that must not judge by accident."""
+    from gdanschin_runtime import run_sweep
+
+    judged = []
+    monkeypatch.setattr(run_sweep, "ensure_served", lambda t: True)
+    monkeypatch.setattr(run_sweep, "generate", lambda t: None)
+    monkeypatch.setattr(run_sweep, "judge_until",
+                        lambda t, e: judged.append(t.base))
+
+    for index, target in enumerate(oss_sweep.SWEEP, 1):
+        run_sweep.run(target, index, len(oss_sweep.SWEEP))
+
+    assert set(judged) == MEANT_TO_BE_JUDGED
+
+
+def test_a_model_that_cannot_be_served_is_skipped_not_fatal(monkeypatch):
+    """Thirty hours unattended: one model failing to start must not take the
+    other eight with it."""
+    from gdanschin_runtime import run_sweep
+
+    generated = []
+    monkeypatch.setattr(run_sweep, "ensure_served",
+                        lambda t: t.base != oss_sweep.SWEEP[0].base)
+    monkeypatch.setattr(run_sweep, "generate", lambda t: generated.append(t.base))
+    monkeypatch.setattr(run_sweep, "judge_until", lambda t, e: None)
+
+    assert run_sweep.main() == 0
+    assert oss_sweep.SWEEP[0].base not in generated
+    assert len(generated) == len(oss_sweep.SWEEP) - 1
+
+
+def test_subprocesses_get_the_runtime_environment():
+    """Without env.sh the model factory is unset and llm_monkeys builds a
+    plain LiteLlm with the raw served name, which litellm rejects for having
+    no provider - after the sweep has already started and looks fine."""
+    from gdanschin_runtime import run_sweep
+
+    wrapped = run_sweep.through_env(["python", "-m", "inference.cli"])
+    assert wrapped[0] == "bash"
+    assert "env.sh" in wrapped[2]
+    assert wrapped[-3:] == ["python", "-m", "inference.cli"]
+
+
+def test_generation_does_not_wait_for_judging(monkeypatch):
+    """Judging works the external gateway and generation our own cards, so
+    holding one for the other leaves the cards idle: on qwen3.5-4b at k=100
+    generation took five hours and judging seventeen."""
+    import threading
+    from gdanschin_runtime import run_sweep
+
+    order = []
+    release = threading.Event()
+
+    def slow_judge(target, generating):
+        order.append(f"judge-start:{target.base}")
+        release.wait(5)
+        order.append(f"judge-end:{target.base}")
+
+    monkeypatch.setattr(run_sweep, "ensure_served", lambda t: True)
+    monkeypatch.setattr(run_sweep, "generate",
+                        lambda t: order.append(f"generated:{t.base}"))
+    monkeypatch.setattr(run_sweep, "judge_until", slow_judge)
+
+    first = oss_sweep.SWEEP[0]
+    thread = run_sweep.run(first, 1, 1)
+    # Generation of the next model may start while this judge is still going.
+    assert f"generated:{first.base}" in order
+    assert f"judge-end:{first.base}" not in order
+    release.set()
+    thread.join()
+    assert f"judge-end:{first.base}" in order

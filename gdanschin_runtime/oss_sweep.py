@@ -48,7 +48,7 @@ SWEEP: tuple[Target, ...] = (
     Target("qwen3.6-35b-a3b-nr-local", "qwen3.6-35b-a3b", 50, True),
     Target("qwen3.5-9b-nr-local", "qwen3.5-9b", 100, True),
     Target("qwen3.5-4b-nr-local", "qwen3.5-4b", 100, True),
-    Target("gemma-4-e2b-local", "gemma-4-e2b", 100, True),
+    Target("gemma-4-e2b-local", "gemma-4-e2b", 100, False),
     Target("gpt-oss-20b-local", "gpt-oss-20b", 100, False),
     Target("qwen3.6-27b-nr-local", "qwen3.6-27b", 50, False),
     Target("qwen3.8-27b-nr-local", "qwen3.8-27b", 50, False),
