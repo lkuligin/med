@@ -60,6 +60,10 @@ class NoDriver(RuntimeError):
     """The GPU driver cannot be queried here."""
 
 
+class UnsupportedModel(RuntimeError):
+    """These weights exist, but this SGLang has no implementation for them."""
+
+
 @dataclass(frozen=True)
 class State:
     """What is running, written where the next invocation can find it."""
@@ -218,6 +222,8 @@ def start(name: str, settings: Settings | None = None,
         )
 
     model = SERVABLE[name]
+    if model.unsupported:
+        raise UnsupportedModel(f"{name} cannot be served here.\n{model.unsupported}")
     # Checked here rather than left to SGLang: missing weights otherwise
     # surface minutes later as a traceback in a log nobody is tailing yet.
     path = resolve_weights(model, settings)

@@ -31,7 +31,11 @@ def _up(args: argparse.Namespace) -> int:
     except host.CannotServe as error:
         print(error, file=sys.stderr)
         return 1
-    state = server.start(args.model, settings, tuple(args.sglang_args))
+    try:
+        state = server.start(args.model, settings, tuple(args.sglang_args))
+    except (server.UnsupportedModel, FileNotFoundError) as error:
+        print(error, file=sys.stderr)
+        return 1
     print(f"{state.model}: pid {state.pid}, {state.replicas} replicas on "
           f"cards {state.cards}, log {state.log}")
     print("waiting until it can generate ...")

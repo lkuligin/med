@@ -12,7 +12,7 @@ import pathlib
 
 import pytest
 
-from gpu_serving.catalog import SERVABLE, ServedModel
+from gpu_serving.catalog import CARD_MEMORY_GB, SERVABLE, ServedModel
 from gpu_serving import check as check_module
 from gpu_serving.check import LEAKED
 from gpu_serving.config import Settings
@@ -35,12 +35,28 @@ def settings(tmp_path) -> Settings:
     )
 
 
-def test_every_catalogue_entry_fits_one_card():
-    # The whole dp-over-tp argument rests on this; if a checkpoint grows past a
-    # card the entry needs a tp, and the test should say so rather than the
-    # server failing to allocate at three in the morning.
+def test_every_catalogue_entry_fits_the_cards_it_asks_for():
+    # The entry's tp is a claim about memory, and this is the arithmetic
+    # behind it: the static budget on one card has to cover that card's share
+    # of the weights and still leave a KV pool. Getting it wrong is an
+    # out-of-memory failure minutes into a load, at three in the morning.
     for model in SERVABLE.values():
-        assert model.weights_gb < 141, model.name
+        per_card = model.weights_gb / model.tp
+        budget = model.mem_fraction * CARD_MEMORY_GB
+        assert per_card < budget, f"{model.name}: {per_card:.0f} GB of {budget:.0f}"
+
+
+def test_a_model_this_sglang_cannot_run_is_refused_before_anything_launches(
+        settings, monkeypatch):
+    # GLM-5.3-Flash is on the box and has no implementation in SGLang 0.5.19.
+    # Finding that out should cost nothing: no weights read, no process, no
+    # card taken - and the message has to say what would make it work.
+    def fail(*args, **kwargs):
+        raise AssertionError("nothing should be launched")
+
+    monkeypatch.setattr(server_module.subprocess, "Popen", fail)
+    with pytest.raises(server_module.UnsupportedModel, match="model registry"):
+        server_module.start("glm-5.3-flash", settings)
 
 
 def test_replicas_use_every_card(settings):
