@@ -1388,6 +1388,19 @@ def verified_curve(base: str | None = None, judge: str | None = None,
             for i, k in enumerate(ks)}
 
 
+def _tick_stride(count: int) -> int:
+    """A stride that leaves the x axis readable however far k goes.
+
+    Labelling every other k is fine to twenty and unreadable at a hundred,
+    where fifty labels overlap into a smear. Picked from round numbers so the
+    ticks land somewhere a reader expects them.
+    """
+    for stride in (1, 2, 5, 10, 20, 25, 50):
+        if count / stride <= 14:
+            return stride
+    return 100
+
+
 def monkeys_curve(base: str | None = None, judge: str | None = None,
                   max_k: int | None = None, plot: bool = True,
                   majority_vote: bool = False,
@@ -1439,24 +1452,25 @@ def monkeys_curve(base: str | None = None, judge: str | None = None,
         def legend(name: str, at_last_k: float) -> str:
             return f"{name}: {_score(at_last_k * n / 100, n).strip()}"
 
+        # Markers shrink as the curve lengthens: at k=100 full-size ones
+        # merge into a band and hide the line they are meant to mark.
+        size = 5 if len(ks) <= 30 else 2.5
         ax.plot(ks, [curve[k] for k in ks], "o-", color="#1f77b4",
-                label=legend(STEP_3, curve[ks[-1]]))
+                markersize=size, label=legend(STEP_3, curve[ks[-1]]))
         if majority_vote:
             ax.plot(ks, [vote[k] for k in ks], "s-", color="#ff7f0e", alpha=0.9,
-                    label=legend(STEP_2_VOTE, vote[ks[-1]]))
+                    markersize=size, label=legend(STEP_2_VOTE, vote[ks[-1]]))
         ax.plot(ks, [single[k] for k in ks], "--", color="#8c564b", alpha=0.8,
                 label=legend(STEP_2_AVERAGE, single[ks[-1]]))
         if one_shot is not None:
             ax.axhline(one_shot.attempt0, ls="--", color="#888888",
                        label=legend(STEP_1, one_shot.attempt0))
-        reference = _reference(on_list, dataset, base)
-        if reference is not None:
-            ax.axhline(reference.attempt0, ls="-.", color="#d62728", alpha=0.8,
-                       label=legend(reference_label(), reference.attempt0))
         ax.set_xlabel("candidates considered (k)")
         ax.set_ylabel("% of questions answered correctly")
         ax.set_title(f"{base}, judged by {judge}  ({counted} questions)")
-        ax.set_xticks([k for k in ks if k % 2 == 0 or k == 1])
+        stride = _tick_stride(len(ks))
+        ax.set_xticks([k for k in ks
+                       if k % stride == 0 or k == ks[0] or k == ks[-1]])
         ax.grid(alpha=0.3)
         ax.legend(loc="lower right")
         plt.tight_layout()

@@ -184,3 +184,13 @@ def test_asking_for_the_split_falls_back_when_there_is_none(monkeypatch):
 
     assert inspect_run._step1_run("gemma", "medbullets",
                                   prefer_full=True) == "gemma"
+
+
+def test_the_x_axis_stays_readable_however_far_k_goes():
+    """Every other k is fine to twenty and a smear at a hundred, where fifty
+    labels overlap. Whatever the range, the axis should carry about a dozen
+    ticks on round numbers."""
+    for count in (10, 20, 50, 100, 200):
+        stride = inspect_run._tick_stride(count)
+        assert count / stride <= 14, count
+        assert stride in (1, 2, 5, 10, 20, 25, 50, 100), stride
