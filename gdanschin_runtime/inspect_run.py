@@ -563,7 +563,8 @@ def _line(label: str, hits: float, n: int, indent: str = "    ",
     print(f"{indent}• {label:<{LABEL}}: {_score(hits, n)}{note}")
 
 
-def _step1_run(base: str | None, dataset: str | None = None) -> str | None:
+def _step1_run(base: str | None, dataset: str | None = None,
+               prefer_full: bool = False) -> str | None:
     """The run that holds step 1 for a model, or None if none does.
 
     A run over the whole split is stored apart from a run over the difficult
@@ -574,7 +575,17 @@ def _step1_run(base: str | None, dataset: str | None = None) -> str | None:
     """
     if not base:
         return None
-    for name in (base, f"{base}-full"):
+    # Two callers want different runs, so the caller says which.
+    #
+    # A baseline for the pipeline wants the run of the same coverage: the
+    # difficult-list run under the model's own name, which answers exactly
+    # the questions steps 2 and 3 worked on.
+    #
+    # The WHOLE SPLIT block wants the split. Reading the difficult-list run
+    # there printed "WHOLE SPLIT, 483 questions" for a split of 1273 - the
+    # block's own heading contradicting its number.
+    order = (f"{base}-full", base) if prefer_full else (base, f"{base}-full")
+    for name in order:
         if OneShotResults(RESULTS_DIR, name, _ds(dataset)).read():
             return name
     return None
@@ -641,6 +652,7 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     dataset = _ds(dataset or getattr(results, "dataset", None))
     all_ids = [q["question_id"] for q in results]
     step1 = _step1_run(base, dataset)
+    whole_run = _step1_run(base, dataset, prefer_full=True)
 
     # Step 1 over everything it has answered, not only the questions step 2 has
     # reached. The per-section lines below are restricted to matching question
@@ -652,14 +664,14 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
         print("  WHOLE SPLIT not shown: this result does not carry a run name."
               "\n    load() attaches one; a plain list of records does not."
               " Pass base='<run>'.\n")
-    elif not step1:
+    elif not whole_run:
         print(f"  WHOLE SPLIT not shown: no step 1 run stored as {base!r} or "
               f"{base + '-full'!r} in {dataset}.\n    one_shot_runs"
               f"('{dataset}') lists the ones there are.\n")
     else:
-        records = OneShotResults(RESULTS_DIR, step1, dataset).read()
-        whole = _one_shot(step1, list(records), dataset)
-        named = "" if step1 == base else f"   (run {step1})"
+        records = OneShotResults(RESULTS_DIR, whole_run, dataset).read()
+        whole = _one_shot(whole_run, list(records), dataset)
+        named = "" if whole_run == base else f"   (run {whole_run})"
         print(f"  WHOLE SPLIT, {whole.covered} questions{named}")
         _line(STEP_1, whole.attempt0 * whole.covered / 100, whole.covered)
         print()
@@ -1018,24 +1030,18 @@ def _one_shot_stored(base: str, dataset: str | None = None) -> int:
     is enough.
     """
     dataset = _ds(dataset)
-    directory = OneShotResults(RESULTS_DIR, base, dataset).directory
-    if directory.is_dir():
-        return sum(1 for _ in directory.glob("question_*.json"))
 
-    # Fall back to the whole-split run of the same model. The questions the
-    # pipeline works on are a subset of the split, so a "-full" run has
-    # already answered every one of them - with more attempts, not fewer.
-    # Without this the row reads 0 for a model that has been answered
-    # thoroughly, which looks like a missing step rather than a name that
-    # does not match.
-    directory = OneShotResults(RESULTS_DIR, f"{base}-full", dataset).directory
-    if not directory.is_dir():
-        return 0
-    # Counted whole, against the split, because that is what this row is
-    # measured against - filtering to the list here would report the list's
-    # questions against the split's denominator, which is the 300/135 the
-    # comment below warns about.
-    return sum(1 for _ in directory.glob("question_*.json"))
+    # The whole-split run first, because this row is measured against the
+    # split. A model can have both: "<base>" from a run over the difficult
+    # list and "<base>-full" over everything. Reading the list run here
+    # reports its 483 answers against the split's 1273 - the one-against-the
+    # -other mistake the comment further down warns about - while the split
+    # run answers all 1273 and is what the row is asking about.
+    for name in (f"{base}-full", base):
+        directory = OneShotResults(RESULTS_DIR, name, dataset).directory
+        if directory.is_dir():
+            return sum(1 for _ in directory.glob("question_*.json"))
+    return 0
 
 
 def _progress_numbers(base: str | None, judge: str | None,
@@ -1055,8 +1061,10 @@ def _progress_numbers(base: str | None, judge: str | None,
     base = _resolve_run(base, dataset)
     judge = _resolve_judge(base, judge, dataset)
     answered = _one_shot_stored(base, dataset)
-    summary = (OneShotResults(RESULTS_DIR, base, dataset).read_summary()
-               or OneShotResults(RESULTS_DIR, f"{base}-full", dataset).read_summary()
+    # Same order as the count above, so the attempt count describes the run
+    # the row is reporting rather than the other one.
+    summary = (OneShotResults(RESULTS_DIR, f"{base}-full", dataset).read_summary()
+               or OneShotResults(RESULTS_DIR, base, dataset).read_summary()
                or {})
     attempts = summary.get("n_attempts") or 1
     candidates = CandidateResults(RESULTS_DIR, base, dataset)

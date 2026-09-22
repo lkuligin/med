@@ -159,3 +159,28 @@ def test_a_model_with_no_step_1_anywhere_resolves_to_nothing(monkeypatch):
                         lambda root, run, dataset: FakeOneShot({}))
 
     assert inspect_run._step1_run("gemma", "medbullets") is None
+
+
+def test_the_whole_split_block_asks_for_the_split(monkeypatch):
+    """The same model can have both runs, and the two callers want different
+    ones: a pipeline baseline wants the difficult-list run beside it, while
+    the block headed WHOLE SPLIT wants the split. Reading the first there
+    printed "WHOLE SPLIT, 483 questions" for a split of 1273."""
+    stored = {"gemma": {"1": answered(1)}, "gemma-full": {"2": answered(1)}}
+    monkeypatch.setattr(inspect_run, "OneShotResults",
+                        lambda root, run, dataset: FakeOneShot(
+                            stored.get(run, {})))
+
+    assert inspect_run._step1_run("gemma", "medbullets") == "gemma"
+    assert inspect_run._step1_run("gemma", "medbullets",
+                                  prefer_full=True) == "gemma-full"
+
+
+def test_asking_for_the_split_falls_back_when_there_is_none(monkeypatch):
+    stored = {"gemma": {"1": answered(1)}}
+    monkeypatch.setattr(inspect_run, "OneShotResults",
+                        lambda root, run, dataset: FakeOneShot(
+                            stored.get(run, {})))
+
+    assert inspect_run._step1_run("gemma", "medbullets",
+                                  prefer_full=True) == "gemma"
