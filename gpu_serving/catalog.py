@@ -51,11 +51,11 @@ class ServedModel:
     # thinking block unless told not to, which leaves content empty and makes
     # a verification that omits this test a configuration nobody runs.
     request_extras: dict[str, Any] = field(default_factory=dict)
-    # Set when this SGLang cannot serve the weights at all. The entry stays,
-    # because the topology and flags are worked out and the day the support
-    # lands only this line has to go; but a launch has to refuse now rather
-    # than fail deep inside a load nobody is watching.
-    unsupported: str = ""
+    # Which environment launches this, when the default one cannot. The only
+    # reason to name one is that the default SGLang has no implementation for
+    # the architecture at all - not a preference, an inability. Config knows
+    # the names; see Settings.venv_for.
+    venv: str = ""
     note: str = ""
 
     def replicas(self, cards: int) -> int:
@@ -253,6 +253,31 @@ SERVABLE.update({
              "A thinking model, hence the parser - whether the thinking can "
              "be turned off for judging is one of the things to find out.",
     ),
+    "qwen3.8-flash-next": ServedModel(
+        name="qwen3.8-flash-next",
+        weights="Qwen/Qwen3.8-Flash-Next-FP8",
+        served_name="Qwen/Qwen3.8-Flash-Next-FP8",
+        weights_gb=180,
+        tp=2,
+        context_length=32768,
+        sglang_args=(
+            "--trust-remote-code",
+            "--linear-attn-backend", "triton",
+            "--mamba-ssm-dtype", "float32",
+            "--reasoning-parser", "qwen3",
+        ),
+        request_extras={"chat_template_kwargs": {"enable_thinking": False}},
+        venv="next",
+        note="the best shape on this box for a judge: 180B of knowledge that "
+             "decodes like a 4B. 512 experts with 10 active and a 640-wide "
+             "shared one come to 2.6B active parameters in the MoE, and its "
+             "layers alternate linear attention with full every fourth, like "
+             "the 122B - so the same mamba flags, float32 from its own "
+             "config. tp=2 puts 90 GB on each card and runs two replicas. "
+             "Qwen4ExpForConditionalGeneration arrived in SGLang 0.5.20, "
+             "hence the other environment. The weights are not on the box: "
+             "180 GB to fetch, of 831 GB free.",
+    ),
     "glm-5.3-flash": ServedModel(
         name="glm-5.3-flash",
         weights="zai-org/GLM-5.3-Flash",
@@ -265,16 +290,14 @@ SERVABLE.update({
             "--trust-remote-code",
             "--reasoning-parser", "glm45",
         ),
-        unsupported="SGLang 0.5.19 has no Glm5NextForConditionalGeneration in "
-                    "its model registry - it carries Glm4Moe* and GlmMoeDsa*, "
-                    "and --trust-remote-code does not add an implementation. "
-                    "It needs a newer SGLang, in a venv of its own: upgrading "
-                    "the one the sweep switches models with would strand the "
-                    "sweep.",
-        note="306 GB leaves no choice but tp=4, which means a single replica "
+        venv="next",
+        note="Glm5NextForConditionalGeneration exists only from SGLang 0.5.20, "
+             "hence the other environment; 0.5.19 looks the architecture up in "
+             "its own registry and --trust-remote-code cannot add to it. "
+             "306 GB leaves no choice but tp=4, which means a single replica "
              "on all four cards - the worst topology there is for a judge "
              "making hundreds of thousands of short calls, whatever the "
-             "model's quality. Kept for the day SGLang supports it. Its "
+             "model's quality, so measure throughput before quality. Its "
              "bigger sibling GLM-5.2-FP8 is on the box too at 704 GB and is "
              "not an entry at all: four cards hold 564.",
     ),
@@ -317,8 +340,8 @@ def describe() -> None:
     """Print the catalogue."""
     for m in SERVABLE.values():
         print(f"  {m.name:18} {m.served_name:32} {m.weights_gb:>5.0f} GB  tp={m.tp}")
-        if m.unsupported:
-            print(f"    CANNOT BE SERVED: {m.unsupported}")
+        if m.venv:
+            print(f"    served from the {m.venv!r} environment")
         if m.note:
             print(f"    {m.note}")
 

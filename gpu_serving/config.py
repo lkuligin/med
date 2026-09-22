@@ -38,6 +38,13 @@ DEFAULTS: dict[str, str] = {
     # moves everything it needs. ".venv" at any depth is already excluded from
     # both git and the mirror, so the box builds its own against its own CUDA.
     "GPU_SERVING_VENV": ".venv",
+    # A second environment, holding an SGLang new enough for the models the
+    # default one has no implementation for. Kept beside rather than replacing
+    # it: the flags in the catalogue were verified against the older release,
+    # and the sweep switches models through this package for days at a time.
+    # Excluded from git and from the mirror by name, like .venv - a third one
+    # would have to be added to both lists or the next sync would delete it.
+    "GPU_SERVING_VENV_NEXT": ".venv-next",
     "GPU_SERVING_HOST": "127.0.0.1",
     "GPU_SERVING_PORT": "8000",
     # State and server logs. The sync runs with --delete, so this path is
@@ -74,6 +81,7 @@ class Settings:
     models_roots: tuple[Path, ...]
     hf_home: Path
     venv: Path
+    venv_next: Path
     host: str
     port: int
     run_dir: Path
@@ -87,6 +95,25 @@ class Settings:
     @property
     def python(self) -> Path:
         return self.venv / "bin" / "python"
+
+    def venv_for(self, name: str = "") -> Path:
+        """The environment a model launches from.
+
+        A catalogue entry names an environment only when the default one
+        cannot run it at all; everything else leaves the field empty and this
+        returns the default. Unknown names raise rather than falling back,
+        because a typo that silently launches the wrong SGLang would show up
+        as a model failing to load, which reads like a problem with the model.
+        """
+        if not name:
+            return self.venv
+        if name == "next":
+            return self.venv_next
+        raise ValueError(
+            f"no environment named {name!r}; known: '' (default), 'next'")
+
+    def python_for(self, name: str = "") -> Path:
+        return self.venv_for(name) / "bin" / "python"
 
     @property
     def base_url(self) -> str:
@@ -118,6 +145,7 @@ def load() -> Settings:
         models_roots=roots,
         hf_home=Path(values["GPU_SERVING_HF_HOME"]).expanduser(),
         venv=_path(values["GPU_SERVING_VENV"]),
+        venv_next=_path(values["GPU_SERVING_VENV_NEXT"]),
         host=values["GPU_SERVING_HOST"],
         port=int(values["GPU_SERVING_PORT"]),
         run_dir=_path(values["GPU_SERVING_RUN_DIR"]),

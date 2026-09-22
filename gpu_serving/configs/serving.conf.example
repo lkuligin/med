@@ -24,6 +24,10 @@ GPU_SERVING_HF_HOME="/mnt/data/model"
 # the pipeline's venv: SGLang pins its own torch/CUDA stack.
 GPU_SERVING_VENV=".venv"
 
+# The second one, holding an SGLang new enough for architectures the default
+# release has no implementation for. Built by: setup_env.sh --next
+GPU_SERVING_VENV_NEXT=".venv-next"
+
 # Where the server listens. Keep it on loopback: this is a shared machine, and
 # 0.0.0.0 would hand the model to anyone who can reach the box.
 GPU_SERVING_HOST="127.0.0.1"

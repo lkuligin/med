@@ -58,14 +58,41 @@ it lives beside this package so that moving the directory moves everything it
 needs. `.venv` at any depth is already ignored by git and by the mirror, so
 each machine builds its own.
 
+A few models need a second environment:
+
+```bash
+./gpu_serving/setup_env.sh --next
+```
+
+This builds `gpu_serving/.venv-next` (prompt `serving_next_env`) from
+`requirements-next.txt`, holding SGLang 0.5.20. It exists because 0.5.19 has no
+implementation at all for some architectures — `Qwen4ExpForConditionalGeneration`
+and `Glm5NextForConditionalGeneration` are absent from its model registry, and
+`--trust-remote-code` cannot add to a registry. It is built beside the default
+environment rather than over it: every catalogue entry's flags were verified
+against 0.5.19, and the sweep switches models through this package for days at
+a time, so an upgrade underneath it would strand it at the next switch.
+
+A catalogue entry names its environment (`venv="next"`); everything else leaves
+the field empty and launches from the default one. Both directories are listed
+by name in `.gitignore` and in the mirror's exclude list — `.venv/` is a literal
+name there and does not cover `.venv-next/`, so a third environment would have
+to be added to both or the next sync would delete it off the box.
+
 ## Design notes
 
-**Data parallel, not tensor parallel.** Every checkpoint we serve fits on one
-141 GB card, so the topology is `--tp-size 1 --dp-size 4`: four independent
-replicas behind one cache-aware router, one endpoint, no cross-GPU traffic. The
-`tp2`/`tp4` in the reference playground scripts come from Kubernetes overlays
-tuned for a latency SLA on other hardware. `tests/` asserts the assumption that
-every catalogue entry still fits one card.
+**Data parallel, not tensor parallel.** Every checkpoint up to Qwen3.8-27B fits
+on one 141 GB card, so the topology is `--tp-size 1 --dp-size 4`: four
+independent replicas, one endpoint, no cross-GPU traffic. The `tp2`/`tp4` in the
+reference playground scripts come from Kubernetes overlays tuned for a latency
+SLA on other hardware, not from what the weights need.
+
+The judge candidates are the exception, and for them `tp` is arithmetic rather
+than preference: 118 GB and 180 GB take two cards, 306 GB takes all four, and
+each card that joins a replica is one that stops being an independent one.
+`tests/` asserts the honest invariant — that a card's static memory budget
+covers its share of the weights, which is the OOM this would otherwise become
+minutes into a load.
 
 **Readiness is not liveness.** SGLang captures CUDA graphs during startup and
 is warm by the time it answers, so nothing warms it up here. But `/health`

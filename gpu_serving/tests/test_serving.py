@@ -28,6 +28,7 @@ def settings(tmp_path) -> Settings:
         models_roots=(tmp_path / "shared", tmp_path / "ours"),
         hf_home=tmp_path / "hf",
         venv=tmp_path / "venv",
+        venv_next=tmp_path / "venv-next",
         host="127.0.0.1",
         port=8000,
         run_dir=tmp_path / "run",
@@ -46,17 +47,42 @@ def test_every_catalogue_entry_fits_the_cards_it_asks_for():
         assert per_card < budget, f"{model.name}: {per_card:.0f} GB of {budget:.0f}"
 
 
-def test_a_model_this_sglang_cannot_run_is_refused_before_anything_launches(
+def test_a_model_whose_environment_is_missing_is_refused_before_launching(
         settings, monkeypatch):
-    # GLM-5.3-Flash is on the box and has no implementation in SGLang 0.5.19.
-    # Finding that out should cost nothing: no weights read, no process, no
-    # card taken - and the message has to say what would make it work.
+    # GLM-5.3-Flash needs the 0.5.20 environment. If it is not built, finding
+    # that out should cost nothing - no weights read, no process, no card
+    # taken - and the message has to carry the flag that builds it.
     def fail(*args, **kwargs):
         raise AssertionError("nothing should be launched")
 
     monkeypatch.setattr(server_module.subprocess, "Popen", fail)
-    with pytest.raises(server_module.UnsupportedModel, match="model registry"):
+    with pytest.raises(server_module.NoEnvironment, match="setup_env.sh --next"):
         server_module.start("glm-5.3-flash", settings)
+
+
+def test_a_model_launches_from_the_environment_it_names(settings):
+    # The two environments hold different SGLangs. Launching the newer models
+    # with the older interpreter is the failure this guards: the weights load
+    # for minutes before the architecture lookup fails.
+    argv = launch_argv(SERVABLE["qwen3.8-flash-next"], settings)
+    assert argv[0] == str(settings.venv_next / "bin" / "python")
+    assert launch_argv(SERVABLE["qwen3.5-9b"], settings)[0] == str(settings.python)
+
+
+def test_the_environment_on_PATH_is_the_one_being_launched(settings):
+    # Not only the interpreter: SGLang shells out to console scripts from its
+    # own venv, and a PATH pointing at the other one finds the wrong ninja -
+    # or none at all - minutes into a launch.
+    env = server_module.server_env(settings, SERVABLE["glm-5.3-flash"].venv)
+    assert env["VIRTUAL_ENV"] == str(settings.venv_next)
+    assert env["PATH"].startswith(str(settings.venv_next / "bin") + ":")
+
+
+def test_an_unknown_environment_is_not_quietly_the_default(settings):
+    # A typo in the catalogue would otherwise launch the wrong SGLang, and the
+    # model would look broken rather than the entry.
+    with pytest.raises(ValueError, match="no environment named"):
+        settings.venv_for("typo")
 
 
 def test_replicas_use_every_card(settings):

@@ -2,6 +2,7 @@
 # Build this package's environment.
 #
 #   ./gpu_serving/setup_env.sh          the serving environment, on the GPU box
+#   ./gpu_serving/setup_env.sh --next   the second one, SGLang 0.5.20
 #   ./gpu_serving/setup_env.sh --dev    just enough to run the tests, anywhere
 #
 # Safe to re-run. The venv lives beside this script and is excluded from both
@@ -9,7 +10,6 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VENV="${GPU_SERVING_VENV:-$HERE/.venv}"
 
 # Python 3.12, not 3.13, and this is not a preference. sglang pulls in
 # outlines-core, which ships no wheel for 3.13: uv then builds it from source,
@@ -20,12 +20,31 @@ VENV="${GPU_SERVING_VENV:-$HERE/.venv}"
 PYTHON_VERSION="${GPU_SERVING_PYTHON_VERSION:-3.12}"
 
 DEV=0
-[[ "${1:-}" == "--dev" ]] && DEV=1
+NEXT=0
+case "${1:-}" in
+    --dev) DEV=1 ;;
+    --next) NEXT=1 ;;
+    "") ;;
+    *) echo "unknown option ${1}; try --dev or --next" >&2; exit 2 ;;
+esac
 
 if (( DEV )); then
+    VENV="${GPU_SERVING_VENV:-$HERE/.venv}"
     REQUIREMENTS="$HERE/requirements-dev.txt"
     PROMPT="${GPU_SERVING_ENV_NAME:-serving_dev_env}"
+elif (( NEXT )); then
+    # Beside the default one, not over it. Both are excluded from git and from
+    # the mirror by name; a third would have to be added to those lists too,
+    # or the next sync would delete it off the box.
+    VENV="${GPU_SERVING_VENV_NEXT:-$HERE/.venv-next}"
+    REQUIREMENTS="$HERE/requirements-next.txt"
+    PROMPT="${GPU_SERVING_ENV_NAME:-serving_next_env}"
+    if ! command -v nvidia-smi >/dev/null; then
+        echo "no NVIDIA driver here, so the serving wheels cannot install." >&2
+        exit 1
+    fi
 else
+    VENV="${GPU_SERVING_VENV:-$HERE/.venv}"
     REQUIREMENTS="$HERE/requirements.txt"
     # Shown in the shell prompt once activated. The pipeline's venv calls
     # itself monkeys_env, and on the box both are a tmux window apart, so the

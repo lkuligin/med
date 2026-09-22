@@ -43,8 +43,12 @@ notebooks/
 # so a supplementary/ at any depth is covered.
 # ============================================================
 supplementary/
-# the remote builds its own against its own CUDA stack
+# the remote builds its own against its own CUDA stack. Both serving
+# environments are named here: the pattern is a literal directory name, so
+# .venv/ does not cover .venv-next/, and an unlisted one would be deleted off
+# the box on the next sync for the crime of not existing on this laptop.
 .venv/
+.venv-next/
 venv/
 env/
 

@@ -60,8 +60,8 @@ class NoDriver(RuntimeError):
     """The GPU driver cannot be queried here."""
 
 
-class UnsupportedModel(RuntimeError):
-    """These weights exist, but this SGLang has no implementation for them."""
+class NoEnvironment(RuntimeError):
+    """The environment this model launches from has not been built here."""
 
 
 @dataclass(frozen=True)
@@ -136,7 +136,7 @@ def launch_argv(model: ServedModel, settings: Settings,
     """
     replicas = model.replicas(len(settings.cards))
     return [
-        str(settings.python), "-m", LAUNCHER,
+        str(settings.python_for(model.venv)), "-m", LAUNCHER,
         "--model-path", resolve_weights(model, settings),
         "--served-model-name", model.served_name,
         "--tp-size", str(model.tp),
@@ -177,7 +177,7 @@ def cached_in_hf_home(model: ServedModel, settings: Settings) -> bool:
     return (settings.hf_home / "hub" / folder).is_dir()
 
 
-def server_env(settings: Settings) -> dict[str, str]:
+def server_env(settings: Settings, venv: str = "") -> dict[str, str]:
     """The environment the server runs in. Pure, so a test can read it.
 
     Running .venv/bin/python directly is not the same as activating the venv:
@@ -186,12 +186,18 @@ def server_env(settings: Settings) -> dict[str, str]:
     ninja while capturing CUDA graphs, which made this surface as
     FileNotFoundError several minutes into a launch that had already loaded the
     weights and started every replica.
+
+    `venv` is the catalogue entry's, so a model served from the second
+    environment gets that one's bin directory rather than the default's - the
+    two hold different SGLangs, and a PATH pointing at the wrong one is the
+    same failure as above with a more confusing cause.
     """
-    bin_dir = str(settings.venv / "bin")
+    chosen = settings.venv_for(venv)
+    bin_dir = str(chosen / "bin")
     return {
         **os.environ,
         "CUDA_VISIBLE_DEVICES": ",".join(str(c) for c in settings.cards),
-        "VIRTUAL_ENV": str(settings.venv),
+        "VIRTUAL_ENV": str(chosen),
         "PATH": f"{bin_dir}:{os.environ.get('PATH', '')}",
         # How a repo id passed as --model-path becomes weights. Offline on
         # purpose: serving is not the moment to discover that a download is
@@ -222,8 +228,16 @@ def start(name: str, settings: Settings | None = None,
         )
 
     model = SERVABLE[name]
-    if model.unsupported:
-        raise UnsupportedModel(f"{name} cannot be served here.\n{model.unsupported}")
+    # Checked before the weights, because building an environment is the
+    # longer errand of the two and there is no point reporting them one at a
+    # time. The flag is the one setup_env.sh takes, so the message is the fix.
+    python = settings.python_for(model.venv)
+    if not python.is_file():
+        raise NoEnvironment(
+            f"{name} is served from the {model.venv or 'default'} environment, "
+            f"which is not built at {python.parent.parent}.\n"
+            f"Build it: ./gpu_serving/setup_env.sh"
+            + (f" --{model.venv}" if model.venv else ""))
     # Checked here rather than left to SGLang: missing weights otherwise
     # surface minutes later as a traceback in a log nobody is tailing yet.
     path = resolve_weights(model, settings)
@@ -236,7 +250,7 @@ def start(name: str, settings: Settings | None = None,
 
     settings.run_dir.mkdir(parents=True, exist_ok=True)
     log = settings.run_dir / f"{name}.log"
-    env = server_env(settings)
+    env = server_env(settings, model.venv)
     argv = launch_argv(model, settings, extra)
     with log.open("ab") as handle:
         handle.write(f"\n=== {time.strftime('%F %T')} {' '.join(argv)}\n".encode())

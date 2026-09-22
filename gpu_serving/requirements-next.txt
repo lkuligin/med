@@ -1,0 +1,20 @@
+# The second serving environment: SGLang 0.5.20, built beside the 0.5.19 one
+# rather than replacing it.
+#
+# Two reasons it is a second environment and not an upgrade. The flags every
+# catalogue entry carries were verified against 0.5.19, and re-verifying nine
+# models to serve two more is work nobody asked for. And the sweep switches
+# models through this package for days at a time: upgrading underneath it
+# would strand it at the next switch, hours from anyone noticing.
+#
+# 0.5.20 is the release that adds the two model implementations 0.5.19 has no
+# entry for at all - python/sglang/srt/models/qwen4_exp.py registers
+# Qwen4ExpForConditionalGeneration and glm5_next.py registers
+# Glm5NextForConditionalGeneration. Without them --trust-remote-code does not
+# help: the architecture is looked up in SGLang's own registry, and code
+# shipped with the weights cannot add to it.
+sglang==0.5.20
+
+# Same reason as in requirements.txt: SGLang shells out to ninja while
+# capturing CUDA graphs and does not declare it.
+ninja

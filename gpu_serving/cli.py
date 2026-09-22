@@ -33,7 +33,7 @@ def _up(args: argparse.Namespace) -> int:
         return 1
     try:
         state = server.start(args.model, settings, tuple(args.sglang_args))
-    except (server.UnsupportedModel, FileNotFoundError) as error:
+    except (server.NoEnvironment, FileNotFoundError) as error:
         print(error, file=sys.stderr)
         return 1
     print(f"{state.model}: pid {state.pid}, {state.replicas} replicas on "

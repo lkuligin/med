@@ -30,6 +30,7 @@ REMOTE_OWNED = {
     "notebooks/": "notebooks filled with outputs there, not here",
     "gpu_serving/run/": "the serving state file and the log a live server writes",
     ".venv/": "environments built against the box's own CUDA",
+    ".venv-next/": "the second serving environment, SGLang 0.5.20",
 }
 
 
