@@ -356,3 +356,15 @@ def test_a_model_that_needs_a_request_setting_declares_it():
 def test_models_that_need_nothing_extra_say_nothing():
     for name in ("gemma-4-26b", "gemma-4-e2b", "gpt-oss-20b", "gpt-oss-120b"):
         assert SERVABLE[name].request_extras == {}, name
+
+
+def test_a_stop_waits_for_the_processes_not_only_the_cards(monkeypatch):
+    # A scheduler that has freed its memory can still hold the distributed
+    # port SGLang picked. The next server then dies with EADDRINUSE, which
+    # cost qwen3.5-9b forty minutes of retries and a skip.
+    import subprocess as sp
+
+    monkeypatch.setattr(server_module.subprocess, "run",
+                        lambda *a, **k: sp.CompletedProcess(a, 0, "4242\n", ""))
+    monkeypatch.setattr(server_module.os, "getpid", lambda: 1)
+    assert server_module.lingering() == [4242]

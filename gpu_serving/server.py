@@ -324,6 +324,22 @@ def cards_free(settings: Settings | None = None) -> dict[int, int]:
     return used
 
 
+def lingering() -> list[int]:
+    """Our SGLang processes that are still about after a stop.
+
+    Free cards are not the whole story. A scheduler that has released its
+    memory can still hold the distributed port SGLang picked, and the next
+    server then dies with EADDRINUSE - which cost a model forty minutes of
+    retries and a skip before this check existed. Waiting for the processes
+    to go covers the ports without having to guess which ones they were.
+    """
+    result = subprocess.run(["pgrep", "-u", str(os.getuid()), "-f", "sglang"],
+                            capture_output=True, text=True)
+    mine = os.getpid()
+    return [int(line) for line in result.stdout.split()
+            if line.isdigit() and int(line) != mine]
+
+
 def stop(settings: Settings | None = None, timeout: int = FREE_TIMEOUT) -> None:
     """Stop the server and do not return until the cards are actually free."""
     settings = settings or load()
@@ -354,19 +370,20 @@ def stop(settings: Settings | None = None, timeout: int = FREE_TIMEOUT) -> None:
     deadline = time.time() + timeout
     while time.time() < deadline:
         used = cards_free(settings)
-        if all(mb < 1024 for mb in used.values()):
+        if all(mb < 1024 for mb in used.values()) and not lingering():
             _state_path(settings).unlink(missing_ok=True)
             return
         time.sleep(POLL)
 
     raise TimeoutError(
-        f"cards still busy {timeout}s after stopping {state.model}: "
-        f"{cards_free(settings)}"
+        f"{timeout}s after stopping {state.model}: cards "
+        f"{cards_free(settings)}, lingering sglang processes {lingering()}"
     )
 
 
 __all__ = [
     "State", "start", "stop", "wait_ready", "read_state", "launch_argv",
     "log_tail", "cards_free", "NoDriver", "LAUNCHER", "server_env",
+    "lingering",
     "resolve_weights", "cached_in_hf_home",
 ]
