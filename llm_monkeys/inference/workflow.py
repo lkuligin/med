@@ -36,7 +36,7 @@ from inference.agent import (
     create_fact_generation_agent,
     create_runner,
 )
-from results_store import build_store
+from results_store import build_store, stored_results
 from inference.parser import (
     evaluate_prediction,
     extract_predicted_option,
@@ -446,7 +446,7 @@ class CandidateInferenceWorkflow:
                 return {}
 
             existing: dict[str, CandidateQuestionResult] = {}
-            for item in data["results"]:
+            for item in stored_results(data):
                 if isinstance(item, dict) and "question_id" in item:
                     q_res = CandidateQuestionResult.from_dict(item)
                     existing[str(q_res.question_id)] = q_res

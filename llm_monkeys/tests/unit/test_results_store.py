@@ -375,3 +375,19 @@ def test_sampling_leaves_out_what_a_config_does_not_have(tmp_path):
     found = results_store.sampling_of(Judgeish())
     assert found == {"model": "gemini-3.8-flash", "temperature": 1.0,
                      "max_tokens": 512}
+
+
+def test_a_bare_list_is_still_readable():
+    """Upstream's loaders documented accepting a bare list as well as the
+    wrapped payload. Reading only the wrapped one makes step 3 a TypeError and
+    every resume a silent full re-run, so the leniency has to survive."""
+    from results_store import stored_results
+
+    wrapped = {"summary": {}, "results": [{"question_id": "1"}]}
+    bare = [{"question_id": "1"}]
+
+    assert stored_results(wrapped) == [{"question_id": "1"}]
+    assert stored_results(bare) == [{"question_id": "1"}]
+    assert stored_results(None) == []
+    assert stored_results({"summary": {}}) == []
+    assert stored_results([{"question_id": "1"}, "junk"]) == [{"question_id": "1"}]

@@ -6,6 +6,8 @@ import logging
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+from results_store import stored_results
+
 logger = logging.getLogger(__name__)
 
 
@@ -107,11 +109,13 @@ def load_step2_results(
 
     start = max(0, offset)
     stop = start + limit if limit is not None and limit > 0 else None
-    selected = [
-        Step2QuestionData.from_dict(item)
-        for item in data["results"]
-        if isinstance(item, dict)
-    ][start:stop]
+    records = stored_results(data)
+    if not records and isinstance(data, dict) and "results" not in data:
+        raise ValueError(
+            f"No candidates in {store}: expected a 'results' list, "
+            f"found keys {list(data)}"
+        )
+    selected = [Step2QuestionData.from_dict(item) for item in records][start:stop]
 
     logger.info(
         "Loaded %d questions from %s (offset=%d, limit=%s)",

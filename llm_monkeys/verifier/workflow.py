@@ -17,7 +17,7 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
 from config import VerifierConfig
-from results_store import build_store
+from results_store import build_store, stored_results
 from inference._schemas import StepTokenUsage
 from inference.parser import evaluate_prediction
 from inference.workflow import _calculate_backoff, is_rate_limit_error
@@ -547,7 +547,7 @@ class VerifierWorkflow:
 
             loaded = {
                 item["question_id"]: QuestionVerificationResult.from_dict(item)
-                for item in data["results"]
+                for item in stored_results(data)
                 if isinstance(item, dict) and "question_id" in item
             }
             logger.info("Resumed %d verified questions from %s", len(loaded), self.store)

@@ -19,7 +19,7 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
 from config import InferenceConfig, resolve_model_name
-from results_store import build_store
+from results_store import build_store, stored_results
 from dataset import MedQAQuestion, format_one_shot_prompt, load_medqa_dataset
 
 from .agent import create_medqa_agent, create_runner
@@ -662,7 +662,7 @@ class OneShotInferenceWorkflow:
                 return {}
 
             existing_results: dict[str, InferenceItemResult] = {}
-            for item in data["results"]:
+            for item in stored_results(data):
                 if isinstance(item, dict) and "question_id" in item:
                     item_res = InferenceItemResult.from_dict(item)
                     existing_results[str(item_res.question_id)] = item_res

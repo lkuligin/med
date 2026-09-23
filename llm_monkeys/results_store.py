@@ -47,6 +47,25 @@ _NUMBER = re.compile(r"_(\d+)\.json$")
 _UNSAFE = re.compile(r"[^A-Za-z0-9._-]+")
 
 
+def stored_results(payload: Any) -> list[dict[str, Any]]:
+    """The result records inside a stored payload, whatever shape it has.
+
+    Every store here writes ``{"summary": ..., "results": [...]}``, but the
+    loaders this replaced also accepted a bare ``[...]`` and said so in their
+    docstrings. A file from an older run, another tool or a hand edit is still
+    a file someone points this at, so the leniency is kept: reading one shape
+    only turns step 3 into a TypeError, and every resume path into a silent
+    full re-run that costs a whole generation pass.
+    """
+    if isinstance(payload, list):
+        return [item for item in payload if isinstance(item, dict)]
+    if isinstance(payload, dict):
+        results = payload.get("results")
+        if isinstance(results, list):
+            return [item for item in results if isinstance(item, dict)]
+    return []
+
+
 class SingleFileResults:
     """A whole run in one JSON file: ``{"summary": ..., "results": [...]}``.
 
