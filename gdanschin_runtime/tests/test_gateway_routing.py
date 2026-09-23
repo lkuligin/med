@@ -47,6 +47,8 @@ EXPECTED_POOL = {
     "Qwen/Qwen3.5-9B": "local",
     "Qwen/Qwen3.6-27B-FP8": "local",
     "Qwen/Qwen3.6-35B-A3B-FP8": "local",
+    "Qwen/Qwen3.5-122B-A10B-FP8": "local",
+    "MiniMaxAI/MiniMax-M2.5": "local",
     "gemma-4-26b-internal": "internal",
     "gpt-oss-120b": "internal",
     "deepseek-v4-flash": "internal",
