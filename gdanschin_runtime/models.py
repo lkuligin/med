@@ -137,6 +137,23 @@ BASE_MODELS: dict[str, BaseModel] = {
              "against 3.8 rather than against the gateway.",
         extra_body={"chat_template_kwargs": {"enable_thinking": False}},
     ),
+    "qwen3.5-122b-a10b-local": served_locally(
+        "qwen3.5-122b-a10b-local", "Qwen/Qwen3.5-122B-A10B-FP8", max_tokens=4096,
+        note="the most knowledge that fits on our four cards: 122B total, 10B "
+             "active. Served tp2 over two cards with two replicas, so it "
+             "answers at roughly half the parallelism of the tp1 models - "
+             "fine for step 1, which is 308 or 1273 questions, not 48000 "
+             "candidates.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+    ),
+    "minimax-m2.5-local": served_locally(
+        "minimax-m2.5-local", "MiniMaxAI/MiniMax-M2.5", max_tokens=4096,
+        note="the only large non-Qwen candidate that runs on this SGLang, "
+             "which is the whole reason to spend cards on it: every model "
+             "above it in the agreement table is a Qwen, and a Qwen judging "
+             "Qwen candidates cannot tell us whether that agreement is "
+             "shared knowledge or shared family.",
+    ),
     "qwen3.6-35b-a3b-nr-local": served_locally(
         "qwen3.6-35b-a3b-nr-local", "Qwen/Qwen3.6-35B-A3B-FP8", max_tokens=4096,
         note="35 GB on disk but roughly 3B active per token - the lightest "
