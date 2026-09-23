@@ -8,7 +8,8 @@ works on. The workflow itself accepts a question list, which is what this uses:
 the comparison only means anything on the same questions, with the same model.
 
 --base names an entry in models.py and decides both the model called and the
-directory the answers go in, exactly as it does for step 2.
+directory the answers go in: <base>-difficult, since <base> itself is step 1
+over the whole split.
 """
 
 from __future__ import annotations
@@ -20,7 +21,7 @@ import sys
 from gdanschin_runtime import _bootstrap  # noqa: F401
 
 from gdanschin_runtime.local_endpoint import EndpointNotReady, require_ready
-from gdanschin_runtime.models import BASE_MODELS
+from gdanschin_runtime.models import BASE_MODELS, difficult_run
 
 from config import InferenceConfig, resolve_dataset_name
 from inference._dataset import load_difficult_questions
@@ -67,7 +68,7 @@ def build_config(args: argparse.Namespace) -> InferenceConfig:
         n_attempts=args.n_attempts,
         concurrency=args.concurrency,
         max_tokens=args.max_tokens or (model.max_tokens if model else 1024),
-        run_name=args.base,
+        run_name=difficult_run(args.base) if args.base else None,
         **({"dataset_name": resolve_dataset_name(args.dataset)} if args.dataset else {}),
         **({"model_name": model.gateway_model} if model else {}),
     )

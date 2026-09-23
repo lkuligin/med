@@ -234,6 +234,16 @@ JUDGE_MODELS: dict[str, JudgeModel] = {
 }
 
 
+def difficult_run(base: str) -> str:
+    """Where step 1 over only the difficult list is stored, for a model.
+
+    Step 1 proper covers the whole split and is stored under the model's own
+    name. A run over just the difficult questions is the same model at another
+    coverage, and one name for both would leave a directory nothing describes.
+    """
+    return f"{base}-difficult"
+
+
 def describe() -> None:
     """Print the registry."""
     print("base models (generate candidates):")
@@ -255,4 +265,5 @@ if __name__ == "__main__":
     describe()
 
 
-__all__ = ["BaseModel", "JudgeModel", "BASE_MODELS", "JUDGE_MODELS", "describe"]
+__all__ = ["BaseModel", "JudgeModel", "BASE_MODELS", "JUDGE_MODELS",
+           "difficult_run", "describe"]
