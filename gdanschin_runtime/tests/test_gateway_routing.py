@@ -53,6 +53,8 @@ EXPECTED_POOL = {
     "gemma-4-26b-internal": "internal",
     "gpt-oss-120b": "internal",
     "deepseek-v4-flash": "internal",
+    "glm5.3-flash": "internal",
+    "deepseek-v4-flash-think-high": "internal",
     "qwen3.6-27b-noreasoning": "internal",
     "qwen3.8-27b-noreasoning": "internal",
     "gemini-3.8-flash": "external",

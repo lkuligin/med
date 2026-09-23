@@ -94,6 +94,7 @@ ALIASES: dict[str, str] = {
     "qwen3-reranker-4b": "qwen3-reranker-4b/Qwen/Qwen3-Reranker-4B",
     "qwen3.6-27b-noreasoning": "qwen36-27b-fp8/Qwen/Qwen3.6-27B-FP8",
     "qwen3.8-27b-noreasoning": "qwen38-27b-fp8/Qwen/Qwen3.8-27B-FP8",
+    "deepseek-v4-flash-think-high": "deepseek-v4-flash-0731/deepseek-ai/DeepSeek-V4-Flash-0731",
 }
 
 # Extra request options some aliases carry. Qwen3 thinks by default and will
@@ -109,7 +110,14 @@ ALIASES: dict[str, str] = {
 # It is not a free speedup: without thinking the model produces about half as
 # many facts, so -noreasoning is a different configuration rather than a faster
 # version of the same one.
+#
+# DeepSeek-V4-Flash is the opposite case: served as-is it does not think at
+# all (no reasoning tokens in 720 answers), and the same switch turns it on,
+# under the key its own template reads.
 MODEL_EXTRAS: dict[str, dict] = {
+    "deepseek-v4-flash-think-high": {
+        "extra_body": {"chat_template_kwargs": {"thinking": True,
+                                                "reasoning_effort": "high"}}},
     "qwen3.6-27b-noreasoning": {
         "extra_body": {"chat_template_kwargs": {"enable_thinking": False}}},
     "qwen3.8-27b-noreasoning": {

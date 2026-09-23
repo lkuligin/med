@@ -97,6 +97,21 @@ BASE_MODELS: dict[str, BaseModel] = {
         gateway_model="deepseek-v4-flash",
         max_tokens=4096,
     ),
+    "deepseek-v4-flash-think-high": BaseModel(
+        name="deepseek-v4-flash-think-high",
+        gateway_model="deepseek-v4-flash-think-high",
+        max_tokens=8192,
+        note="thinking on at reasoning_effort=high; the gateway serves it "
+             "without thinking by default, which is deepseek-v4-flash. "
+             "Peaks at 2373 output tokens over a 15-answer smoke run.",
+    ),
+    "glm5.3-flash": BaseModel(
+        name="glm5.3-flash",
+        gateway_model="glm5.3-flash",
+        max_tokens=4096,
+        note="320B total, 18B active; the largest open-weight model the "
+             "internal gateway serves, and from none of our candidates' families",
+    ),
     "qwen3.6-27b-nr": BaseModel(
         name="qwen3.6-27b-nr",
         gateway_model="qwen3.6-27b-noreasoning",
