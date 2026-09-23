@@ -23,7 +23,8 @@ from gdanschin_runtime import _bootstrap  # noqa: F401
 from gdanschin_runtime.local_endpoint import EndpointNotReady, require_ready
 from gdanschin_runtime.models import BASE_MODELS, difficult_run
 
-from config import InferenceConfig, resolve_dataset_name
+from config import (MEDBULLETS_SPLIT, InferenceConfig,
+                    is_medbullets_dataset, resolve_dataset_name)
 from inference._dataset import load_difficult_questions
 from one_shot.workflow import OneShotInferenceWorkflow
 
@@ -41,6 +42,23 @@ def create_parser() -> argparse.ArgumentParser:
                         help="default: the budget models.py records for --base")
     parser.add_argument("--limit", type=int, default=None)
     return parser
+
+
+def _dataset_kwargs(dataset: str | None) -> dict:
+    """Name, config and split for a dataset argument.
+
+    Medbullets needs all three, not just the name: it has no config and its
+    split is op5_test, where the default is test. llm_monkeys' own CLI works
+    this out in build_config and this script did not, so a medbullets run
+    stopped on "Unknown split" before it reached a model.
+    """
+    if not dataset:
+        return {}
+    name = resolve_dataset_name(dataset)
+    if not is_medbullets_dataset(name):
+        return {"dataset_name": name}
+    return {"dataset_name": name, "dataset_config": None,
+            "dataset_split": MEDBULLETS_SPLIT}
 
 
 def build_config(args: argparse.Namespace) -> InferenceConfig:
@@ -69,7 +87,7 @@ def build_config(args: argparse.Namespace) -> InferenceConfig:
         concurrency=args.concurrency,
         max_tokens=args.max_tokens or (model.max_tokens if model else 1024),
         run_name=difficult_run(args.base) if args.base else None,
-        **({"dataset_name": resolve_dataset_name(args.dataset)} if args.dataset else {}),
+        **_dataset_kwargs(args.dataset),
         **({"model_name": model.gateway_model} if model else {}),
     )
 

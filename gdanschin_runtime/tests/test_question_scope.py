@@ -196,3 +196,17 @@ def test_the_x_axis_stays_readable_however_far_k_goes():
         stride = inspect_run._tick_stride(count)
         assert count / stride <= 14, count
         assert stride in (1, 2, 5, 10, 20, 25, 50, 100), stride
+
+
+def test_a_medbullets_run_gets_its_split_and_not_the_default():
+    """Medbullets has no config and its split is op5_test. Naming only the
+    dataset leaves the default "test", and the run stops on Unknown split
+    before it reaches a model - which is how this was found."""
+    from gdanschin_runtime.run_step1 import _dataset_kwargs
+
+    medbullets = _dataset_kwargs("medbullets")
+    assert medbullets["dataset_split"] == "op5_test"
+    assert medbullets["dataset_config"] is None
+    # MedQA keeps the defaults it has always had.
+    assert "dataset_split" not in _dataset_kwargs("med_qa")
+    assert _dataset_kwargs(None) == {}

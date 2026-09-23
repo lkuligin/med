@@ -100,21 +100,24 @@ BASE_MODELS: dict[str, BaseModel] = {
     "deepseek-v4-flash-think-high": BaseModel(
         name="deepseek-v4-flash-think-high",
         gateway_model="deepseek-v4-flash-think-high",
-        max_tokens=8192,
+        max_tokens=16384,
         note="thinking on at reasoning_effort=high; the gateway serves it "
-             "without thinking by default, which is deepseek-v4-flash. "
-             "Peaks at 2373 output tokens over a 15-answer smoke run.",
+             "without thinking by default, which is deepseek-v4-flash. At 8192, "
+             "4.4% of MedBullets answers stopped at the ceiling mid-reasoning "
+             "and were right 41% of the time against 86% for the rest, so the "
+             "whole step 1 was redone at 16384; the longest answer seen was "
+             "15627 tokens.",
     ),
     "glm5.3-flash": BaseModel(
         name="glm5.3-flash",
         gateway_model="glm5.3-flash",
-        max_tokens=16384,
+        max_tokens=32768,
         note="320B total, 18B active; the largest open-weight model the "
              "internal gateway serves, and from none of our candidates' families. "
-             "It thinks by default there (166-1465 reasoning tokens in a smoke "
-             "run), and thinking DeepSeek on the same gateway ran past 15000 "
-             "once, so the budget is sized for a long reasoning tail rather "
-             "than for the three answers measured.",
+             "It thinks by default there, with a long tail: at 16384, 5 of 308 "
+             "MedBullets answers hit the ceiling mid-reasoning and returned no "
+             "FINAL ANSWER, which the parser then guessed from the fragment. "
+             "The gateway caps its reasoning by max_tokens, as it does DeepSeek's.",
     ),
     "qwen3.6-27b-nr": BaseModel(
         name="qwen3.6-27b-nr",
@@ -185,6 +188,36 @@ BASE_MODELS: dict[str, BaseModel] = {
              "rather than different, and says what was measured.",
         extra_body={"chat_template_kwargs": {"enable_thinking": True,
                                              "reasoning_effort": "xhigh"}},
+    ),
+    # The same two, with the top_k their model card asks for. Everything
+    # else is held fixed - thinking on, temperature 0.8 - so the pair differs
+    # in one knob and the difference is readable. top_p is left alone on
+    # purpose: the card recommends 0.95 as well, and changing both at once
+    # would make a win unattributable.
+    "qwen3.6-35b-a3b-topk-local": served_locally(
+        "qwen3.6-35b-a3b-topk-local", "Qwen/Qwen3.6-35B-A3B-FP8", max_tokens=8192,
+        note="qwen3.6-35b-a3b-local plus top_k=20, the value Qwen's card gives "
+             "for thinking mode. Our runs set no top_k at all, which leaves "
+             "the tail unclipped.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": True},
+                    "top_k": 20},
+    ),
+    "qwen3.6-27b-topk-local": served_locally(
+        "qwen3.6-27b-topk-local", "Qwen/Qwen3.6-27B-FP8", max_tokens=8192,
+        note="qwen3.6-27b-local plus top_k=20, the card's value for thinking "
+             "mode.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": True},
+                    "top_k": 20},
+    ),
+    # The same weights and the same serving, with the budget the gateway
+    # entry already had. Our local run was capped at 4096 and 6.3% of its
+    # replies never reached their FINAL ANSWER line, while the gateway's -
+    # at 32768 - lost 1.0%. That is a plausible share of the two points
+    # between them, so it is worth separating the backend from the budget.
+    "glm-5.3-flash-32k-local": served_locally(
+        "glm-5.3-flash-32k-local", "zai-org/GLM-5.3-Flash", max_tokens=32768,
+        note="glm-5.3-flash-local with room to finish. Run over only the "
+             "questions the 4096 cap bit, since the rest cannot change.",
     ),
     "glm-5.3-flash-local": served_locally(
         "glm-5.3-flash-local", "zai-org/GLM-5.3-Flash", max_tokens=4096,
@@ -272,6 +305,17 @@ JUDGE_MODELS: dict[str, JudgeModel] = {
         max_tokens=512,
         temperature=1.0,
         note="the reference default; note temperature 1.0 makes verdicts non-deterministic",
+    ),
+    "deepseek-v4-flash-think-high": JudgeModel(
+        name="deepseek-v4-flash-think-high",
+        gateway_model="deepseek-v4-flash-think-high",
+        max_tokens=16384,
+        temperature=1.0,
+        note="open weights on the internal gateway, thinking at reasoning_effort="
+             "high; on step 1 it matched gemini-3.8-flash. Temperature follows "
+             "gemini's so the two judges' verdicts compare. The budget matches "
+             "the step 1 entry's: the gateway does cap its reasoning there, and "
+             "a verdict cut off mid-thought is no verdict.",
     ),
 }
 
