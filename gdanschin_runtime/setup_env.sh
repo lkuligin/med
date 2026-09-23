@@ -119,8 +119,8 @@ if [[ $VERIFY_ONLY -eq 0 ]]; then
         bootstrap_pip
     fi
 
-    # The GPU box routes pip through an internal mirror (see /etc/pip.conf,
-    # pypi-mirror.example.com) that answers in ~13s, against pip's 15s default timeout.
+    # The GPU box routes pip through an internal mirror (see /etc/pip.conf on
+    # the box) that answers in ~13s, against pip's 15s default timeout.
     # That is close enough to the edge to fail intermittently, so give it room
     # rather than bypassing the mirror the machine's admins configured.
     # Progress is printed by default. Installing ~100 packages through a mirror

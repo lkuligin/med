@@ -7,8 +7,8 @@
 # also protected from the mirror's --delete, so it stays put.
 #
 # There are TWO gateways with SEPARATE tokens. Same UI, same instructions, only
-# the URL differs - see
-# your deployment's docs
+# the URL differs. Both addresses are internal, so they are not written down
+# here: take them, and the token for each, from your own deployment's docs.
 #
 # Any LLM_GATEWAY_* environment variable overrides the value here.
 

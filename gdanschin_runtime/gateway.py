@@ -43,9 +43,9 @@ CONFIG = Path(__file__).resolve().parent / "configs" / "gateway.conf"
 # provider -> (litellm prefix, path under the gateway)
 #
 # External vendors only, and only ones verified to answer through the gateway.
-# The gateway also fronts internal providers (sglang, sglang-worker-slot*,
-# internal-llm, qwen3-reranker-4b); they are deliberately absent, because the plan is
-# to serve step 2 from our own SGLang on the GPU box rather than through here.
+# The gateway also fronts internal providers (sglang, sglang-worker-slot* and
+# others); they are deliberately absent, because the plan is to serve step 2
+# from our own SGLang on the GPU box rather than through here.
 # openrouter and yandex are left out too: their model endpoints did not answer
 # in a usable shape, and claiming support without a passing call would be worse
 # than a clear "unknown provider" error.
@@ -150,8 +150,9 @@ def _config_values() -> dict[str, str]:
 def load_gateway(kind: str = "external") -> tuple[str, str]:
     """Return (url, token) for the "external" or "internal" gateway.
 
-    They are separate deployments with separate tokens: gateway.example.com fronts
-    the vendors, gateway-internal.example.com the open-weight models.
+    They are separate deployments with separate tokens: the external one
+    fronts the vendors, the internal one the open-weight models. Both
+    addresses come from gateway.conf, which is neither committed nor mirrored.
     """
     if kind not in ("external", "internal"):
         raise ValueError(f"unknown gateway {kind!r}")

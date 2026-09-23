@@ -4,7 +4,7 @@
 #
 # Any GPU_SERVING_* environment variable overrides a value here.
 
-# Cards this box lets us use. On the GPU box cards 0-3 belong to other people.
+# Cards this box lets us use. On ours, cards 0-3 belong to other people.
 GPU_SERVING_CARDS="4,5,6,7"
 
 # Where flat <org>/<name> weight directories are looked for, in order, like
