@@ -108,9 +108,13 @@ BASE_MODELS: dict[str, BaseModel] = {
     "glm5.3-flash": BaseModel(
         name="glm5.3-flash",
         gateway_model="glm5.3-flash",
-        max_tokens=4096,
+        max_tokens=16384,
         note="320B total, 18B active; the largest open-weight model the "
-             "internal gateway serves, and from none of our candidates' families",
+             "internal gateway serves, and from none of our candidates' families. "
+             "It thinks by default there (166-1465 reasoning tokens in a smoke "
+             "run), and thinking DeepSeek on the same gateway ran past 15000 "
+             "once, so the budget is sized for a long reasoning tail rather "
+             "than for the three answers measured.",
     ),
     "qwen3.6-27b-nr": BaseModel(
         name="qwen3.6-27b-nr",
@@ -151,6 +155,44 @@ BASE_MODELS: dict[str, BaseModel] = {
              "too but has no run here, so the comparison that matters is "
              "against 3.8 rather than against the gateway.",
         extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+    ),
+    # The same three models the sweep measured with thinking off, measured
+    # again with it on. The top of the agreement table is held by models that
+    # think by default - GLM and DeepSeek - while every Qwen in it was run
+    # with enable_thinking false, so the comparison has a confound worth
+    # removing. Budgets are doubled to 8192: thinking is charged to the same
+    # allowance as the answer, and a reply that runs out before its FINAL
+    # ANSWER line scores as wrong however good the reasoning above it was.
+    "qwen3.6-35b-a3b-local": served_locally(
+        "qwen3.6-35b-a3b-local", "Qwen/Qwen3.6-35B-A3B-FP8", max_tokens=8192,
+        note="qwen3.6-35b-a3b-nr-local with thinking on. Its template takes "
+             "enable_thinking and nothing finer, so this is as far as its "
+             "reasoning goes.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": True}},
+    ),
+    "qwen3.6-27b-local": served_locally(
+        "qwen3.6-27b-local", "Qwen/Qwen3.6-27B-FP8", max_tokens=8192,
+        note="qwen3.6-27b-nr-local with thinking on; enable_thinking is the "
+             "only knob this generation exposes.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": True}},
+    ),
+    "qwen3.8-27b-local": served_locally(
+        "qwen3.8-27b-local", "Qwen/Qwen3.8-27B-FP8", max_tokens=8192,
+        note="qwen3.8-27b-nr-local with thinking on and the effort dial at its "
+             "maximum. 3.8 is the only one of the three whose template reads "
+             "reasoning_effort, which it accepts as low, medium or xhigh and "
+             "defaults to xhigh once thinking is enabled - so this is explicit "
+             "rather than different, and says what was measured.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": True,
+                                             "reasoning_effort": "xhigh"}},
+    ),
+    "glm-5.3-flash-local": served_locally(
+        "glm-5.3-flash-local", "zai-org/GLM-5.3-Flash", max_tokens=4096,
+        note="306 GB, so tp4 and a single replica on all four cards - the "
+             "slowest topology we can serve, which is fine for step 1 and "
+             "disqualifying for a judge. Here to answer whether the top of "
+             "the agreement table is Qwen because Qwen knows medicine or "
+             "because our judge and our candidates share a family.",
     ),
     "qwen3.5-122b-a10b-local": served_locally(
         "qwen3.5-122b-a10b-local", "Qwen/Qwen3.5-122B-A10B-FP8", max_tokens=4096,

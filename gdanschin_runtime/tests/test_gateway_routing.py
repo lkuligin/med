@@ -50,6 +50,7 @@ EXPECTED_POOL = {
     "Qwen/Qwen3.6-35B-A3B-FP8": "local",
     "Qwen/Qwen3.5-122B-A10B-FP8": "local",
     "MiniMaxAI/MiniMax-M2.5": "local",
+    "zai-org/GLM-5.3-Flash": "local",
     "gemma-4-26b-internal": "internal",
     "gpt-oss-120b": "internal",
     "deepseek-v4-flash": "internal",
@@ -203,3 +204,25 @@ def test_thinking_is_turned_off_where_the_name_says_so(model):
 def test_a_model_no_pool_claims_is_refused():
     with pytest.raises(ValueError, match="cannot tell which provider"):
         gateway.completion_kwargs("some-model-nobody-serves")
+
+
+def test_two_entries_on_one_served_name_are_told_apart_by_run_name():
+    """The same weights with thinking on and off are two entries, and both
+    answer to one served name. Keyed on the served name alone, whichever was
+    written last wins - and the run completes under the name that was asked
+    for while measuring the other configuration, which is the kind of mistake
+    that is only found by reading the numbers and disbelieving them."""
+    from types import SimpleNamespace
+
+    from gdanschin_runtime.adapters.factory import build
+
+    def thinking_of(run_name):
+        model = build(SimpleNamespace(
+            resolved_model_name="Qwen/Qwen3.6-35B-A3B-FP8", run_name=run_name))
+        extra = getattr(model, "_additional_args", None) or {}
+        return extra["extra_body"]["chat_template_kwargs"]["enable_thinking"]
+
+    assert thinking_of("qwen3.6-35b-a3b-local") is True
+    assert thinking_of("qwen3.6-35b-a3b-nr-local") is False
+    # No run name: the served-name lookup, as before.
+    assert thinking_of(None) in (True, False)

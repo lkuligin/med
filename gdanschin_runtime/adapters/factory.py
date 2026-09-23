@@ -68,9 +68,19 @@ def build(config: Any):
     """Build an ADK model for `config`, served by the gateway or by our GPUs."""
     from google.adk.models.lite_llm import LiteLlm
 
+    # The run name first, the served name second. Two entries can share one
+    # served name - the same weights with thinking on and off are two entries
+    # by design - and keying only on the served name lets whichever was
+    # written last silently win. That is not a crash: the run completes,
+    # under the name that was asked for, measuring the other configuration.
     name = config.resolved_model_name
-    local = LOCAL_MODELS.get(name) or LOCAL_MODELS.get(
-        name.removeprefix("vertex_ai/"))
+    run = getattr(config, "run_name", None)
+    local = (BASE_MODELS.get(run) if run else None)
+    if local is not None and not local.base_url:
+        local = None
+    if local is None:
+        local = LOCAL_MODELS.get(name) or LOCAL_MODELS.get(
+            name.removeprefix("vertex_ai/"))
     if local is not None:
         # SGLang speaks the OpenAI dialect, so litellm needs the openai prefix
         # and some key; the server does not check it. No token here on purpose:
