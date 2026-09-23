@@ -21,8 +21,11 @@ from dataclasses import dataclass
 # The two candidates. `serve` is the catalogue entry, `base` the registry
 # entry - they differ because one describes weights and flags, the other
 # describes what a run is called and how requests are shaped.
-JUDGES = (("glm-5.3-flash", "glm-5.3-flash-local"),
-          ("qwen3.6-35b-a3b", "qwen3.6-35b-a3b-local"))
+# serve, registry entry, and the budget this judge answers within. The
+# budgets differ because the models do: GLM writes long and is served at a
+# 32768 context, Qwen3.6-35B-A3B at 65536 but answers shorter.
+JUDGES = (("glm-5.3-flash", "glm-5.3-flash-local", 16384),
+          ("qwen3.6-35b-a3b", "qwen3.6-35b-a3b-local", 8192))
 
 # Generators to judge. Every one has candidates on both splits already; the
 # two gateway-era runs also carry candidates for the simple questions, which
@@ -49,16 +52,10 @@ ATTEMPTS = 3
 STEP1_TEMPERATURE = 0.8
 JUDGE_TEMPERATURE = 1.0
 
-# The judge's answer is one bit and a sentence, which is what made 512 look
-# generous in the reference code - and 6% of gemini's verdicts arrived with no
-# verdict in them, because thinking is charged to the same allowance. Both
-# candidates think: Qwen3.6-35B-A3B averaged 2434 output tokens on a step 1
-# question with thinking on and once reached 8192, GLM two thirds of its
-# output. So the judge gets what step 1 gets. Both are served with contexts
-# far above it - 32768 for GLM, 65536 for Qwen - and an unused allowance
-# costs nothing, while a short one costs verdicts we cannot tell from
-# rejections.
-JUDGE_MAX_TOKENS = 8192
+# Budgets live on each judge above, not here. The reference 512 left 6% of
+# gemini's verdicts with no verdict in them, because thinking is charged to
+# the same allowance - and both candidates think. An unused allowance costs
+# nothing; a short one costs verdicts we cannot tell from rejections.
 
 
 @dataclass(frozen=True)
@@ -72,6 +69,7 @@ class Step:
     dataset_dir: str    # where results live
     questions: str      # the frozen difficult list for this split
     judge: str = ""     # registry entry of the judge, for kind == "judge"
+    max_tokens: int = 0  # what this run answers within
 
     @property
     def label(self) -> str:
@@ -83,19 +81,20 @@ class Step:
 def plan() -> list[Step]:
     """Every run, in the order they are done."""
     steps: list[Step] = []
-    for serve, judge in JUDGES:
+    for serve, judge, budget in JUDGES:
         for dataset_dir, dataset, questions in DATASETS:
             steps.append(Step(serve, "step1", judge, dataset, dataset_dir,
-                              questions))
+                              questions, max_tokens=budget))
     # Generator first, then both judges, then both splits. This costs a
     # server switch per judge per generator rather than one per judge, and
     # that is the point: a generator finishes complete, judged both ways, so
     # a stop at any moment leaves whole comparisons rather than half of each.
     for generator in GENERATORS:
-        for serve, judge in JUDGES:
+        for serve, judge, budget in JUDGES:
             for dataset_dir, dataset, questions in DATASETS:
                 steps.append(Step(serve, "judge", generator, dataset,
-                                  dataset_dir, questions, judge=judge))
+                                  dataset_dir, questions, judge=judge,
+                                  max_tokens=budget))
     return steps
 
 
@@ -116,5 +115,4 @@ if __name__ == "__main__":
 
 
 __all__ = ["Step", "plan", "describe", "JUDGES", "GENERATORS", "DATASETS",
-           "ATTEMPTS", "STEP1_TEMPERATURE", "JUDGE_TEMPERATURE",
-           "JUDGE_MAX_TOKENS"]
+           "ATTEMPTS", "STEP1_TEMPERATURE", "JUDGE_TEMPERATURE"]
