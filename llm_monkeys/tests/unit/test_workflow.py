@@ -8,6 +8,7 @@ from google.genai import types
 
 from config import DEFAULT_MODEL, resolve_model_name
 from dataset import MedQAQuestion
+from results_store import OneShotResults
 from one_shot.workflow import (
     AttemptResult,
     InferenceItemResult,
@@ -77,16 +78,18 @@ def make_result_dict(
     }
 
 
+def store_for(tmp_path: Path) -> OneShotResults:
+    """The store a workflow built by workflow_factory writes to."""
+    return OneShotResults(tmp_path / "results", "test-run")
+
+
 def write_results_file(
-    filepath: Path,
+    store: OneShotResults,
     results: list[dict[str, Any]],
     summary: dict[str, Any] | None = None,
 ) -> None:
-    """Helper to dump pre-existing results to JSON file."""
-    data: dict[str, Any] = {"results": results}
-    if summary:
-        data["summary"] = summary
-    filepath.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    """Helper to seed a store with pre-existing results."""
+    store.save({"summary": summary, "results": results})
 
 
 # ---------------------------------------------------------------------------
@@ -98,9 +101,8 @@ def write_results_file(
 async def test_workflow_run_with_mocked_runner(
     sample_questions, tmp_path, workflow_factory
 ):
-    output_file = tmp_path / "test_results.json"
+    store = store_for(tmp_path)
     workflow = workflow_factory(
-        output_filepath=str(output_file),
         concurrency=2,
         n_attempts=3,
     )
@@ -170,8 +172,8 @@ async def test_workflow_run_with_mocked_runner(
     assert results[1].total_attempts == 3
     assert len(results[1].attempts) == 3
 
-    assert output_file.exists()
-    saved_data = json.loads(output_file.read_text(encoding="utf-8"))
+    assert store.load() is not None
+    saved_data = store.load()
     assert "summary" in saved_data
     assert "results" in saved_data
     assert saved_data["summary"]["total_questions"] == 2
@@ -282,7 +284,7 @@ async def test_workflow_empty_questions(workflow_factory):
 
 @pytest.mark.asyncio
 async def test_workflow_dumps_periodically_every_n_examples(tmp_path, workflow_factory):
-    output_file = tmp_path / "periodic_results.json"
+    store = store_for(tmp_path)
     questions = [
         MedQAQuestion(
             question_id=f"q_{i}",
@@ -295,20 +297,19 @@ async def test_workflow_dumps_periodically_every_n_examples(tmp_path, workflow_f
     ]
 
     workflow = workflow_factory(
-        output_filepath=str(output_file),
         concurrency=1,
         n_attempts=2,
         save_every_n=2,  # dump every 2 examples
     )
 
     save_counts = []
-    original_save = workflow._save_to_json
+    original_save = workflow._save_to_store
 
-    def tracked_save(filepath, summary, results):
+    def tracked_save(summary, results):
         save_counts.append(len(results))
-        return original_save(filepath, summary, results)
+        return original_save(summary, results)
 
-    workflow._save_to_json = tracked_save
+    workflow._save_to_store = tracked_save
 
     async def mock_invoke(prompt_text, session_id, user_id="med_eval_user"):
         return "Answer: A\nExplanation: test", None
@@ -321,7 +322,7 @@ async def test_workflow_dumps_periodically_every_n_examples(tmp_path, workflow_f
     # For 5 items with save_every_n=2:
     # Intermediate saves at count 2 and 4, plus final save at count 5
     assert save_counts == [2, 4, 5]
-    saved_data = json.loads(output_file.read_text(encoding="utf-8"))
+    saved_data = store.load()
     assert len(saved_data["results"]) == 5
     for r in saved_data["results"]:
         assert len(r["attempts"]) == 2
@@ -435,7 +436,7 @@ async def test_workflow_retries_configurable_k(single_question, workflow_factory
 async def test_workflow_skips_already_processed_questions(
     sample_questions, tmp_path, workflow_factory
 ):
-    output_file = tmp_path / "resume_results.json"
+    store = store_for(tmp_path)
     cached_q0 = make_result_dict(
         "0",
         predicted_option="A",
@@ -461,10 +462,9 @@ async def test_workflow_skips_already_processed_questions(
         "total_candidate_tokens": 20,
         "created_at": "2026-09-02T12:00:00Z",
     }
-    write_results_file(output_file, [cached_q0], summary=summary_data)
+    write_results_file(store, [cached_q0], summary=summary_data)
 
     workflow = workflow_factory(
-        output_filepath=str(output_file),
         concurrency=2,
         n_attempts=3,
     )
@@ -498,7 +498,7 @@ async def test_workflow_skips_already_processed_questions(
     assert results[1].raw_response == "Answer: B\nExplanation: fresh run"
     assert len(results[1].attempts) == 3
 
-    saved = json.loads(output_file.read_text(encoding="utf-8"))
+    saved = store.load()
     assert len(saved["results"]) == 2
     assert saved["results"][0]["question_id"] == "0"
     assert len(saved["results"][0]["attempts"]) == 3
@@ -510,9 +510,9 @@ async def test_workflow_skips_already_processed_questions(
 async def test_workflow_skips_all_when_all_processed(
     sample_questions, tmp_path, workflow_factory
 ):
-    output_file = tmp_path / "all_processed.json"
+    store = store_for(tmp_path)
     write_results_file(
-        output_file,
+        store,
         [
             make_result_dict("0", predicted_option="A", raw_response="Cached 0"),
             make_result_dict(
@@ -524,7 +524,7 @@ async def test_workflow_skips_all_when_all_processed(
         ],
     )
 
-    workflow = workflow_factory(output_filepath=str(output_file), n_attempts=3)
+    workflow = workflow_factory(n_attempts=3)
     mock_invoke = AsyncMock()
     workflow._invoke_agent_with_retry = mock_invoke
 
@@ -542,9 +542,9 @@ async def test_workflow_reprocesses_failed_questions_from_existing_file(
     sample_questions, tmp_path, workflow_factory
 ):
     """Test that failed questions in existing file are re-processed while successful ones are skipped."""
-    output_file = tmp_path / "partially_failed.json"
+    store = store_for(tmp_path)
     write_results_file(
-        output_file,
+        store,
         [
             make_result_dict(
                 "0",
@@ -573,7 +573,6 @@ async def test_workflow_reprocesses_failed_questions_from_existing_file(
     )
 
     workflow = workflow_factory(
-        output_filepath=str(output_file),
         concurrency=2,
         n_attempts=3,
     )
@@ -618,7 +617,7 @@ async def test_workflow_reprocesses_failed_questions_from_existing_file(
     assert results[1].is_all_correct is True
     assert "successfully re-processed" in results[1].raw_response
 
-    saved_data = json.loads(output_file.read_text(encoding="utf-8"))
+    saved_data = store.load()
     assert saved_data["summary"]["completed"] == 2
     assert saved_data["summary"]["failed"] == 0
     assert saved_data["results"][1]["error"] is None
@@ -630,9 +629,9 @@ async def test_workflow_reprocesses_attempt_level_error(
     sample_questions, tmp_path, workflow_factory
 ):
     """Test that question is re-processed if any attempt has an error even if top-level error is None."""
-    output_file = tmp_path / "attempt_error.json"
+    store = store_for(tmp_path)
     write_results_file(
-        output_file,
+        store,
         [
             make_result_dict(
                 "0",
@@ -643,7 +642,7 @@ async def test_workflow_reprocesses_attempt_level_error(
         ],
     )
 
-    workflow = workflow_factory(output_filepath=str(output_file), n_attempts=3)
+    workflow = workflow_factory(n_attempts=3)
     call_count = 0
 
     async def mock_invoke(prompt_text, session_id, user_id="med_eval_user"):
@@ -667,13 +666,13 @@ async def test_workflow_reprocesses_incomplete_attempts(
     sample_questions, tmp_path, workflow_factory
 ):
     """Test that a question with fewer attempts than configured n_attempts is re-processed."""
-    output_file = tmp_path / "incomplete.json"
+    store = store_for(tmp_path)
     write_results_file(
-        output_file,
+        store,
         [make_result_dict("0", predicted_option="A", n_attempts=1)],
     )
 
-    workflow = workflow_factory(output_filepath=str(output_file), n_attempts=3)
+    workflow = workflow_factory(n_attempts=3)
     call_count = 0
 
     async def mock_invoke(prompt_text, session_id, user_id="med_eval_user"):
@@ -695,11 +694,12 @@ async def test_workflow_reprocesses_incomplete_attempts(
 async def test_workflow_handles_corrupted_destination_file(
     sample_questions, tmp_path, workflow_factory
 ):
-    output_file = tmp_path / "corrupted.json"
-    output_file.write_text("{corrupted json content...", encoding="utf-8")
+    store = store_for(tmp_path)
+    store.question_path("0").parent.mkdir(parents=True, exist_ok=True)
+    store.question_path("0").write_text("{corrupted json content...", encoding="utf-8")
 
     workflow = workflow_factory(
-        output_filepath=str(output_file), concurrency=2, n_attempts=1
+        concurrency=2, n_attempts=1
     )
     call_count = 0
 
@@ -716,7 +716,7 @@ async def test_workflow_handles_corrupted_destination_file(
     assert call_count == 2
     assert summary.total_questions == 2
     assert len(results) == 2
-    assert output_file.exists()
+    assert store.load() is not None
 
 
 @pytest.mark.parametrize("thoughts_tokens", [None, 35])
@@ -1003,10 +1003,9 @@ async def test_workflow_run_models_with_thoughts(
 ):
     """Test running workflow with different models that produce reasoning tokens."""
     safe_name = model_name.replace("/", "_")
-    output_file = tmp_path / f"{safe_name}_results.json"
+    store = store_for(tmp_path)
     workflow = workflow_factory(
         model_name=model_name,
-        output_filepath=str(output_file),
         concurrency=2,
         n_attempts=2,
     )
@@ -1044,7 +1043,7 @@ async def test_workflow_run_models_with_thoughts(
     assert results[1].predicted_option == "B"
     assert results[1].thoughts_tokens == 2 * thoughts_per_attempt
 
-    saved_data = json.loads(output_file.read_text(encoding="utf-8"))
+    saved_data = store.load()
     assert saved_data["summary"]["model"] == model_name
     assert saved_data["summary"]["total_thoughts_tokens"] == expected_total_thoughts
 

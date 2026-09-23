@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from google.adk.agents import Agent
-from google.adk.models.lite_llm import LiteLlm
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
-from config import InferenceConfig, register_litellm_model_pricing, resolve_model_name
+from config import InferenceConfig, register_litellm_model_pricing
+from model_factory import build_model
 
 
 def create_medqa_agent(config: InferenceConfig | None = None) -> Agent:
@@ -21,10 +21,9 @@ def create_medqa_agent(config: InferenceConfig | None = None) -> Agent:
         litellm.num_retries = getattr(cfg, "litellm_num_retries", 3)
     except Exception:
         pass
-    model_identifier = resolve_model_name(cfg.model_name)
     return Agent(
         name="medqa_evaluator",
-        model=LiteLlm(model=model_identifier),
+        model=build_model(cfg),
         instruction=cfg.system_instruction,
         generate_content_config=types.GenerateContentConfig(
             temperature=cfg.temperature,

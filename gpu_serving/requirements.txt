@@ -1,0 +1,20 @@
+# The serving environment, kept apart from the pipeline's venv because SGLang
+# pins its own torch/CUDA stack and the two cannot share one interpreter.
+#
+# 0.5.19 is not a free choice: it is the first release that loads Qwen3.8's
+# FP8 lm_head, and it is the version the reference playground scripts on this
+# box were verified against.
+sglang==0.5.19
+
+# No sglang-router. It would put a prefix-cache-aware router in front of the
+# replicas, which is the better dispatch for repeated sampling, but its latest
+# release (0.3.2, the only one newer than our sglang) imports
+# sglang.srt.utils.is_port_available, which 0.5.19 no longer exports, so it
+# raises ImportError before serving anything. SGLang's own --dp-size does the
+# same job with simpler dispatch. Revisit when the router catches up.
+
+# SGLang JIT-compiles kernels while capturing CUDA graphs, and the compiler it
+# shells out to is ninja. It is not declared by sglang itself, so without this
+# every launch loads the weights, starts all replicas, and only then dies with
+# FileNotFoundError: 'ninja' - several minutes in, at the last step.
+ninja

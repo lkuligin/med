@@ -8,6 +8,18 @@ from dataset import MedQAQuestion
 from one_shot.workflow import OneShotInferenceWorkflow
 
 
+@pytest.fixture(autouse=True)
+def directory_per_run(monkeypatch):
+    """Run the suite against the directory-per-run layout.
+
+    These tests read back what a workflow wrote, so they have to know where it
+    went; they were written against this layout and ask for it rather than
+    depending on whichever one happens to be the default. The default, and the
+    hook that chooses between them, are covered in test_results_store.py.
+    """
+    monkeypatch.setenv("MEDQA_RESULTS_STORE", "results_store:per_record")
+
+
 @pytest.fixture
 def sample_questions() -> list[MedQAQuestion]:
     """Returns two standard sample questions for multi-question workflow tests."""
@@ -49,7 +61,7 @@ def single_question() -> MedQAQuestion:
 
 
 @pytest.fixture
-def workflow_factory():
+def workflow_factory(tmp_path):
     """Factory fixture to create OneShotInferenceWorkflow with common mocks pre-configured."""
 
     def _create(
@@ -60,7 +72,10 @@ def workflow_factory():
         **config_kwargs: Any,
     ) -> OneShotInferenceWorkflow:
         if config is None:
-            config_kwargs.setdefault("output_filepath", "")
+            # Results always go somewhere now, so keep them inside the test's
+            # own directory rather than the working directory.
+            config_kwargs.setdefault("results_dir", str(tmp_path / "results"))
+            config_kwargs.setdefault("run_name", "test-run")
             config = InferenceConfig(**config_kwargs)
         if session_service is None:
             session_service = MagicMock()

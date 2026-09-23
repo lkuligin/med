@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import logging
 
+from results_store import DEFAULT_RESULTS_DIR
 from config import DEFAULT_MODEL
 
 
@@ -62,6 +63,18 @@ def add_common_arguments(
     )
     parser.add_argument(
         "--output", default=default_output, help="Output JSON file path"
+    )
+    parser.add_argument(
+        "--results-dir",
+        default=DEFAULT_RESULTS_DIR,
+        help=f"Directory results are stored under, for a store that keeps one "
+        f"(default: {DEFAULT_RESULTS_DIR})",
+    )
+    parser.add_argument(
+        "--run-name",
+        default=None,
+        help="Name of the directory this run's results go in, for a store that "
+        "keeps one (default: the model name)",
     )
     if include_attempts:
         parser.add_argument(

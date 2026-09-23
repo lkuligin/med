@@ -7,6 +7,7 @@ import asyncio
 import sys
 
 from cli_utils import add_common_arguments, setup_logging
+from results_store import DEFAULT_CANDIDATES_FILE, DEFAULT_VERIFIED_FILE
 from config import DEFAULT_VERIFIER_MODEL, VerifierConfig
 from verifier._schemas import VerifierWorkflowSummary
 from verifier.workflow import VerifierWorkflow
@@ -29,7 +30,7 @@ def create_parser() -> argparse.ArgumentParser:
     add_common_arguments(
         parser,
         default_model=DEFAULT_VERIFIER_MODEL,
-        default_output="results_step3_verified.json",
+        default_output=DEFAULT_VERIFIED_FILE,
         default_temperature=1.0,
         default_concurrency=4,
         include_attempts=False,
@@ -37,8 +38,16 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--input",
         "-i",
-        default="results_step2_gemma4_candidates.json",
-        help="Path to Step 2 JSON candidate output file (default: results_step2_gemma4_candidates.json)",
+        default=DEFAULT_CANDIDATES_FILE,
+        help=f"Path to the Step 2 candidate file the default store reads "
+        f"(default: {DEFAULT_CANDIDATES_FILE})",
+    )
+    parser.add_argument(
+        "--judge-name",
+        default=None,
+        help="Name this judge's verdicts are stored under, inside the run being "
+        "verified (default: the model name). Naming it keeps two settings of "
+        "one judge apart.",
     )
     parser.add_argument(
         "--max-candidates-per-question",
@@ -79,15 +88,15 @@ def build_config(args: argparse.Namespace) -> VerifierConfig:
     return VerifierConfig.from_dict(params)
 
 
-def format_summary(summary: VerifierWorkflowSummary, output_path: str = "") -> str:
+def format_summary(summary: VerifierWorkflowSummary, destination: str = "") -> str:
     """Format verification workflow summary for console output."""
-    out_path = output_path or summary.output_filepath
     return (
         f"\n{'=' * 70}\n"
         f"FACT VERIFICATION SUMMARY (Step 3 - LLM-as-a-Judge Rejection Sampling):\n"
         f"Model: {summary.model}\n"
-        f"Input File: {summary.input_filepath}\n"
-        f"Output File: {out_path}\n"
+        f"Run Verified: {summary.run_name}\n"
+        f"Judge: {summary.judge_name}\n"
+        f"Results saved to: {destination}\n"
         f"Total Questions Evaluated: {summary.total_questions}\n"
         f"Completed Questions: {summary.completed_questions}\n"
         f"Failed Questions: {summary.failed_questions}\n"
@@ -123,7 +132,7 @@ async def async_main(args: argparse.Namespace | None = None) -> int:
     workflow = VerifierWorkflow(config=config)
     summary, _ = await workflow.run()
 
-    print(format_summary(summary, config.output_filepath))
+    print(format_summary(summary, str(workflow.store)))
     return 0 if summary.failed_questions == 0 else 1
 
 

@@ -21,6 +21,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Sequence
 
+from results_store import OneShotResults, VerificationResults, split_run_path
+
 # Set headless matplotlib backend before importing pyplot
 import matplotlib
 
@@ -116,20 +118,56 @@ class Step1ComparisonResult:
         return asdict(self)
 
 
+def _verification_store(
+    run_dir: str | Path, judge_name: str | None = None
+) -> VerificationResults:
+    """Build the store for one judge of a stored run.
+
+    Raises:
+        FileNotFoundError: If the run has no verdicts at all.
+        ValueError: If it holds several judges and none was named, since
+            picking one silently would put an unlabelled curve on the plot.
+    """
+    results_dir, run_name, dataset = split_run_path(run_dir)
+    if judge_name:
+        return VerificationResults(results_dir, run_name, judge_name, dataset)
+
+    found = VerificationResults(results_dir, run_name, "", dataset).judges()
+    if not found:
+        raise FileNotFoundError(f"No verdicts stored in: {run_dir}")
+    if len(found) > 1:
+        raise ValueError(
+            f"{run_dir} holds verdicts by {', '.join(found)}; "
+            "name one with --judge-name"
+        )
+    return VerificationResults(results_dir, run_name, found[0], dataset)
+
+
 def load_verifier_results(
     file_path: str | Path,
+    judge_name: str | None = None,
 ) -> tuple[dict[str, Any] | None, list[QuestionVerificationResult]]:
-    """Load verifier output JSON file.
+    """Load verifier output: a stored run directory, or a JSON file.
+
+    Given the directory of a step 2 run, the verdicts of `judge_name` are read
+    from it; when the run holds exactly one judge, naming it is unnecessary.
 
     Supports both `{ "summary": ..., "results": [ ... ] }` structure and a bare list `[ ... ]`.
     Returns a tuple of (summary_dict_or_None, list_of_question_verification_results).
     """
     path = Path(file_path)
-    if not path.is_file():
+    if path.is_dir():
+        store = _verification_store(path, judge_name)
+        data = store.load()
+        if data is None:
+            raise FileNotFoundError(
+                f"No verdicts by '{store.judge_name}' stored in: {path}"
+            )
+    elif not path.is_file():
         raise FileNotFoundError(f"Verifier results file not found: {path}")
-
-    with path.open(mode="r", encoding="utf-8") as f:
-        data = json.load(f)
+    else:
+        with path.open(mode="r", encoding="utf-8") as f:
+            data = json.load(f)
 
     summary: dict[str, Any] | None = None
     raw_results: list[dict[str, Any]] = []
@@ -880,11 +918,15 @@ def load_step1_single_shot_results(
     }
     """
     path = Path(step1_path)
-    if not path.is_file():
+    if path.is_dir():
+        data = OneShotResults(*split_run_path(path)).load()
+        if data is None:
+            raise FileNotFoundError(f"No Step 1 results stored in: {path}")
+    elif not path.is_file():
         raise FileNotFoundError(f"Single-shot results file not found: {path}")
-
-    with path.open(mode="r", encoding="utf-8") as f:
-        data = json.load(f)
+    else:
+        with path.open(mode="r", encoding="utf-8") as f:
+            data = json.load(f)
 
     if isinstance(data, dict):
         items = data.get("results") or data.get("data") or []
@@ -1193,7 +1235,7 @@ def build_parser() -> argparse.ArgumentParser:
         "positional_input",
         nargs="?",
         default=None,
-        help="Path to verifier JSON results file (e.g. results_step3_verified.json).",
+        help="Directory of a stored run, or a verifier JSON results file.",
     )
     parser.add_argument(
         "--input",
@@ -1201,7 +1243,13 @@ def build_parser() -> argparse.ArgumentParser:
         dest="input_file",
         type=str,
         default="results_step3_verified.json",
-        help="Path to verifier JSON results file.",
+        help="Directory of a stored run, or a verifier JSON results file.",
+    )
+    parser.add_argument(
+        "--judge-name",
+        dest="judge_name",
+        default=None,
+        help="Which judge's verdicts to read, when the run holds several.",
     )
     parser.add_argument(
         "--output",
@@ -1343,7 +1391,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     logger.info("Loading verifier results from %s", input_path)
 
     try:
-        summary_meta, results = load_verifier_results(input_path)
+        summary_meta, results = load_verifier_results(
+            input_path, getattr(args, "judge_name", None)
+        )
     except Exception as e:
         logger.error("Failed to load %s: %s", input_path, e)
         return 1

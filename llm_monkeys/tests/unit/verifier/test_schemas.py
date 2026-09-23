@@ -247,8 +247,8 @@ def test_verifier_workflow_summary_from_results():
     summary = VerifierWorkflowSummary.from_results(
         results=[q1, q2, q3],
         model="vertex_ai/gemini-3-flash-preview",
-        input_filepath="input.json",
-        output_filepath="output.json",
+        run_name="test-run",
+        judge_name="test-judge",
         total_time_seconds=12.5,
     )
 

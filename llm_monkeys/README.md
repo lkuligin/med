@@ -2,6 +2,43 @@
 
 Implementation of inference scaling approaches in the medical domain inspired by the paper [Large Language Monkeys: Scaling Inference Compute with Repeated Sampling](https://arxiv.org/abs/2407.21787).
 
+## Where Results Are Stored
+
+By default every step writes one JSON file per run, holding `{"summary": ...,
+"results": [...]}`, at the path `--output` names:
+
+```
+results_one_shot_gemma4.json
+results_step2_gemma4_candidates.json
+results_step3_verified.json
+```
+
+Setting `MEDQA_RESULTS_STORE` to `"results_store:per_record"` writes a
+directory per run instead, one file per record, under `--results-dir`:
+
+```
+results/single-step/<run>/question_{n}.json
+results/facts-pipeline/<run>/question_{n}/iteration_{i}.json
+results/facts-pipeline/<run>/question_{n}/<judge>/iteration_{i}.json
+```
+
+`<run>` is the model whose answers these are and `<judge>` the model that
+verified them, so several models can be measured on the same questions without
+one run's candidates blending into another's. Both default to the model name;
+`--run-name` and `--judge-name` set them explicitly, which is what keeps two
+runs of one model under different settings apart. Neither means anything to
+the single-file layout, which knows only the path it was given.
+
+A record is written once and never rewritten, so resuming a run costs only the
+records that are new, extending one to more candidates adds files rather than
+rewriting everything, and a reader always sees whole records. Step 3 reads its
+candidates straight out of the store, so it can run while step 2 is still
+generating.
+
+The choice is made in one place, `results_store.build_store`, which any
+runtime can point at its own layout the way `MEDQA_MODEL_FACTORY` points model
+construction elsewhere.
+
 ## Step 1: One-Shot Inference Workflow with Gemma 4 on Vertex MaaS
 
 This workflow loads the `test` split of the MedQA dataset (`bigbio/med_qa`, config `med_qa_en_source`), constructs one-shot inference prompts, invokes Gemma 4 on Vertex AI MaaS (`vertex_ai/google/gemma-4-26b-a4b-it-maas`) using the Google Agent Development Kit (ADK) `LiteLlm` adapter, and outputs structured evaluation results to a JSON file.
@@ -12,10 +49,10 @@ Run one-shot inference on the MedQA test set:
 
 ```bash
 # Run on sample of questions
-python3 run_one_shot_inference.py --limit 10 --concurrency 2 --output results_sample.json
+python3 -m cli --limit 10 --concurrency 2 --run-name gemma4-sample
 
 # Run full evaluation on test split
-python3 run_one_shot_inference.py --split test --output results_medqa_test_gemma4.json
+python3 -m cli --split test --run-name gemma4
 ```
 
 ### CLI Arguments
@@ -31,7 +68,8 @@ python3 run_one_shot_inference.py --split test --output results_medqa_test_gemma
 | `--n-attempts` | int | `3` | Number of inference attempts per question ($n \ge 3$) |
 | `--concurrency` | int | `2` | Max concurrent requests |
 | `--max-parse-retries` | int | `3` | Max retries if predicted option is unparsed (None) |
-| `--output` | str | `results_one_shot_gemma4.json` | Path to save output JSON |
+| `--results-dir` | str | `results` | Directory results are stored under |
+| `--run-name` | str | model name | Name of the directory this run's results go in |
 | `--temperature` | float | `0.0` | Sampling temperature |
 
 ### Running Results Separation
@@ -43,6 +81,12 @@ Separate question IDs answered correctly across ALL attempts by ALL models:
 python3 separate_result.py results_gemma4.json results_gemini.json results_gpt-oss-20b.json \
       --output simple_questions.csv \
       --difficult-output difficult_questions.csv
+
+# Optional: set MEDQA_DIFFICULT_CANDIDATE to a path to make that path the
+# default output and refuse writes to the tracked difficult_questions.csv.
+# Useful when this repository is mirrored to another machine, where a write to
+# a synced file would be reverted by the next sync pass. Unset, the command
+# above writes difficult_questions.csv directly, as it always has.
 
 # Include question text and ground truth in CSVs
 python3 separate_result.py results_gemma4.json results_gemini.json results_gpt-oss-20b.json \
@@ -70,7 +114,7 @@ python3 inference/cli.py \
       --difficult-questions difficult_questions.csv \
       --limit 1 \
       --n-candidates 5 \
-      --output test_candidates.json
+      --run-name smoke-test
 
 # Full Step 2 run with Gemma 4 on Vertex AI (N=1000 candidates per question)
 python3 inference/cli.py \
@@ -79,7 +123,7 @@ python3 inference/cli.py \
       --difficult-questions difficult_questions.csv \
       --n-candidates 1000 \
       --concurrency 4 \
-      --output results_step2_gemma4_candidates.json
+      --run-name gemma4
 
 # Run with GPT-OSS 20B
 python3 inference/cli.py \
@@ -89,7 +133,7 @@ python3 inference/cli.py \
       --difficult-questions difficult_questions.csv \
       --n-candidates 1000 \
       --concurrency 4 \
-      --output results_step2_gpt20b_candidates.json
+      --run-name gpt-oss-20b
 
 # Run with Gemini Flash 3.8
 python3 inference/cli.py \
@@ -99,7 +143,7 @@ python3 inference/cli.py \
       --difficult-questions difficult_questions.csv \
       --n-candidates 1000 \
       --concurrency 4 \
-      --output results_step2_gemini_candidates.json
+      --run-name gemini-3.8-flash
 ```
 
 You can also run the CLI as a Python module:
@@ -119,7 +163,8 @@ python3 -m inference.cli --help
 | `--temperature` | float | `0.8` | Sampling temperature for repeated sampling |
 | `--save-every-n-candidates` | int | `25` | Save results incrementally every N candidates per question |
 | `--save-every-n-questions` | int | `1` | Save results after every N completed questions |
-| `--output` | str | `results_step2_gemma4_candidates.json` | Path to save output JSON |
+| `--results-dir` | str | `results` | Directory results are stored under |
+| `--run-name` | str | model name | Name of the directory this run's candidates go in |
 | `--limit` | int | `None` | Maximum number of difficult questions to evaluate |
 | `--offset` | int | `0` | Starting index offset in difficult questions list |
 | `--dataset` | str | `bigbio/med_qa` | Hugging Face dataset name |

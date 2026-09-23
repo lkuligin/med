@@ -1,0 +1,20 @@
+# Development-only dependencies, kept out of llm_monkeys/requirements.txt so the
+# reference's runtime dependency set stays as its authors pinned it.
+#
+# pytest-asyncio is not optional: the suite marks 50+ coroutine tests with
+# @pytest.mark.asyncio, and without the plugin pytest skips them silently
+# rather than failing, so the suite would look green while testing nothing.
+pytest
+pytest-asyncio
+
+# Notebooks for exploring results on either machine. Plain Notebook, not
+# JupyterHub: Hub needs configurable-http-proxy from npm, and neither machine
+# has Node, nor root on the GPU box to install it. Hub also buys multi-user
+# auth and spawning, which a single user on two of their own machines does not
+# need.
+notebook
+
+# Plotting. Not optional despite living here: llm_monkeys/analyze_verifier.py
+# imports matplotlib at module scope, so the reference's own analysis script
+# cannot run without it, yet requirements.txt does not list it.
+matplotlib

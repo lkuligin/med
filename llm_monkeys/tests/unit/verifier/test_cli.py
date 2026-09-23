@@ -6,7 +6,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from config import DEFAULT_VERIFIER_MODEL
+from config import DEFAULT_VERIFIER_MODEL, VerifierConfig
+from results_store import DEFAULT_RESULTS_DIR
 from verifier._schemas import VerifierWorkflowSummary
 from verifier.cli import (
     async_main,
@@ -24,9 +25,14 @@ def test_create_parser_defaults():
     args = parser.parse_args([])
 
     assert args.model == DEFAULT_VERIFIER_MODEL
-    assert args.input == "results_step2_gemma4_candidates.json"
-    assert args.output == "results_step3_verified.json"
-    assert args.temperature == 0.0
+    assert args.results_dir == DEFAULT_RESULTS_DIR
+    # Both default to the model name: the run being verified has to be named,
+    # and the judge directory is named after the judge unless told otherwise.
+    assert args.run_name is None
+    assert args.judge_name is None
+    # Tied to the config rather than a literal: the two defaults must agree,
+    # and a literal here silently went stale when the default moved to 1.0.
+    assert args.temperature == VerifierConfig().temperature
     assert args.concurrency == 4
     assert args.max_candidates_per_question is None
     assert args.early_stop_facts is False
@@ -35,8 +41,8 @@ def test_create_parser_defaults():
 
 
 def test_parse_args():
-    args = parse_args(["--input", "my_candidates.json", "--concurrency", "2"])
-    assert args.input == "my_candidates.json"
+    args = parse_args(["--run-name", "my-run", "--concurrency", "2"])
+    assert args.run_name == "my-run"
     assert args.concurrency == 2
     assert args.early_stop_candidates is True
 
@@ -50,10 +56,10 @@ def test_build_config():
         [
             "--model",
             "gemini-3-flash-preview",
-            "--input",
-            "custom_step2.json",
-            "--output",
-            "custom_step3.json",
+            "--run-name",
+            "custom-run",
+            "--judge-name",
+            "custom-judge",
             "--concurrency",
             "8",
             "--temperature",
@@ -68,8 +74,9 @@ def test_build_config():
     config = build_config(args)
 
     assert config.model_name == "gemini-3-flash-preview"
-    assert config.input_filepath == "custom_step2.json"
-    assert config.output_filepath == "custom_step3.json"
+    assert config.run_name == "custom-run"
+    assert config.judge_name == "custom-judge"
+    assert config.resolved_judge_name == "custom-judge"
     assert config.concurrency == 8
     assert config.temperature == 0.1
     assert config.max_candidates_per_question == 10
@@ -81,8 +88,8 @@ def test_build_config():
 def _dummy_summary(failed_questions: int = 0) -> VerifierWorkflowSummary:
     return VerifierWorkflowSummary(
         model="gemini-3-flash-preview",
-        input_filepath="input.json",
-        output_filepath="output.json",
+        run_name="test-run",
+        judge_name="test-judge",
         total_questions=10,
         completed_questions=10 - failed_questions,
         failed_questions=failed_questions,
@@ -105,7 +112,7 @@ def _dummy_summary(failed_questions: int = 0) -> VerifierWorkflowSummary:
 
 def test_format_summary():
     summary = _dummy_summary()
-    out = format_summary(summary, "output.json")
+    out = format_summary(summary, "results/facts-pipeline/test-run")
     assert "FACT VERIFICATION SUMMARY" in out
     assert "Questions with Valid Candidate" in out
     assert "75.00%" in out
@@ -114,7 +121,7 @@ def test_format_summary():
 
 @pytest.mark.asyncio
 async def test_async_main_success(capsys):
-    args = parse_args(["--input", "dummy.json"])
+    args = parse_args(["--run-name", "dummy-run"])
     summary = _dummy_summary(failed_questions=0)
 
     with patch("verifier.cli.VerifierWorkflow.run", new_callable=AsyncMock) as mock_run:
@@ -147,5 +154,5 @@ def test_main():
         patch("sys.exit") as mock_exit,
     ):
         mock_async_main.return_value = 0
-        main(["--input", "test.json"])
+        main(["--run-name", "test-run"])
         mock_exit.assert_called_once_with(0)

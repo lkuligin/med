@@ -7,6 +7,7 @@ import asyncio
 import sys
 
 from cli_utils import add_common_arguments, setup_logging
+from results_store import DEFAULT_CANDIDATES_FILE
 from config import (
     DEFAULT_DATASET,
     DEFAULT_DATASET_CONFIG,
@@ -40,7 +41,7 @@ def create_parser() -> argparse.ArgumentParser:
     add_common_arguments(
         parser,
         default_model=DEFAULT_MODEL,
-        default_output="results_step2_gemma4_candidates.json",
+        default_output=DEFAULT_CANDIDATES_FILE,
         default_temperature=0.8,
         default_concurrency=4,
         include_attempts=False,
@@ -162,6 +163,8 @@ def build_config(args: argparse.Namespace) -> CandidateInferenceConfig:
         "temperature": args.temperature,
         "max_tokens": args.max_tokens,
         "output_filepath": output_filepath,
+        "results_dir": args.results_dir,
+        "run_name": args.run_name,
         "save_every_n_candidates": getattr(args, "save_every_n_candidates", 25),
         "save_every_n_questions": getattr(args, "save_every_n_questions", 1),
         "max_retries": args.max_retries,
@@ -175,7 +178,7 @@ def build_config(args: argparse.Namespace) -> CandidateInferenceConfig:
     return CandidateInferenceConfig(**kwargs)
 
 
-def format_summary(summary: CandidateWorkflowSummary, output_path: str) -> str:
+def format_summary(summary: CandidateWorkflowSummary, destination: str) -> str:
     """Format workflow summary for console output."""
     config_str = f"{summary.config}, " if summary.config else ""
     return (
@@ -196,7 +199,7 @@ def format_summary(summary: CandidateWorkflowSummary, output_path: str) -> str:
         f"Total Time: {summary.total_time_seconds:.2f}s "
         f"(Avg/Question: {summary.average_question_latency_seconds:.2f}s, "
         f"Avg/Candidate: {summary.average_candidate_latency_seconds:.2f}s)\n"
-        f"Results saved to: {output_path}\n"
+        f"Results saved to: {destination}\n"
         f"{'=' * 65}\n"
     )
 
@@ -207,7 +210,7 @@ async def async_main(args: argparse.Namespace) -> int:
     config = build_config(args)
     workflow = CandidateInferenceWorkflow(config=config)
     summary, _ = await workflow.run()
-    print(format_summary(summary, args.output))
+    print(format_summary(summary, str(workflow.store)))
     return 0 if summary.failed_questions == 0 else 1
 
 

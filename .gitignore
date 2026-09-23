@@ -124,6 +124,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+.venv-next
 env/
 venv/
 ENV/
@@ -166,3 +167,33 @@ cython_debug/
 config-*.json
 results/
 data/ 
+
+# Remote-owned working directories (see gdanschin_runtime/sync/rsync-exclude.txt)
+cache/
+logs/
+scratch/
+
+# Machine-specific remote settings (see configs/remote.conf.example)
+gdanschin_runtime/configs/remote.conf
+gdanschin_runtime/configs/gateway.conf
+gdanschin_runtime/configs/jupyter-password.conf
+gdanschin_runtime/configs/jupyter_server_config.generated.py
+
+# Internal infrastructure material: never committed, never synced
+# (also excluded in gdanschin_runtime/sync/rsync-exclude.txt)
+gdanschin_runtime/supplementary/
+
+# macOS directory metadata
+.DS_Store
+
+# The default store writes here when nothing says otherwise, so a run started
+# from the repository root leaves its output in the working tree.
+results_*.json
+llm_monkeys/results_*.json
+
+# Runs assembled back into the single-file layout, for reading elsewhere.
+exports/
+
+# gpu_serving machine-local settings (cards, paths, venv)
+gpu_serving/configs/serving.conf
+gpu_serving/run/

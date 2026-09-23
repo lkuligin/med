@@ -6,12 +6,12 @@ import os
 from typing import Any
 
 from google.adk.agents import Agent
-from google.adk.models.lite_llm import LiteLlm
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
 from config import VerifierConfig, register_litellm_model_pricing
+from model_factory import build_model
 from verifier._prompts import DEFAULT_VERIFIER_SYSTEM_INSTRUCTION
 from verifier._schemas import FactVerification
 
@@ -48,7 +48,7 @@ def create_fact_verifier_agent(
 
     return Agent(
         name="medqa_fact_verifier",
-        model=LiteLlm(model=cfg.resolved_model_name),
+        model=build_model(cfg),
         instruction=cfg.system_instruction or DEFAULT_VERIFIER_SYSTEM_INSTRUCTION,
         output_schema=output_schema,
         generate_content_config=types.GenerateContentConfig(

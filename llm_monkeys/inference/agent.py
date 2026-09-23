@@ -5,13 +5,13 @@ from __future__ import annotations
 from typing import Any
 
 from google.adk.agents import Agent
-from google.adk.models.lite_llm import LiteLlm
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
 from config import CandidateInferenceConfig, register_litellm_model_pricing
 from inference._schemas import MedicalFacts
+from model_factory import build_model
 
 
 def _build_agent(
@@ -32,7 +32,7 @@ def _build_agent(
 
     return Agent(
         name=name,
-        model=LiteLlm(model=cfg.resolved_model_name),
+        model=build_model(cfg),
         instruction=instruction,
         output_schema=output_schema,
         generate_content_config=types.GenerateContentConfig(
