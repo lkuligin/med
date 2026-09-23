@@ -2,10 +2,11 @@
 
 The pool follows the provider a name resolves to, not the job the model is
 doing. Anything the internal gateway serves is reached at its own provider
-path; vendor models, and the sglang deployment, live on the external one. That
-today's base models all happen to sit on the internal gateway and today's
-judge is a vendor model is a fact about the current set, not a rule - a vendor
-model can be a base model and an open-weight one can judge.
+path; vendor models, and whatever only the external sglang serves, live on the
+external one. That today's base models all happen to sit on the internal
+gateway and today's judge is a vendor model is a fact about the current set,
+not a rule - a vendor model can be a base model and an open-weight one can
+judge.
 
 Getting it wrong is not cosmetic. The internal gateway does not serve Gemini
 at all, and the external one holds a per-user limit on requests in flight, so
@@ -149,14 +150,18 @@ def test_a_named_vendor_provider_is_external(model):
     assert pool_of(model) == "external"
 
 
-def test_the_two_gemmas_are_different_models_on_different_pools():
-    """gemma-4-26b is the sglang deployment on the external gateway;
-    gemma-4-26b-internal is the internal one. models.py names the second on
-    purpose: the alias without the suffix would move generation onto the
-    external gateway's quota without changing a single visible name."""
-    assert pool_of("gemma-4-26b") == "external"
-    assert pool_of("gemma-4-26b-internal") == "internal"
-    assert BASE_MODELS["gemma-4-26b"].gateway_model == "gemma-4-26b-internal"
+@pytest.mark.parametrize("model", ["gemma-4-26b", "gemma-4-26b-a4b-it",
+                                   "gemma-4-26b-internal", "qwen3-reranker-4b"])
+def test_open_weight_aliases_are_internal(model):
+    """The external gateway's sglang serves these too, but open-weight models
+    are reached on the internal gateway, so a manual ask("gemma-4-26b") hits
+    the same deployment the runs do rather than the external quota."""
+    assert pool_of(model) == "internal"
+
+
+def test_an_unlisted_gemma_is_not_guessed_onto_a_gateway():
+    with pytest.raises(ValueError):
+        gateway.resolve("gemma-9-99b")
 
 
 def test_an_internal_model_is_reached_at_its_own_provider_path():
