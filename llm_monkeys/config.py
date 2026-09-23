@@ -398,6 +398,7 @@ class VerifierConfig(BaseInferenceConfig):
     max_candidates_per_question: int | None = None
     early_stop_facts: bool = False
     early_stop_candidates: bool = True
+    difficult_questions: str | None = None
 
     @property
     def resolved_judge_name(self) -> str:

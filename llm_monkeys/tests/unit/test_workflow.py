@@ -553,10 +553,11 @@ async def test_workflow_reprocesses_failed_questions_from_existing_file(
             ),
             make_result_dict(
                 "1",
-                predicted_option=None,
+                predicted_option="B",
                 ground_truth="B",
-                is_correct=False,
+                is_correct=True,
                 error="litellm.RateLimitError: 429 RESOURCE_EXHAUSTED",
+                raw_response="Kept attempt for Q1",
                 attempt_errors=[
                     None,
                     "litellm.RateLimitError: 429 RESOURCE_EXHAUSTED",
@@ -594,8 +595,8 @@ async def test_workflow_reprocesses_failed_questions_from_existing_file(
     summary, results = await workflow.run(questions=sample_questions)
 
     # Question "0" was successful -> skipped (0 calls)
-    # Question "1" was failed -> re-processed (3 attempts = 3 calls)
-    assert call_count == 3
+    # Question "1" had two failed attempts -> only those re-run (2 calls)
+    assert call_count == 2
     assert all("Sample question 2" in p for p in invoked_prompts)
 
     assert summary.total_questions == 2
@@ -615,7 +616,9 @@ async def test_workflow_reprocesses_failed_questions_from_existing_file(
     assert results[1].predicted_option == "B"
     assert results[1].is_correct is True
     assert results[1].is_all_correct is True
-    assert "successfully re-processed" in results[1].raw_response
+    assert results[1].raw_response == "Kept attempt for Q1"
+    assert all("successfully re-processed" in a.raw_response
+               for a in results[1].attempts[1:])
 
     saved_data = store.load()
     assert saved_data["summary"]["completed"] == 2
@@ -628,7 +631,7 @@ async def test_workflow_reprocesses_failed_questions_from_existing_file(
 async def test_workflow_reprocesses_attempt_level_error(
     sample_questions, tmp_path, workflow_factory
 ):
-    """Test that question is re-processed if any attempt has an error even if top-level error is None."""
+    """An attempt that failed is re-run; the attempts that succeeded are kept."""
     store = store_for(tmp_path)
     write_results_file(
         store,
@@ -654,18 +657,24 @@ async def test_workflow_reprocesses_attempt_level_error(
 
     summary, results = await workflow.run(questions=[sample_questions[0]])
 
-    assert call_count == 3
+    assert call_count == 1
     assert summary.completed == 1
     assert summary.failed == 0
     assert results[0].error is None
     assert all(a.error is None for a in results[0].attempts)
+    assert [a.attempt_index for a in results[0].attempts] == [0, 1, 2]
+    assert results[0].attempts[1].raw_response.endswith("re-run")
+    assert results[0].attempts[0].raw_response == "Answer: A"
 
 
 @pytest.mark.asyncio
 async def test_workflow_reprocesses_incomplete_attempts(
     sample_questions, tmp_path, workflow_factory
 ):
-    """Test that a question with fewer attempts than configured n_attempts is re-processed."""
+    """A question with fewer attempts than n_attempts is topped up, not redone.
+
+    This is what lets a split be answered once everywhere, then a second and
+    a third time, by raising --n-attempts between runs."""
     store = store_for(tmp_path)
     write_results_file(
         store,
@@ -684,8 +693,10 @@ async def test_workflow_reprocesses_incomplete_attempts(
 
     summary, results = await workflow.run(questions=[sample_questions[0]])
 
-    assert call_count == 3
+    assert call_count == 2
     assert len(results[0].attempts) == 3
+    assert results[0].attempts[0].raw_response == "Answer: A"
+    assert results[0].total_attempts == 3
     assert summary.completed == 1
     assert summary.failed == 0
 

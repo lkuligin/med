@@ -68,6 +68,12 @@ def create_parser() -> argparse.ArgumentParser:
         help="Stop evaluating candidates immediately once a candidate has all facts correct (default: True)",
     )
     parser.add_argument(
+        "--difficult-questions",
+        default=None,
+        help="CSV of question ids to judge; the rest of the run's questions are "
+        "left alone (default: judge every question the run has)",
+    )
+    parser.add_argument(
         "--save-every-n-questions",
         type=int,
         default=1,

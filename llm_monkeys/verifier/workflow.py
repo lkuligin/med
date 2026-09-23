@@ -18,6 +18,7 @@ from google.genai import types
 
 from config import VerifierConfig
 from results_store import build_store, stored_results
+from inference._dataset import load_difficult_question_ids
 from inference._schemas import StepTokenUsage
 from inference.parser import evaluate_prediction
 from inference.workflow import _calculate_backoff, is_rate_limit_error
@@ -33,6 +34,23 @@ from verifier.agent import create_fact_verifier_agent, create_runner
 from verifier.parser import parse_fact_verification
 
 logger = logging.getLogger(__name__)
+
+
+def keep_listed(
+    questions: list[Step2QuestionData], question_ids: list[str]
+) -> list[Step2QuestionData]:
+    """The questions whose id is on the list, in their original order.
+
+    Ids are compared without leading zeros: medbullets pads them to three
+    digits in some places and not in others, and '1' and '001' are one question.
+    """
+    def norm(qid: object) -> str:
+        return str(qid).strip().lstrip("0") or "0"
+
+    wanted = {norm(q) for q in question_ids}
+    kept = [q for q in questions if norm(q.question_id) in wanted]
+    logger.info("Kept %d of %d questions on the list", len(kept), len(questions))
+    return kept
 
 
 class VerifierWorkflow:
@@ -602,6 +620,10 @@ class VerifierWorkflow:
                 store=self.store.candidates,
                 limit=self.config.limit,
                 offset=self.config.offset,
+            )
+        if self.config.difficult_questions:
+            questions = keep_listed(
+                questions, load_difficult_question_ids(self.config.difficult_questions)
             )
 
         if not questions:

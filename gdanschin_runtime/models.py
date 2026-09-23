@@ -209,24 +209,8 @@ BASE_MODELS: dict[str, BaseModel] = {
         extra_body={"chat_template_kwargs": {"enable_thinking": True},
                     "top_k": 20},
     ),
-    # The same weights and the same serving, with the budget the gateway
-    # entry already had. Our local run was capped at 4096 and 6.3% of its
-    # replies never reached their FINAL ANSWER line, while the gateway's -
-    # at 32768 - lost 1.0%. That is a plausible share of the two points
-    # between them, so it is worth separating the backend from the budget.
-    "glm-5.3-flash-32k-local": served_locally(
-        "glm-5.3-flash-32k-local", "zai-org/GLM-5.3-Flash", max_tokens=16384,
-        note="glm-5.3-flash-local with room to finish. Run over only the "
-             "questions the 4096 cap bit, since the rest cannot change. "
-             "16384 rather than the 32768 the name suggests: the catalogue "
-             "serves this model at a 32768 context, which the prompt shares "
-             "with the answer, so asking for the whole of it is refused "
-             "before generation. Nothing needs more - the longest reply the "
-             "4096 run produced was 12288 tokens, and the gateway, at 32768, "
-             "peaked at 16384.",
-    ),
     "glm-5.3-flash-local": served_locally(
-        "glm-5.3-flash-local", "zai-org/GLM-5.3-Flash", max_tokens=4096,
+        "glm-5.3-flash-local", "zai-org/GLM-5.3-Flash", max_tokens=16384,
         note="306 GB, so tp4 and a single replica on all four cards - the "
              "slowest topology we can serve, which is fine for step 1 and "
              "disqualifying for a judge. Here to answer whether the top of "

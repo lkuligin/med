@@ -17,6 +17,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from one_shot.parser import rescore_results
 from results_store import OneShotResults, split_run_path
 
 
@@ -209,7 +210,7 @@ def analyze_data(
             f"Expected dict or list at root of JSON, got {type(data).__name__}"
         )
 
-    items = [_extract_item_metrics(item) for item in results_list]
+    items = [_extract_item_metrics(item) for item in rescore_results(results_list)]
     total_q = len(items)
 
     completed_q = sum(1 for q in items if not q["has_error"])
