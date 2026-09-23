@@ -226,3 +226,24 @@ def test_two_entries_on_one_served_name_are_told_apart_by_run_name():
     assert thinking_of("qwen3.6-35b-a3b-nr-local") is False
     # No run name: the served-name lookup, as before.
     assert thinking_of(None) in (True, False)
+
+
+def test_a_judge_is_named_by_judge_name_not_by_the_run_it_judges():
+    """A verifier run carries the generator's name as run_name and the judge's
+    separately. Keying the model on run_name there builds the generator as its
+    own judge - the wrong model, under the right directory, with no error."""
+    from types import SimpleNamespace
+
+    from gdanschin_runtime.adapters.factory import build
+
+    judging = SimpleNamespace(
+        resolved_model_name="Qwen/Qwen3.6-35B-A3B-FP8",
+        run_name="qwen3.6-27b-nr-local",      # the generator being judged
+        judge_name="qwen3.6-35b-a3b-local",   # the judge
+        input_filepath="candidates.json",     # what marks this a verifier config
+    )
+    model = build(judging)
+    assert model.model.endswith("Qwen3.6-35B-A3B-FP8"), model.model
+    extra = getattr(model, "_additional_args", None) or {}
+    thinking = extra["extra_body"]["chat_template_kwargs"]["enable_thinking"]
+    assert thinking is True, "the judge's own settings, not the generator's"
