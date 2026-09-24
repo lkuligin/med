@@ -398,6 +398,12 @@ class VerifierConfig(BaseInferenceConfig):
     max_candidates_per_question: int | None = None
     early_stop_facts: bool = False
     early_stop_candidates: bool = True
+    # Fill the slots a run's last questions leave idle by judging further
+    # candidates of them side by side. Off by default, and deliberately not
+    # inferred from anything: the extra candidates are extra requests, which
+    # on a judge that charges per call is money spent to finish a few minutes
+    # sooner. Turn it on for a judge that runs on hardware already paid for.
+    speculate_tail: bool = False
     difficult_questions: str | None = None
 
     @property

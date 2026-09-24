@@ -117,7 +117,11 @@ def command(step: Step) -> list[str]:
             # candidates for exactly those, but the gateway-era runs carry the
             # whole split, and judging their simple questions spends cards on
             # answers every candidate already gets right.
-            "--difficult-questions", str(MONKEYS / step.questions)]
+            "--difficult-questions", str(MONKEYS / step.questions),
+            # Both judges in this table run on our own cards, where a request
+            # that turns out unnecessary costs time already paid for. Never
+            # pass this for a judge billed per call: waiting is cheaper.
+            "--speculate-tail"]
 
 
 def run(step: Step, index: int, total: int) -> None:

@@ -619,3 +619,43 @@ async def test_one_fact_per_question_is_in_flight_with_early_stop(tmp_path: Path
     await workflow.run(questions=questions)
 
     assert worst == 1, "a question must never have two facts in flight"
+
+
+@pytest.mark.asyncio
+async def test_the_tail_is_not_speculated_on_unless_asked(tmp_path: Path):
+    """The extra candidates are extra requests. On a judge that charges per
+    call that is money spent to finish a few minutes sooner, so the default
+    has to be to wait instead."""
+    import asyncio
+
+    in_flight = peak = 0
+
+    async def mock_run(new_message=None, **kwargs):
+        nonlocal in_flight, peak
+        in_flight += 1
+        peak = max(peak, in_flight)
+        await asyncio.sleep(0.01)
+        in_flight -= 1
+        # Nothing passes, so every candidate of the question is reached.
+        yield make_mock_event('{"is_correct": 0, "rationale": "."}')
+
+    runner = MagicMock()
+    runner.run_async = mock_run
+    question = Step2QuestionData(
+        question_id="Q1", question="?", options={"A": "A"}, ground_truth="A",
+        candidates=[Step2CandidateData(i, ["f1"], "A", True) for i in range(8)])
+
+    # One question, eight slots: without speculation seven stay idle.
+    config = VerifierConfig(results_dir=str(tmp_path), run_name="r", judge_name="j",
+                            concurrency=8, early_stop_facts=True)
+    await VerifierWorkflow(config=config, verifier_runner=runner).run(
+        questions=[question])
+    assert peak == 1, "one question, one candidate, one request"
+
+    in_flight = peak = 0
+    config = VerifierConfig(results_dir=str(tmp_path), run_name="r2", judge_name="j",
+                            concurrency=8, early_stop_facts=True,
+                            speculate_tail=True)
+    await VerifierWorkflow(config=config, verifier_runner=runner).run(
+        questions=[question])
+    assert peak == 8, "asked for, so the idle slots are filled"

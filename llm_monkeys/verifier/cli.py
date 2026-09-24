@@ -56,6 +56,13 @@ def create_parser() -> argparse.ArgumentParser:
         help="Maximum number of candidates to evaluate per question (default: evaluate all until first pass)",
     )
     parser.add_argument(
+        "--speculate-tail",
+        action="store_true",
+        help="Once fewer questions remain than the concurrency allows, judge "
+        "further candidates of them in parallel to fill the idle slots. Costs "
+        "extra requests, so leave it off for a judge that charges per call.",
+    )
+    parser.add_argument(
         "--early-stop-facts",
         action="store_true",
         default=False,

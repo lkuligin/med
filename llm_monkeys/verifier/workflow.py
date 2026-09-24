@@ -694,7 +694,11 @@ class VerifierWorkflow:
         # How wide a question may go. One while questions fill the slots;
         # wider once they run out, so a run's tail does not leave most of the
         # concurrency idle waiting for the last few questions.
-        spread = _Spread(self.config.concurrency)
+        # None unless asked for: without it a question judges one candidate at
+        # a time to the end of the run, which leaves slots idle over the last
+        # few questions but sends no request that the verdict does not need.
+        spread = (_Spread(self.config.concurrency)
+                  if getattr(self.config, "speculate_tail", False) else None)
 
         # Questions run side by side and the semaphore alone bounds requests in
         # flight. Within a question the candidates are sequential by design (the
@@ -735,7 +739,8 @@ class VerifierWorkflow:
                 question.question_id,
             )
 
-            spread.active += 1
+            if spread is not None:
+                spread.active += 1
             try:
                 q_res = await self.verify_question(
                     question=question,
@@ -745,7 +750,8 @@ class VerifierWorkflow:
                     spread=spread,
                 )
             finally:
-                spread.active -= 1
+                if spread is not None:
+                    spread.active -= 1
             async with save_lock:
                 results.append(q_res)
 
