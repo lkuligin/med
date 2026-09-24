@@ -99,7 +99,21 @@ def command(step: Step) -> list[str]:
             "--dataset", step.dataset,
             "--temperature", str(JUDGE_TEMPERATURE),
             "--max-tokens", str(step.max_tokens),
-            "--concurrency", str(CONCURRENCY)]
+            "--concurrency", str(CONCURRENCY),
+            # Two things at once, and the second is the surprise. A candidate
+            # passes only if every fact does, so checking the rest after the
+            # first failure cannot change the verdict: measured over 262
+            # candidates, 49% of the work was spent that way.
+            #
+            # And it is what fills the cards. Without it a candidate submits
+            # all of its facts through one gather, taking every slot the
+            # concurrency allows, while the other fifteen open questions wait
+            # - so the server ran at sixteen requests, then trailed to one
+            # waiting for that batch's slowest fact, over and over, averaging
+            # 4.7. Facts sequential within a candidate, candidates sequential
+            # within a question, sixteen questions open: one in-flight fact
+            # per question, sixteen at all times.
+            "--early-stop-facts"]
 
 
 def environment(step: Step) -> dict[str, str]:
