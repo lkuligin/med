@@ -391,33 +391,3 @@ def test_a_bare_list_is_still_readable():
     assert stored_results(None) == []
     assert stored_results({"summary": {}}) == []
     assert stored_results([{"question_id": "1"}, "junk"]) == [{"question_id": "1"}]
-
-
-def test_judging_can_be_restricted_to_a_question_list(tmp_path, monkeypatch):
-    """Runs made before the split settled carry candidates for every question,
-    and judging those spends cards on ones the pipeline never asks about."""
-    import csv as _csv
-
-    from results_store import QUESTION_FILTER_ENV, CandidateResults
-
-    root = tmp_path / "results"
-    run = root / "medbullets" / "facts-pipeline" / "a-run"
-    for qid in ("001", "002", "010"):
-        (run / f"question_{qid}").mkdir(parents=True)
-
-    store = CandidateResults(root, "a-run", "medbullets")
-    assert store.questions() == ["001", "002", "010"]
-
-    listing = tmp_path / "hard.csv"
-    with listing.open("w", newline="") as handle:
-        writer = _csv.writer(handle)
-        writer.writerow(["question_id"])
-        # Padded in the file, unpadded in the directory names: both forms
-        # have to mean the same question.
-        writer.writerows([["001"], ["010"]])
-
-    monkeypatch.setenv(QUESTION_FILTER_ENV, str(listing))
-    assert store.questions() == ["001", "010"]
-
-    monkeypatch.delenv(QUESTION_FILTER_ENV)
-    assert store.questions() == ["001", "002", "010"]

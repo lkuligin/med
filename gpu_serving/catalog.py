@@ -241,7 +241,7 @@ SERVABLE.update({
         mem_fraction=0.9,
         sglang_args=(
             "--trust-remote-code",
-            "--reasoning-parser", "minimax-append-think",
+            "--reasoning-parser", "minimax",
         ),
         note="plain MoE, full attention throughout, so none of the hybrid "
              "flags apply. tp=2 puts 107 GB on each card and the 0.9 budget "
@@ -250,8 +250,12 @@ SERVABLE.update({
              "runs out of memory loading, tp=4 is the fallback: half the "
              "throughput, four times the pool. The reference overlay for "
              "M2.7 also sets --ep-size equal to tp; left out until measured. "
-             "A thinking model, hence the parser - whether the thinking can "
-             "be turned off for judging is one of the things to find out.",
+             "A thinking model, hence the parser - and the parser is "
+             "'minimax', not the 'minimax-append-think' the reference overlay "
+             "sets for M2.7. That one appends an opening <think> to text that "
+             "has none; M2.5 writes its own, so appending a second unbalances "
+             "the pair and the whole reasoning block lands in content. "
+             "Measured: the probe came back with <think> in the answer.",
     ),
     "qwen3.8-flash-next": ServedModel(
         name="qwen3.8-flash-next",

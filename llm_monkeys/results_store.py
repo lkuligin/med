@@ -27,7 +27,6 @@ verifying, and writes its verdicts beside those candidates.
 
 from __future__ import annotations
 
-import csv
 import json
 import logging
 import os
@@ -434,34 +433,6 @@ class OneShotResults(_Results):
         return {"summary": self.read_summary(), "results": list(records.values())}
 
 
-QUESTION_FILTER_ENV = "MEDQA_ONLY_QUESTIONS"
-
-
-def _only_questions() -> set[str] | None:
-    """The question ids a run is restricted to, or None for no restriction.
-
-    Step 2 generates candidates for the difficult questions, so judging what
-    is stored already judges only those - except for the runs made before the
-    split settled, which carry candidates for the whole set. Judging those
-    costs cards on questions every candidate already answers correctly.
-
-    The list is a CSV of question ids with a header, the same file step 1 and
-    step 2 take. Unset, nothing is filtered and the store behaves as it always
-    has.
-    """
-    path = os.getenv(QUESTION_FILTER_ENV, "").strip()
-    if not path:
-        return None
-    ids = set()
-    with open(path, newline="", encoding="utf-8") as handle:
-        for row in csv.reader(handle):
-            if row and (value := row[0].strip()) and value.lower() != "question_id":
-                # Stored directories are named by the unpadded number, while
-                # the frozen lists pad to three digits.
-                ids.add(str(int(value)) if value.isdigit() else value)
-    return ids
-
-
 class CandidateResults(_Results):
     """Step 2: ``facts-pipeline/<run>/question_{n}/iteration_{i}.json``."""
 
@@ -485,10 +456,6 @@ class CandidateResults(_Results):
             for path in self.directory.iterdir()
             if path.is_dir()
         ]
-        wanted = _only_questions()
-        if wanted is not None:
-            ids = [name for name in ids
-                   if (str(int(name)) if name.isdigit() else name) in wanted]
         return sorted(ids, key=lambda name: int(name) if name.isdigit() else 0)
 
     def read_candidates(self, question_id: int | str) -> list[dict[str, Any]]:

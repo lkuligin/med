@@ -15,7 +15,6 @@ confirm. A restart loses at most the question in flight.
 
 from __future__ import annotations
 
-import os
 import subprocess
 import sys
 import time
@@ -113,20 +112,12 @@ def command(step: Step) -> list[str]:
             # 4.7. Facts sequential within a candidate, candidates sequential
             # within a question, sixteen questions open: one in-flight fact
             # per question, sixteen at all times.
-            "--early-stop-facts"]
-
-
-def environment(step: Step) -> dict[str, str]:
-    """Extra environment for this step.
-
-    Judging is restricted to the frozen difficult list. Most runs generated
-    candidates for exactly those questions and would be unaffected, but the
-    two gateway-era runs carry the whole split, and judging their simple
-    questions spends cards on answers every candidate already gets right.
-    """
-    if step.kind != "judge":
-        return {}
-    return {"MEDQA_ONLY_QUESTIONS": str(MONKEYS / step.questions)}
+            "--early-stop-facts",
+            # Judge only the difficult questions. Most generators produced
+            # candidates for exactly those, but the gateway-era runs carry the
+            # whole split, and judging their simple questions spends cards on
+            # answers every candidate already gets right.
+            "--difficult-questions", str(MONKEYS / step.questions)]
 
 
 def run(step: Step, index: int, total: int) -> None:
@@ -135,8 +126,7 @@ def run(step: Step, index: int, total: int) -> None:
         log(f"[{index}/{total}] skipped: nothing serving")
         return
     started = time.time()
-    subprocess.run(through_env(command(step)), cwd=MONKEYS,
-                   env={**os.environ, **environment(step)})
+    subprocess.run(through_env(command(step)), cwd=MONKEYS)
     log(f"[{index}/{total}] done in {(time.time() - started) / 60:.0f} min")
 
 

@@ -435,3 +435,187 @@ async def test_workflow_continues_a_question_that_found_no_valid_candidate(tmp_p
     )
     await third.run(questions=[question2])
     assert len(judged_facts) == before
+
+
+def test_keep_listed_filters_to_the_list_whatever_the_padding():
+    """A run can hold candidates for every question while only the difficult
+    ones are to be judged; medbullets writes '001' in one place and '1' in
+    another, and both name the same question."""
+    from verifier._dataset import Step2QuestionData
+    from verifier.workflow import keep_listed
+
+    questions = [Step2QuestionData(question_id=q, question="?") for q in ("001", "002", "010", "0")]
+    kept = keep_listed(questions, ["1", "010", "0"])
+
+    assert [q.question_id for q in kept] == ["001", "010", "0"]
+
+
+@pytest.mark.asyncio
+async def test_questions_are_judged_side_by_side_even_with_early_stop_facts(tmp_path: Path):
+    """With early_stop_facts a question has one request in flight at a time, so
+    questions judged one after another left every other slot of the semaphore
+    idle: concurrency 8 behaved as 1. The questions have to overlap."""
+    import asyncio
+
+    in_flight = peak = 0
+
+    async def mock_run(**kwargs):
+        nonlocal in_flight, peak
+        in_flight += 1
+        peak = max(peak, in_flight)
+        await asyncio.sleep(0.01)
+        in_flight -= 1
+        yield make_mock_event('{"is_correct": 1, "rationale": "True."}')
+
+    mock_runner = MagicMock()
+    mock_runner.run_async = mock_run
+    config = VerifierConfig(results_dir=str(tmp_path), run_name="test-run",
+                            judge_name="test-judge", concurrency=4, early_stop_facts=True)
+    workflow = VerifierWorkflow(config=config, verifier_runner=mock_runner)
+    questions = [
+        Step2QuestionData(question_id=f"Q{i}", question="?", options={"A": "A"}, ground_truth="A",
+                          candidates=[Step2CandidateData(0, ["f1", "f2"], "A", True)])
+        for i in range(8)
+    ]
+
+    summary, results = await workflow.run(questions=questions)
+
+    assert peak == 4
+    assert [r.question_id for r in results] == [f"Q{i}" for i in range(8)]
+    assert summary.questions_with_valid_candidate == 8
+
+
+def test_spread_is_one_while_questions_fill_the_slots():
+    """The schedule that discards nothing: as many open questions as slots,
+    one candidate each, one fact each. Widening before the questions run out
+    would judge candidates that the first valid one makes unnecessary."""
+    from verifier.workflow import _Spread
+
+    spread = _Spread(16)
+    for spread.active in (16, 17, 32):
+        assert spread.width() == 1
+
+
+def test_spread_opens_up_only_as_questions_run_out():
+    """Eleven of sixteen slots would otherwise idle to the end of a run."""
+    from verifier.workflow import _Spread
+
+    spread = _Spread(16)
+    spread.active = 8
+    assert spread.width() == 2
+    spread.active = 3
+    assert spread.width() == 5
+    spread.active = 1
+    assert spread.width() == 16
+
+
+def test_spread_never_returns_less_than_one():
+    """A question always gets to judge something, whatever the arithmetic:
+    zero would stall the run, and active is decremented by the questions
+    themselves so it can be seen at zero."""
+    from verifier.workflow import _Spread
+
+    spread = _Spread(0)
+    assert spread.width() == 1
+    spread.active = 0
+    assert _Spread(16).width() == 16
+    spread = _Spread(4)
+    spread.active = 100
+    assert spread.width() == 1
+
+
+@pytest.mark.asyncio
+async def test_facts_after_the_first_wrong_one_are_not_checked(tmp_path: Path):
+    """A candidate passes only if every fact does, so a check after the first
+    failure cannot change the verdict. Measured over a real run, half the
+    work went that way."""
+    asked: list[str] = []
+
+    async def mock_run(new_message=None, **kwargs):
+        text = new_message.parts[0].text if new_message and new_message.parts else ""
+        for name in ("fact-1", "fact-2", "fact-3", "fact-4"):
+            if f'"{name}"' in text:
+                asked.append(name)
+                break
+        verdict = 0 if '"fact-2"' in text else 1
+        yield make_mock_event(f'{{"is_correct": {verdict}, "rationale": "."}}')
+
+    runner = MagicMock()
+    runner.run_async = mock_run
+    config = VerifierConfig(results_dir=str(tmp_path), run_name="r", judge_name="j",
+                            concurrency=4, early_stop_facts=True)
+    workflow = VerifierWorkflow(config=config, verifier_runner=runner)
+    question = Step2QuestionData(
+        question_id="Q1", question="?", options={"A": "A"}, ground_truth="A",
+        candidates=[Step2CandidateData(
+            0, ["fact-1", "fact-2", "fact-3", "fact-4"], "A", True)])
+
+    summary, results = await workflow.run(questions=[question])
+
+    assert asked == ["fact-1", "fact-2"], "fact-3 and fact-4 cannot change it"
+    assert results[0].candidate_verifications[0].all_facts_correct is False
+    assert summary.questions_with_valid_candidate == 0
+
+
+@pytest.mark.asyncio
+async def test_a_candidate_with_no_facts_does_not_stall_the_question(tmp_path: Path):
+    """Step 2 can produce a candidate whose fact extraction returned nothing.
+    It cannot pass, and it must not stop the question from reaching one that
+    can."""
+    async def mock_run(new_message=None, **kwargs):
+        yield make_mock_event('{"is_correct": 1, "rationale": "."}')
+
+    runner = MagicMock()
+    runner.run_async = mock_run
+    config = VerifierConfig(results_dir=str(tmp_path), run_name="r", judge_name="j",
+                            concurrency=4, early_stop_facts=True)
+    workflow = VerifierWorkflow(config=config, verifier_runner=runner)
+    question = Step2QuestionData(
+        question_id="Q1", question="?", options={"A": "A"}, ground_truth="A",
+        candidates=[Step2CandidateData(0, [], "A", True),
+                    Step2CandidateData(1, ["fact-1"], "A", True)])
+
+    summary, results = await workflow.run(questions=[question])
+
+    verdicts = results[0].candidate_verifications
+    assert verdicts[0].all_facts_correct is False
+    assert verdicts[1].all_facts_correct is True
+    assert summary.questions_with_valid_candidate == 1
+
+
+@pytest.mark.asyncio
+async def test_one_fact_per_question_is_in_flight_with_early_stop(tmp_path: Path):
+    """The invariant the schedule rests on: a question contributes exactly one
+    request at a time, so N open questions fill N slots and no more."""
+    import asyncio
+
+    in_flight: dict[str, int] = {}
+    worst = 0
+
+    async def mock_run(new_message=None, **kwargs):
+        nonlocal worst
+        text = new_message.parts[0].text if new_message and new_message.parts else ""
+        qid = "Q1" if "first question" in text else "Q2"
+        in_flight[qid] = in_flight.get(qid, 0) + 1
+        worst = max(worst, max(in_flight.values()))
+        await asyncio.sleep(0.01)
+        in_flight[qid] -= 1
+        yield make_mock_event('{"is_correct": 1, "rationale": "."}')
+
+    runner = MagicMock()
+    runner.run_async = mock_run
+    config = VerifierConfig(results_dir=str(tmp_path), run_name="r", judge_name="j",
+                            concurrency=8, early_stop_facts=True)
+    workflow = VerifierWorkflow(config=config, verifier_runner=runner)
+    questions = [
+        Step2QuestionData(question_id="Q1", question="the first question",
+                          options={"A": "A"}, ground_truth="A",
+                          candidates=[Step2CandidateData(0, ["a", "b", "c"], "A", True)]),
+        Step2QuestionData(question_id="Q2", question="the second question",
+                          options={"A": "A"}, ground_truth="A",
+                          candidates=[Step2CandidateData(0, ["a", "b", "c"], "A", True)]),
+    ]
+
+    await workflow.run(questions=questions)
+
+    assert worst == 1, "a question must never have two facts in flight"
