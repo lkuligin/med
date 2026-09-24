@@ -404,6 +404,19 @@ class VerifierConfig(BaseInferenceConfig):
     # on a judge that charges per call is money spent to finish a few minutes
     # sooner. Turn it on for a judge that runs on hardware already paid for.
     speculate_tail: bool = False
+    # How long one fact check may take before it is cancelled and retried.
+    # 120 suits a judge that answers without thinking; measured on GLM-5.3,
+    # p99 is 174s and the slowest check took 838s, so a tenth of a percent of
+    # the work was being cancelled and retried five times over - which adds
+    # load, which cancels more. Raise it for a judge that reasons.
+    request_timeout: float = 120.0
+    # How many candidates of one question may be judged side by side once
+    # questions run out. Bounded because a question's candidates share their
+    # prompt prefix, so cache-aware routing sends them all to one replica: the
+    # width is that replica's queue depth, and a deep queue of long
+    # generations is what request_timeout starts cancelling. Four suited a
+    # single-replica judge; a faster one tolerates more.
+    speculate_width: int = 4
     difficult_questions: str | None = None
 
     @property

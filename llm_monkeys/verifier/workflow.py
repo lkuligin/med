@@ -68,12 +68,17 @@ class _Spread:
     been unnecessary is a little from each rather than a lot from one.
     """
 
-    def __init__(self, slots: int) -> None:
+    def __init__(self, slots: int, cap: int = 4) -> None:
         self.slots = max(1, slots)
+        self.cap = max(1, cap)
         self.active = 0
 
+    # However few questions remain, a question does not get the whole
+    # concurrency. Sixteen long generations queued behind one replica take
+    # minutes each, and minutes is what the per-check timeout is measured in:
+    # filling idle slots that way cancels the work it was meant to speed up.
     def width(self) -> int:
-        return max(1, self.slots // max(1, self.active))
+        return max(1, min(self.cap, self.slots // max(1, self.active)))
 
 
 class VerifierWorkflow:
@@ -144,7 +149,8 @@ class VerifierWorkflow:
                 thought_parts: list[str] = []
                 usage_metadata: types.GenerateContentResponseUsageMetadata | None = None
 
-                async with asyncio.timeout(120.0):
+                async with asyncio.timeout(
+                        getattr(self.config, "request_timeout", 120.0)):
                     async for event in runner.run_async(
                         user_id=user_id,
                         session_id=curr_session,
@@ -697,7 +703,8 @@ class VerifierWorkflow:
         # None unless asked for: without it a question judges one candidate at
         # a time to the end of the run, which leaves slots idle over the last
         # few questions but sends no request that the verdict does not need.
-        spread = (_Spread(self.config.concurrency)
+        spread = (_Spread(self.config.concurrency,
+                          getattr(self.config, "speculate_width", 4))
                   if getattr(self.config, "speculate_tail", False) else None)
 
         # Questions run side by side and the semaphore alone bounds requests in

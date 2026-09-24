@@ -500,13 +500,34 @@ def test_spread_opens_up_only_as_questions_run_out():
     """Eleven of sixteen slots would otherwise idle to the end of a run."""
     from verifier.workflow import _Spread
 
-    spread = _Spread(16)
+    spread = _Spread(16, cap=16)
     spread.active = 8
     assert spread.width() == 2
     spread.active = 3
     assert spread.width() == 5
     spread.active = 1
     assert spread.width() == 16
+
+
+def test_spread_will_not_go_wider_than_its_cap():
+    """A question's candidates share a prompt prefix, so cache-aware routing
+    sends them to one replica and the width is that replica's queue depth. A
+    deep queue of long generations is what the per-check timeout cancels, so
+    how wide is safe is a property of the judge, not of the arithmetic."""
+    from verifier.workflow import _Spread
+
+    narrow = _Spread(16, cap=4)
+    narrow.active = 1
+    assert narrow.width() == 4, "sixteen slots free, but four is the limit"
+
+    wide = _Spread(16, cap=16)
+    wide.active = 1
+    assert wide.width() == 16
+
+    # The cap never forces more than the slots allow.
+    both = _Spread(4, cap=16)
+    both.active = 1
+    assert both.width() == 4
 
 
 def test_spread_never_returns_less_than_one():
@@ -517,11 +538,11 @@ def test_spread_never_returns_less_than_one():
 
     spread = _Spread(0)
     assert spread.width() == 1
-    spread.active = 0
-    assert _Spread(16).width() == 16
+    assert _Spread(16, cap=16).width() == 16
     spread = _Spread(4)
     spread.active = 100
     assert spread.width() == 1
+    assert _Spread(16, cap=0).width() == 1
 
 
 @pytest.mark.asyncio
@@ -655,7 +676,7 @@ async def test_the_tail_is_not_speculated_on_unless_asked(tmp_path: Path):
     in_flight = peak = 0
     config = VerifierConfig(results_dir=str(tmp_path), run_name="r2", judge_name="j",
                             concurrency=8, early_stop_facts=True,
-                            speculate_tail=True)
+                            speculate_tail=True, speculate_width=8)
     await VerifierWorkflow(config=config, verifier_runner=runner).run(
         questions=[question])
     assert peak == 8, "asked for, so the idle slots are filled"

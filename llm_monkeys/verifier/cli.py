@@ -56,6 +56,22 @@ def create_parser() -> argparse.ArgumentParser:
         help="Maximum number of candidates to evaluate per question (default: evaluate all until first pass)",
     )
     parser.add_argument(
+        "--request-timeout",
+        type=float,
+        default=None,
+        help="Seconds one fact check may take before it is cancelled and "
+        "retried (default: 120). A judge that reasons needs more: on GLM-5.3 "
+        "the slowest check took 838s.",
+    )
+    parser.add_argument(
+        "--speculate-width",
+        type=int,
+        default=None,
+        help="Most candidates of one question to judge at once when the tail "
+        "of a run leaves slots idle (default: 4). They share a prompt prefix, "
+        "so they land on one replica; this bounds that replica's queue.",
+    )
+    parser.add_argument(
         "--speculate-tail",
         action="store_true",
         help="Once fewer questions remain than the concurrency allows, judge "

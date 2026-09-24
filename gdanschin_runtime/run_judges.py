@@ -23,6 +23,8 @@ from pathlib import Path
 from gdanschin_runtime.judge_plan import (ATTEMPTS, JUDGE_TEMPERATURE,
                                           STEP1_TEMPERATURE, Step, plan)
 from gdanschin_runtime.models import BASE_MODELS
+from gpu_serving.catalog import SERVABLE
+from gpu_serving.config import load as load_serving
 
 REPO = Path(__file__).resolve().parents[1]
 MONKEYS = REPO / "llm_monkeys"
@@ -78,6 +80,12 @@ def ensure_served(step: Step) -> bool:
     return not result.returncode
 
 
+def replicas(step: Step) -> int:
+    """How many independent copies of this judge the cards hold."""
+    settings = load_serving()
+    return SERVABLE[step.serve].replicas(len(settings.cards))
+
+
 def command(step: Step) -> list[str]:
     """The command this step runs."""
     if step.kind == "step1":
@@ -121,7 +129,14 @@ def command(step: Step) -> list[str]:
             # Both judges in this table run on our own cards, where a request
             # that turns out unnecessary costs time already paid for. Never
             # pass this for a judge billed per call: waiting is cheaper.
-            "--speculate-tail"]
+            "--speculate-tail",
+            # As wide as the judge has replicas to answer with. A question's
+            # candidates share a prompt prefix, so they land on one replica and
+            # the width is that replica's queue depth: four suited GLM on a
+            # single replica, and left three of Qwen's four cards idle through
+            # every run's tail.
+            "--speculate-width", str(replicas(step) * 4),
+            "--request-timeout", "900"]
 
 
 def run(step: Step, index: int, total: int) -> None:
