@@ -388,7 +388,7 @@ class VerifierConfig(BaseInferenceConfig):
 
     model_name: str = DEFAULT_VERIFIER_MODEL
     temperature: float = 1.0
-    max_tokens: int = 512
+    max_tokens: int = 1024
     concurrency: int = 4
     input_filepath: str = DEFAULT_CANDIDATES_FILE
     output_filepath: str = DEFAULT_VERIFIED_FILE

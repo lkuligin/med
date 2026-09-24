@@ -4,25 +4,36 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
+from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from inference._schemas import StepTokenUsage
+
+
+class FactTruthfulness(StrEnum):
+    """Enumeration for fact truthfulness classification by LLM-as-a-judge."""
+
+    YES = "YES"
+    NO = "NO"
 
 
 class FactVerification(BaseModel):
     """Structured output for binary fact verification by LLM-as-a-judge."""
 
-    is_correct: int = Field(
-        description="Binary classification: 1 if the medical fact is factually and clinically correct, 0 if incorrect or false.",
-        ge=0,
-        le=1,
+    is_correct: FactTruthfulness = Field(
+        description="Binary classification: YES if the medical fact is clinically correct, NO if incorrect.",
     )
     rationale: str = Field(
         default="",
-        description="Brief clinical reasoning or explanation for the verdict (1 or 0).",
+        description="Brief clinical reasoning or explanation for the verdict (YES or NO).",
     )
+
+    @field_validator("is_correct", mode="before")
+    @classmethod
+    def _coerce_truthfulness(cls, v: Any) -> Any:
+        return {1: "YES", 0: "NO"}.get(v, v.upper() if isinstance(v, str) else v)
 
 
 @dataclass
@@ -40,6 +51,11 @@ class FactVerificationResult:
     timestamp: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
+
+    @property
+    def truthfulness(self) -> FactTruthfulness:
+        """Enum truthfulness classification corresponding to verdict."""
+        return FactTruthfulness.YES if self.verdict == 1 else FactTruthfulness.NO
 
     def to_dict(self) -> dict[str, Any]:
         """Convert FactVerificationResult to a dictionary."""
@@ -383,6 +399,7 @@ class VerifierWorkflowSummary:
 
 
 __all__ = [
+    "FactTruthfulness",
     "FactVerification",
     "FactVerificationResult",
     "CandidateVerificationResult",

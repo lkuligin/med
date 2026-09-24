@@ -6,8 +6,8 @@ DEFAULT_VERIFIER_SYSTEM_INSTRUCTION = (
     "You are an expert physician, medical licensing board examiner, and clinical judge. "
     "Your task is to critically evaluate whether a stated medical fact or clinical assertion "
     "is factually accurate, scientifically sound, and clinically correct in the context of the medical question. "
-    "Provide a binary classification: 1 if the statement is factually and clinically correct, "
-    "or 0 if the statement is factually incorrect, misleading, false, or scientifically flawed."
+    "Provide a binary classification: YES (1) if the statement is factually and clinically correct, "
+    "or NO (0) if the statement is factually incorrect, misleading, false, or scientifically flawed."
 )
 
 
@@ -35,10 +35,10 @@ def format_fact_verification_prompt(
         f"Candidate Medical Fact to Verify:\n"
         f'"{fact}"\n\n'
         f"Task:\n"
-        f"Determine whether the candidate medical fact above is factually and clinically accurate (1) "
-        f"or inaccurate/false/misleading (0).\n\n"
+        f"Determine whether the candidate medical fact above is factually and clinically accurate (YES / 1) "
+        f"or inaccurate/false/misleading (NO / 0).\n\n"
         f"Respond with:\n"
-        f"- is_correct: 1 if correct and scientifically sound, 0 if incorrect or flawed\n"
+        f"- is_correct: YES if correct and scientifically sound, NO if incorrect or flawed (1 for YES, 0 for NO)\n"
         f"- rationale: A brief 1-2 sentence medical explanation for your judgment\n"
     )
 

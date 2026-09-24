@@ -11,6 +11,8 @@ from verifier._prompts import (
 def test_default_verifier_system_instruction():
     assert "expert physician" in DEFAULT_VERIFIER_SYSTEM_INSTRUCTION
     assert "binary classification" in DEFAULT_VERIFIER_SYSTEM_INSTRUCTION
+    assert "YES" in DEFAULT_VERIFIER_SYSTEM_INSTRUCTION
+    assert "NO" in DEFAULT_VERIFIER_SYSTEM_INSTRUCTION
     assert "1" in DEFAULT_VERIFIER_SYSTEM_INSTRUCTION
     assert "0" in DEFAULT_VERIFIER_SYSTEM_INSTRUCTION
 
@@ -26,5 +28,6 @@ def test_format_fact_verification_prompt():
     assert "A. Aspirin" in prompt
     assert "B. Morphine" in prompt
     assert fact in prompt
-    assert "is_correct: 1" in prompt
+    assert "is_correct: YES" in prompt
+    assert "NO" in prompt
     assert "rationale:" in prompt

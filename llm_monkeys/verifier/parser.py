@@ -26,6 +26,7 @@ _VERDICT_MAP: dict[str, int] = {
 _VERDICT_KEYS = (
     "is_correct",
     "verdict",
+    "truthfulness",
     "label",
     "correct",
     "binary_classification",
@@ -44,13 +45,13 @@ _RATIONALE_PATTERN = re.compile(
     re.IGNORECASE,
 )
 _STANDALONE_PATTERN = re.compile(
-    r"\b([01]|correct|incorrect|true|false)\b",
+    r"\b([01]|correct|incorrect|true|false|yes|no)\b",
     re.IGNORECASE,
 )
 
 
 def _coerce_verdict(val: Any) -> int | None:
-    """Coerce boolean, integer, or verdict string to 0 or 1."""
+    """Coerce boolean, integer, or verdict string/enum to 0 or 1."""
     if val is None:
         return None
     return _VERDICT_MAP.get(str(val).strip().lower())
@@ -96,7 +97,7 @@ def _extract_standalone(text: str) -> tuple[int, str] | None:
     """Extract standalone verdict keyword from text."""
     if match := _STANDALONE_PATTERN.search(text):
         verdict = _VERDICT_MAP[match.group(1).lower()]
-        rationale = "" if text in ("0", "1") else text
+        rationale = "" if text.strip().lower() in ("0", "1", "yes", "no") else text
         return verdict, rationale
     return None
 
