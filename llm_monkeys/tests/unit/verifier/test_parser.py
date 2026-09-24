@@ -114,3 +114,50 @@ def test_parse_with_think_block():
     verdict, rationale = parse_fact_verification(raw)
     assert verdict == 1
     assert "Accurate mechanism." in rationale
+
+
+def test_parse_json_enum_yes_and_no():
+    raw_yes = '{"is_correct": "YES", "rationale": "Strongly supported by guidelines."}'
+    verdict, rationale = parse_fact_verification(raw_yes)
+    assert verdict == 1
+    assert "guidelines" in rationale
+
+    raw_no = '{"is_correct": "NO", "rationale": "Contraindicated in renal failure."}'
+    verdict, rationale = parse_fact_verification(raw_no)
+    assert verdict == 0
+    assert "Contraindicated" in rationale
+
+
+def test_parse_truthfulness_key():
+    raw = '{"truthfulness": "YES", "rationale": "Correct pathophysiology."}'
+    verdict, rationale = parse_fact_verification(raw)
+    assert verdict == 1
+    assert "pathophysiology" in rationale
+
+
+def test_parse_standalone_yes_no():
+    v_yes, rat_yes = parse_fact_verification("YES")
+    assert v_yes == 1
+    assert rat_yes == ""
+
+    v_no, rat_no = parse_fact_verification("NO")
+    assert v_no == 0
+    assert rat_no == ""
+
+    v_yes_lower, _ = parse_fact_verification("yes")
+    assert v_yes_lower == 1
+
+    v_no_lower, _ = parse_fact_verification("no")
+    assert v_no_lower == 0
+
+
+def test_parse_kv_yes_no():
+    raw = "is_correct: YES\nrationale: Correct statement."
+    verdict, rationale = parse_fact_verification(raw)
+    assert verdict == 1
+    assert "Correct statement." in rationale
+
+    raw2 = "truthfulness: NO\nrationale: Misleading claim."
+    verdict2, rationale2 = parse_fact_verification(raw2)
+    assert verdict2 == 0
+    assert "Misleading claim." in rationale2

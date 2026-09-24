@@ -22,7 +22,8 @@ def test_create_fact_verifier_agent():
     assert agent.generate_content_config is not None
     assert agent.generate_content_config.response_mime_type == "application/json"
     assert agent.generate_content_config.temperature == config.temperature
-    assert agent.generate_content_config.max_output_tokens == config.max_tokens
+    assert agent.generate_content_config.max_output_tokens == 1024
+    assert config.max_tokens == 1024
 
 
 def test_create_fact_verifier_agent_default():
@@ -34,6 +35,7 @@ def test_create_fact_verifier_agent_default():
     assert agent.model.model == VerifierConfig().resolved_model_name
     assert agent.generate_content_config is not None
     assert agent.generate_content_config.response_mime_type == "application/json"
+    assert agent.generate_content_config.max_output_tokens == 1024
 
 
 def test_create_fact_verifier_agent_no_output_schema():

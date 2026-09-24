@@ -7,6 +7,7 @@ import pytest
 from inference._schemas import StepTokenUsage
 from verifier._schemas import (
     CandidateVerificationResult,
+    FactTruthfulness,
     FactVerification,
     FactVerificationResult,
     QuestionVerificationResult,
@@ -14,16 +15,41 @@ from verifier._schemas import (
 )
 
 
+def test_fact_truthfulness_enum():
+    assert FactTruthfulness.YES == "YES"
+    assert FactTruthfulness.NO == "NO"
+    assert str(FactTruthfulness.YES) == "YES"
+    assert str(FactTruthfulness.NO) == "NO"
+
+
 def test_fact_verification_pydantic_schema():
-    valid = FactVerification(is_correct=1, rationale="Accurate mechanism.")
-    assert valid.is_correct == 1
-    assert valid.rationale == "Accurate mechanism."
+    # Direct enum strings
+    v_yes = FactVerification(is_correct="YES", rationale="Accurate mechanism.")
+    assert v_yes.is_correct == FactTruthfulness.YES
+    assert v_yes.rationale == "Accurate mechanism."
 
-    valid_zero = FactVerification(is_correct=0, rationale="False statement.")
-    assert valid_zero.is_correct == 0
+    v_no = FactVerification(is_correct="NO", rationale="False statement.")
+    assert v_no.is_correct == FactTruthfulness.NO
 
+    # Coercions from integer 1/0, boolean, and lowercase strings
+    assert FactVerification(is_correct=1).is_correct == FactTruthfulness.YES
+    assert FactVerification(is_correct=0).is_correct == FactTruthfulness.NO
+    assert FactVerification(is_correct=True).is_correct == FactTruthfulness.YES
+    assert FactVerification(is_correct=False).is_correct == FactTruthfulness.NO
+    assert FactVerification(is_correct="yes").is_correct == FactTruthfulness.YES
+    assert FactVerification(is_correct="no").is_correct == FactTruthfulness.NO
+
+    # JSON Schema enforcement
+    schema = FactVerification.model_json_schema()
+    assert schema["$defs"]["FactTruthfulness"]["enum"] == ["YES", "NO"]
+
+    # Rejection of invalid values
     with pytest.raises(Exception):
         FactVerification(is_correct=2)
+    with pytest.raises(Exception):
+        FactVerification(is_correct="MAYBE")
+    with pytest.raises(Exception):
+        FactVerification(is_correct="uncertain")
 
 
 def test_fact_verification_result_serialization():
@@ -49,6 +75,15 @@ def test_fact_verification_result_serialization():
     assert restored.verdict == fv.verdict
     assert restored.is_correct == fv.is_correct
     assert restored.tokens.total_tokens == 70
+    assert fv.truthfulness == FactTruthfulness.YES
+    assert restored.truthfulness == FactTruthfulness.YES
+
+    fv_false = FactVerificationResult(
+        fact="Penicillin is a macrolide.",
+        verdict=0,
+        is_correct=False,
+    )
+    assert fv_false.truthfulness == FactTruthfulness.NO
 
 
 def test_candidate_verification_result_serialization():
