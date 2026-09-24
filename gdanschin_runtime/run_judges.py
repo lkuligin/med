@@ -15,12 +15,14 @@ confirm. A restart loses at most the question in flight.
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import time
 from pathlib import Path
 
-from gdanschin_runtime.judge_plan import (ATTEMPTS, JUDGE_TEMPERATURE,
+from gdanschin_runtime.judge_plan import (ATTEMPTS, DIFFICULT_SIZE,
+                                          JUDGE_TEMPERATURE, SPLIT_SIZE,
                                           STEP1_TEMPERATURE, Step, plan)
 from gdanschin_runtime.models import BASE_MODELS
 from gpu_serving.catalog import SERVABLE
@@ -78,6 +80,37 @@ def ensure_served(step: Step) -> bool:
     if result.returncode:
         log(f"  FAILED to serve {step.serve}: {result.stderr.strip()[:300]}")
     return not result.returncode
+
+
+def finished(step: Step) -> bool:
+    """Is this run already complete, judging only by what is on disk?
+
+    Asked before the cards are touched. The commands are resumable and confirm
+    a finished run in seconds, but confirming costs a server start first, and
+    a restart part-way through the table would otherwise cycle the cards
+    through every model in it to establish that nothing needs doing.
+
+    Deliberately a count and not a checksum: the commands remain the authority
+    on what is complete, and a wrong answer here only costs one needless
+    confirmation.
+    """
+    results = MONKEYS / "results" / step.dataset_dir
+    if step.kind == "step1":
+        stored = list((results / "single-step" / step.base).glob("question_*.json"))
+        if len(stored) < SPLIT_SIZE[step.dataset_dir]:
+            return False
+        # Attempts matter as much as questions: a split answered once is not
+        # the same run as a split answered three times.
+        for path in stored:
+            try:
+                record = json.loads(path.read_text())
+            except (OSError, json.JSONDecodeError):
+                return False
+            if len(record.get("attempts") or []) < ATTEMPTS:
+                return False
+        return True
+    judged = (results / "facts-pipeline" / step.base).glob(f"question_*/{step.judge}")
+    return sum(1 for _ in judged) >= DIFFICULT_SIZE[step.dataset_dir]
 
 
 def replicas(step: Step) -> int:
@@ -141,6 +174,9 @@ def command(step: Step) -> list[str]:
 
 def run(step: Step, index: int, total: int) -> None:
     log(f"[{index}/{total}] {step.label}")
+    if finished(step):
+        log(f"[{index}/{total}] already complete; nothing served")
+        return
     if not ensure_served(step):
         log(f"[{index}/{total}] skipped: nothing serving")
         return

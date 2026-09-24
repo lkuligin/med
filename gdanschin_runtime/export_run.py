@@ -162,10 +162,15 @@ def export_one_shot(run: str, out: Path, dataset: str) -> Path | None:
     return None if stored is None else _write(out, stored)
 
 
-def export_verdicts(run: str, judge: str, out: Path, dataset: str) -> Path | None:
+def export_verdicts(run: str, judge: str, out: Path, dataset: str,
+                    difficult_only: bool = False) -> Path | None:
     """Step 3, likewise stored whole, one file per judge."""
     stored = VerificationResults(RESULTS, run, judge, dataset).load()
-    return None if stored is None else _write(out, stored)
+    if stored is None:
+        return None
+    if difficult_only:
+        stored = {**stored, "results": _on_list(stored["results"], dataset)}
+    return _write(out, stored)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -219,6 +224,7 @@ def main(argv: list[str] | None = None) -> int:
                 run, judge,
                 out_dir / STEP_DIR["verdicts"] / f"results_step3_{run}_{judge}{mark}.json",
                 dataset,
+                difficult_only=args.difficult_only,
             )
             if path:
                 written.append(path)

@@ -44,6 +44,11 @@ DATASETS = (("medbullets", "mkieffer/Medbullets", "difficult_questions_mb.csv"),
 
 ATTEMPTS = 3
 
+# Rows in each split, for telling a finished run from an unfinished one
+# without opening it.
+SPLIT_SIZE = {"medbullets": 308, "med_qa": 1273}
+DIFFICULT_SIZE = {"medbullets": 165, "med_qa": 483}
+
 # The two steps sample differently, and neither number is ours to pick. 0.8 is
 # what BaseInferenceConfig sets and what every step 1 run already measured has
 # used; 1.0 is what VerifierConfig sets and what every gemini verdict we have
@@ -115,4 +120,5 @@ if __name__ == "__main__":
 
 
 __all__ = ["Step", "plan", "describe", "JUDGES", "GENERATORS", "DATASETS",
-           "ATTEMPTS", "STEP1_TEMPERATURE", "JUDGE_TEMPERATURE"]
+           "ATTEMPTS", "STEP1_TEMPERATURE", "JUDGE_TEMPERATURE",
+           "SPLIT_SIZE", "DIFFICULT_SIZE"]
