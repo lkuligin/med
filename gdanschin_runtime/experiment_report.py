@@ -15,8 +15,8 @@ For each dataset, over the difficult questions, it compares:
 - one pass: the first attempt of the model's step 1 run.
 
 Each dataset is also split by whether its questions need an exhibit the text
-does not include, from data/figure_labels_<dataset>.csv (labelled by an LLM):
-questions that require a figure, and questions whose text is enough.
+does not include, from llm_monkeys/figure_labels.csv and figure_labels_mb.csv
+(labelled by an LLM): questions labelled requires_figure, and everything else.
 
 The verdict follows the rule agreed for this experiment: on at least one
 dataset the better of the two judge selections is within MARGIN of the
@@ -111,9 +111,13 @@ def one_pass(dataset: str, run: str, qids: list[str]) -> float | None:
     return sum(bool(a["is_correct"]) for a in first) / len(first)
 
 
+# Written by llm_monkeys/label_figures.py, beside the difficult-question lists.
+FIGURE_LABELS = {"med_qa": "figure_labels.csv", "medbullets": "figure_labels_mb.csv"}
+
+
 def figure_labels(dataset: str) -> dict[str, str]:
     """question id -> label; empty when the dataset has not been labelled."""
-    path = ROOT / "data" / f"figure_labels_{dataset}.csv"
+    path = ROOT / FIGURE_LABELS[dataset]
     if not path.is_file():
         return {}
     with open(path, encoding="utf-8") as handle:
@@ -122,7 +126,7 @@ def figure_labels(dataset: str) -> dict[str, str]:
 
 FIGURE_GROUPS = {
     "requires_figure": ("requires_figure",),
-    "text_is_enough": ("no_figure", "mentions_figure_answerable"),
+    "everything_else": ("no_figure", "mentions_figure_answerable"),
 }
 
 

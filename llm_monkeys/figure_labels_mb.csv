@@ -1,0 +1,309 @@
+question_id,label,reason
+001,no_figure,The question contains all necessary clinical and diagnostic details in the text without referencing any figures or external exhibits.
+002,no_figure,The question does not mention or rely on any image or figure.
+003,requires_figure,The diagnosis and management depend on interpreting the initial and repeat ECG findings shown in Figure A and Figure B.
+004,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+005,requires_figure,The diagnosis depends on visual inspection of the scalp lesions depicted in Figure A and Figure B to distinguish between the skin cancer types and other options.
+006,no_figure,The clinical vignette and answer choices do not refer to or rely on any images or exhibits.
+007,no_figure,The clinical vignette provides all necessary details in text without referencing any figures or images.
+008,no_figure,The question contains all necessary clinical details in the text and does not reference any image or exhibit.
+009,no_figure,The question contains all necessary clinical information in the text and makes no reference to any external image or exhibit.
+010,mentions_figure_answerable,"The clinical presentation of false pregnancy signs, negative in-office urine hCG, and an evaporation line on an old home test provides enough diagnostic information to identify pseudocyesis without seeing the ultrasound figure."
+011,requires_figure,The correct management depends on identifying the type and exact location of the ingested foreign body shown in the chest radiographs.
+012,no_figure,The question contains all necessary clinical information in the text and does not mention or require an image.
+013,requires_figure,The question relies entirely on the physical exam finding depicted in Figure A to identify the patient's condition and determine its risk factor.
+014,no_figure,"The question contains no references to any external images, figures, or exhibits and can be evaluated entirely from the text."
+015,no_figure,The question contains all clinical findings in the text and does not mention or rely on any image or exhibit.
+016,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any images or external figures.
+017,no_figure,The question contains all clinical information within the text and does not mention or rely on any figures or exhibits.
+018,no_figure,The question contains only text describing a clinical vignette and does not reference any image or exhibit.
+019,no_figure,The question contains all necessary clinical details in text and does not reference any figure or exhibit.
+020,mentions_figure_answerable,"The clinical history of hepatitis C infection combined with fine, lace-like white lines on the buccal mucosa (Wickham striae) is classic for lichen planus without needing to see Figure A."
+021,no_figure,The question contains all clinical information in the text and does not reference any image or exhibit.
+022,requires_figure,"Figure A displays hemoglobin electrophoresis results necessary to determine whether the patient has sickle cell trait or sickle cell disease, which dictates the expected future complication."
+023,mentions_figure_answerable,"The clinical vignette describing thick, purulent eye discharge in a 4-day-old infant is classic for gonococcal ophthalmia neonatorum, which is routinely prevented at birth with topical erythromycin, making the figure unnecessary."
+024,mentions_figure_answerable,"Although Figure A is referenced, the text clearly describes metoclopramide-induced acute dystonia (torticollis), which is sufficient to identify diphenhydramine as the appropriate management."
+025,mentions_figure_answerable,"Although Figure A (ECG) is mentioned, the post-myocardial infarction discharge regimen (dual antiplatelet therapy, beta-blocker, statin) indicates acute coronary syndrome, making the addition of an ACE inhibitor (lisinopril) the standard guideline-directed medical therapy that can be deduced from the text alone."
+026,no_figure,The question contains all necessary clinical information in the text and does not reference any external images or exhibits.
+027,mentions_figure_answerable,"The clinical history of working in semiconductor manufacturing combined with gastrointestinal symptoms, altered mental status, and a garlic odor on the breath is sufficient to identify arsenic toxicity without seeing Figure A."
+028,no_figure,The question contains all necessary clinical information to diagnose juvenile myoclonic epilepsy without referencing any images or external figures.
+029,mentions_figure_answerable,"The combination of a marfanoid habitus (tall and slender), a thyroid nodule with lymphadenopathy suggesting medullary thyroid cancer, and perioral findings is characteristic of multiple endocrine neoplasia type 2B (MEN 2B), which is associated with pheochromocytoma (elevated plasma metanephrines)."
+030,mentions_figure_answerable,"The clinical history of head trauma followed by a classic lucid interval and rapid neurologic deterioration is diagnostic of an epidural hematoma, typically associated with damage to the pterion/sphenoid bone, allowing the question to be answered without the CT scan."
+031,no_figure,The question contains all necessary clinical information in the text and does not reference any external images or exhibits.
+032,no_figure,"The question presents all clinical details, including CT findings, in the text without referencing any external image or exhibit."
+033,no_figure,"The question does not reference any figure, image, table, or external exhibit."
+034,no_figure,"The question presents all relevant clinical, imaging, and laboratory findings within the text without referencing an external image."
+035,no_figure,The question contains all necessary clinical information in the text and makes no reference to any images or exhibits.
+036,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+037,requires_figure,"The question requires interpreting a table of lab values in Figure A, which is not provided, and the answer choices only reference labels from that figure."
+038,mentions_figure_answerable,"The clinical history of proximal muscle weakness that improves with exercise in a heavy smoker with weight loss is classic for Lambert-Eaton myasthenic syndrome, allowing identification of the diagnostic test without viewing the chest radiograph."
+039,no_figure,The question presents a complete clinical scenario without any reference to external figures or images.
+040,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any exhibits.
+041,requires_figure,The question relies entirely on the visual appearance of the rash in Figure A to determine the underlying diagnosis among diverse histologic and etiologic options.
+042,no_figure,The question contains all necessary clinical information directly in the text without referencing any figures or external exhibits.
+043,no_figure,The question does not refer to any external image or exhibit and can be answered entirely using the provided clinical text.
+044,mentions_figure_answerable,"The clinical history of sensorineural deafness, sudden drop attacks triggered by auditory startle, and family history of sudden cardiac death uniquely identifies Jervell and Lange-Nielsen syndrome (congenital long QT syndrome), which is managed with electrolyte repletion and a beta-blocker."
+045,mentions_figure_answerable,"The clinical presentation of hemoptysis, weight loss, smoking history, right shoulder pain, Horner syndrome, and ulnar-distribution paresthesias clearly describes a Pancoast tumor caused by lung adenocarcinoma, making the question answerable without viewing Figure A."
+046,no_figure,The question contains all necessary clinical details in text form and does not reference any figure or image.
+047,no_figure,The question contains all necessary clinical information and laboratory results directly in the text without referencing any external image or exhibit.
+048,no_figure,The question contains all clinical and laboratory information in the text and does not reference any external images or exhibits.
+049,no_figure,"The question contains all clinical information in the text without referring to any images, tables, or other exhibits."
+050,mentions_figure_answerable,"The clinical presentation of fever, hypotension, desquamating rash, and retained nasal packing provides sufficient information to diagnose staphylococcal toxic shock syndrome without seeing Figure A."
+051,requires_figure,The ECG shown in Figure A is required to identify the specific cardiac arrhythmia and determine which part of the conduction system is affected.
+052,no_figure,The question contains all necessary clinical details in text and does not reference any figure or exhibit.
+053,no_figure,"The question does not refer to any image, exhibit, or figure."
+054,no_figure,The question presents a complete clinical scenario without referencing any images or external exhibits.
+055,mentions_figure_answerable,"The clinical presentation of painless bloody stools and regurgitation in an exclusively breastfed 4-week-old infant is diagnostic of food protein-induced allergic proctocolitis, which is treated by modifying the mother's diet regardless of the rash shown in Figure A."
+056,no_figure,The question presents all clinical details and laboratory values entirely in text without referencing any images or exhibits.
+057,no_figure,The question contains all the clinical information within the text and does not reference any figure or exhibit.
+058,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any exhibits or images.
+059,requires_figure,The CT scan in Figure A is required to distinguish between the various differential diagnoses of intracranial masses presented in the options.
+060,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+061,no_figure,"The question is entirely text-based and does not mention or rely on any figures, tables, or external exhibits."
+062,no_figure,"The question mentions diagnostic imaging in the clinical narrative, but does not refer to any external image or exhibit, and all necessary laboratory data are provided directly in the text."
+063,no_figure,The question contains all necessary clinical details in text and does not mention or require an external figure.
+064,mentions_figure_answerable,"The clinical presentation of a sudden-onset thunderclap headache with neck stiffness and a prior sentinel headache is classic for subarachnoid hemorrhage due to rupture of a berry aneurysm, allowing the question to be answered without the CT image."
+065,no_figure,"The question does not refer to any image, figure, or exhibit and contains all necessary clinical information to identify the disease and answer."
+066,no_figure,The question contains all necessary clinical information and laboratory values in the text without referring to any images or exhibits.
+067,mentions_figure_answerable,"The clinical vignette fully describes the classic presentation of malignant (necrotizing) otitis externa in an elderly diabetic patient with granulation tissue, allowing determination of the correct systemic antimicrobial therapy without viewing Figure A."
+068,no_figure,The question contains all necessary clinical information and laboratory values in text form without referring to any images or exhibits.
+069,requires_figure,"The differential consists of the five cyanotic congenital heart diseases, and viewing the chest radiograph (Figure A) and electrocardiogram (Figure B) is essential to determine the specific diagnosis."
+070,requires_figure,The question relies on Figure A to identify the specific foot abnormality (such as clubfoot versus metatarsus adductus) to determine the appropriate management.
+071,requires_figure,"The ECG in Figure A is required to determine whether hyperkalemic cardiac membrane instability is present, which dictates whether calcium gluconate is the necessary next step over fluid resuscitation alone."
+072,no_figure,The question contains all necessary clinical information in the text and does not refer to any image or exhibit.
+073,no_figure,The question presents all necessary clinical details in text format without referring to any images or figures.
+074,requires_figure,The question relies on the unseen fundoscopic exam image in Figure A to identify the ocular finding and determine the appropriate management step.
+075,requires_figure,"The question presents overlapping clinical features of myopathy and systemic symptoms, requiring the muscle biopsy in Figure A to definitively confirm the diagnosis among options like dermatomyositis and polymyositis."
+076,mentions_figure_answerable,"The clinical presentation of fever, retro-orbital headache, severe myalgias/arthralgias, leukopenia, and thrombocytopenia following travel to Thailand is classic for dengue fever, which can be diagnosed via serologic testing without needing to see the rash in Figure A."
+077,mentions_figure_answerable,"The constellation of overlapping symptoms of systemic lupus erythematosus (photosensitivity/sunburn, arthralgias), systemic sclerosis (dysphagia, edematous hands), and polymyositis (muscle pain) strongly points to mixed connective tissue disease, which is diagnosed by detecting anti-U1 ribonucleoprotein antibodies."
+078,requires_figure,"The non-stress test tracing shown in Figure A must be evaluated to determine whether it is normal, non-reactive, or demonstrating another pattern before identifying the underlying cause."
+079,requires_figure,"The question refers to an ultrasound in Figure A, which is necessary to identify the specific features of the adnexal mass to determine whether conservative management (reassurance) or surgical intervention is appropriate."
+080,no_figure,The question presents a complete clinical scenario without referencing any figures or images.
+081,no_figure,"The question contains no references to any images, tables, or external exhibits."
+082,requires_figure,"The patient presents with neonatal bilious vomiting with multiple differential diagnoses provided in the options, making the referenced abdominal radiograph and upper GI series essential to confirm the diagnosis."
+083,requires_figure,The question requires viewing the ECG in Figure A to determine the specific overdose/toxidrome responsible for the patient's symptoms.
+084,no_figure,The question contains all necessary clinical information to diagnose cluster headache and select preventive treatment without referencing any figures or images.
+085,mentions_figure_answerable,"Although the electrocardiogram in Figure A is referenced, the patient's symptomatic, hypotensive bradycardia refractory to atropine makes pacing the only appropriate management option among the choices."
+086,no_figure,The question presents a complete clinical vignette and does not refer to any image or exhibit.
+087,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+088,no_figure,"The question contains all necessary clinical details in text and does not reference any image, figure, or exhibit."
+089,requires_figure,"The ECG in Figure A is required to determine the underlying cardiac rhythm (e.g., atrial fibrillation) to decide between anticoagulation and antiplatelet therapy for secondary stroke prevention."
+090,requires_figure,"The diagnosis depends on visual identification of the skin lesions shown in Figure A, as the clinical history contains competing clues pointing toward several different dermatologic conditions."
+091,requires_figure,"The patient's physical appearance and ocular/facial findings are depicted in Figure A, which is essential to distinguish between differential diagnoses like cavernous sinus thrombosis and intracranial hemorrhage to determine the most appropriate initial management."
+092,no_figure,"All relevant clinical and laboratory information is provided in the text, and no external figure is referenced."
+093,mentions_figure_answerable,"The rapid onset of virilization, a palpable unilateral adnexal mass, markedly elevated testosterone (>200 ng/dL), and normal DHEAS are sufficient to identify an ovarian tumor without needing to view the ultrasound image."
+094,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+095,no_figure,The question describes the clinical presentation and EEG findings entirely in text without referencing any external image or exhibit.
+096,no_figure,The question contains all necessary clinical information in the text and does not reference any image or exhibit.
+097,no_figure,The question contains all necessary clinical details in the text and makes no reference to any figures or exhibits.
+098,no_figure,The question contains all necessary clinical and laboratory information in the text without referring to any images or exhibits.
+099,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any figures or exhibits.
+100,requires_figure,The appropriate management of the finger injury depends on evaluating the extent of the subungual hematoma or nail bed disruption shown in Figure A.
+101,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any figures or exhibits.
+102,no_figure,The question presents a complete clinical scenario without referencing any images or external exhibits.
+103,requires_figure,The answer choices correspond to lettered labels on a chest radiograph (Figure A) that must be viewed to identify which anatomical structure is being indicated.
+104,no_figure,The question is entirely text-based and does not mention or require any figure or exhibit.
+105,mentions_figure_answerable,"Although Figure A displays the patient's acne, the question can be answered based on the timeline, as topical acne regimens typically require 8 to 12 weeks to show efficacy and should not be changed after only one month."
+106,no_figure,The question contains all necessary clinical information directly in the text and does not reference any external images or exhibits.
+107,mentions_figure_answerable,"The clinical history of a mandibular mass with draining sinus tracts following a root canal is classic for cervicofacial actinomycosis, which is treated with penicillin, making the question answerable without viewing Figure A."
+108,no_figure,The question contains all necessary clinical information in the text and does not refer to any image or exhibit.
+109,no_figure,The question contains all necessary clinical details in text and does not reference any image or exhibit.
+110,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+111,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+112,mentions_figure_answerable,"The constellation of headache, blurry vision, pulsatile tinnitus, papilledema, and recent initiation of an oral acne medication in a young female is sufficient to diagnose idiopathic intracranial hypertension without viewing the skin findings in Figure A."
+113,mentions_figure_answerable,"The clinical history of delayed meconium passage, abdominal distension, and explosive release of stool on rectal exam is classic for Hirschsprung disease, which is definitively diagnosed by rectal suction biopsy regardless of the radiograph in Figure A."
+114,mentions_figure_answerable,"The clinical presentation of cyanosis during feeding that improves with crying is pathognomonic for bilateral choanal atresia, which is diagnosed by the inability to pass a nasogastric tube through the nares without needing to see Figure A."
+115,mentions_figure_answerable,"The clinical presentation of acute posterior elbow pain and loss of active elbow extension following a fall on an outstretched hand is classic for a triceps rupture among the provided options, allowing the question to be answered without the radiograph."
+116,requires_figure,The answer choices only list letters corresponding to an unseen table or diagram (Figure A) containing the maternal regimens and neonatal prophylaxis options.
+117,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+118,mentions_figure_answerable,"The ECG in Figure A is mentioned, but the clinical presentation of postsurgical hypocalcemia and hyperphosphatemia following total thyroidectomy is sufficient to diagnose iatrogenic hypoparathyroidism."
+119,mentions_figure_answerable,"Although an abdominal radiograph is referenced, the clinical presentation of failure to pass meconium, abdominal distension, Down syndrome features, and release of stool and flatus upon digital rectal exam (squirt sign) uniquely identifies Hirschsprung disease."
+120,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+121,requires_figure,The diagnosis and appropriate next step in management depend on interpreting the pathology results provided in Figure A.
+122,no_figure,The question contains all necessary clinical information and laboratory findings directly in the text without referencing any figures or external exhibits.
+123,mentions_figure_answerable,"Acute bilious vomiting in a previously healthy 3-week-old is malrotation with midgut volvulus until proven otherwise, for which an upper gastrointestinal contrast series is the gold standard next diagnostic step once perforation is ruled out."
+124,requires_figure,"The specific radiographic findings in Figure A (such as dilated bowel loops versus a double-bubble sign) are necessary to determine whether a contrast enema, upper GI series, or another diagnostic step is indicated for this infant's bowel obstruction."
+125,mentions_figure_answerable,"The clinical presentation of hirsutism, oligomenorrhea, and acanthosis nigricans is diagnostic of polycystic ovary syndrome, allowing identification of the increased risk of endometrial carcinoma without the ultrasound image."
+126,requires_figure,"The lesion under the breast is only presented as Figure A, which is essential to distinguish between candidal intertrigo, inverse psoriasis, or other dermatologic conditions to choose the correct treatment."
+127,no_figure,The question contains all necessary clinical information in text and does not mention or rely on any image or exhibit.
+128,no_figure,The question contains all clinical information in the text and does not refer to any external images or exhibits.
+129,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+130,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+131,no_figure,The question contains all necessary clinical information in the text without referring to any images or exhibits.
+132,requires_figure,The question requires viewing the radiograph in Figure A to differentiate between the various knee injuries listed in the options.
+133,no_figure,The clinical vignette and laboratory results provide all necessary details in text without referencing any figures or exhibits.
+134,mentions_figure_answerable,"The patient's presentation with bloody diarrhea, family history of primary sclerosing cholangitis, and positive p-ANCA clearly indicate ulcerative colitis without needing to view the colonoscopy image in Figure A."
+135,no_figure,The question contains all necessary clinical details in text and does not refer to any external figures or exhibits.
+136,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+137,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+138,no_figure,"The question does not refer to any image, graph, table, or external exhibit and can be answered entirely from the provided text."
+139,requires_figure,The nature of the rash in Figure A is critical to identifying the likely causative organism (such as Neisseria meningitidis) and determining whether adjunctive corticosteroids are indicated.
+140,no_figure,The question contains all necessary clinical and laboratory information directly in the text with no reference to an external image or exhibit.
+141,mentions_figure_answerable,"The clinical history of an animal bite to the hand is sufficient to know that mammalian bites over joints should not be primarily closed and require antibiotic prophylaxis with amoxicillin-clavulanate, making the figure unnecessary."
+142,no_figure,The clinical vignette contains all necessary details directly in the text with no reference to any images or exhibits.
+143,no_figure,The question contains all necessary information in the text and does not refer to any external figure or exhibit.
+144,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any exhibits or images.
+145,requires_figure,Microscopic examination of the synovial fluid in Figure A is required to definitively distinguish between gout and pseudogout based on crystal morphology.
+146,no_figure,The question contains all necessary clinical information in the text without referencing any figures or exhibits.
+147,no_figure,The question describes the chest radiograph findings directly in the text without referencing an external image.
+148,no_figure,The question contains all necessary clinical details in text and does not mention or require any images or exhibits.
+149,no_figure,The question contains all necessary clinical information in the text and does not refer to any figures or exhibits.
+150,no_figure,The question contains all necessary clinical information in the text and does not reference any image or external exhibit.
+151,requires_figure,The question relies on the physical examination finding in Figure A (likely showing livedo reticularis or blue toe syndrome) to differentiate cholesterol embolism from other causes of abdominal pain and elevated lipase.
+152,no_figure,The question contains all necessary clinical information in the text and does not mention or require an image.
+153,requires_figure,Figure A is required to identify whether the synovial fluid shows needle-shaped crystals (gout) or rhomboid-shaped crystals (pseudogout) to determine whether tophi or chondrocalcinosis would be seen on the radiograph.
+154,no_figure,The question contains no references to any images or exhibits.
+155,mentions_figure_answerable,"The clinical presentation of severe tearing chest and back pain, marked hypertension, and asymmetric pulses is sufficient to identify suspected aortic dissection and choose CT angiography without viewing the chest radiograph."
+156,no_figure,The question contains all necessary clinical and laboratory information in the text with no reference to an external image or exhibit.
+157,requires_figure,The question relies on the rash shown in Figure A to differentiate among potential causes such as an allergic reaction or a drug eruption.
+158,no_figure,The question contains all necessary clinical and laboratory information in the text itself and does not reference any external figures or exhibits.
+159,requires_figure,The diagnosis between types of bowel obstruction or volvulus relies on the radiographic findings shown in Figure A.
+160,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+161,mentions_figure_answerable,"The clinical presentation of supraventricular tachycardia and an IV medication whose effect wears off in seconds clearly points to adenosine, allowing identification of flushing as a side effect without viewing Figure A."
+162,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any exhibits or images.
+163,no_figure,The question contains all clinical information and test findings within the text without referring to any images or exhibits.
+164,requires_figure,The question presents competing clinical clues (recent travel to Mexico suggesting an amebic abscess versus steroid use in a wrestler suggesting a hepatic adenoma) that require the abdominal CT image in Figure A to characterize the liver mass and select the correct management.
+165,requires_figure,The brain MRI in Figure A is essential to identify the underlying intracranial pathology (such as multiple ring-enhancing lesions versus other findings) to determine the appropriate next step in management.
+166,mentions_figure_answerable,"The patient's travel to South America, history of eyelid swelling (Romaña sign), and current signs of dilated cardiomyopathy clinically point directly to Chagas disease treated with benznidazole, making the question answerable without viewing the blood smear."
+167,requires_figure,"The visual appearance of the nodule in Figure A is essential to distinguish between keratoacanthoma and pyogenic granuloma, both of which can present as rapidly growing lesions following minor trauma."
+168,mentions_figure_answerable,"Figure A illustrates the patient's goiter, but the text provides sufficient clinical detail regarding uncontrolled hyperthyroidism refractory to maximal medical therapy during pregnancy to identify second-trimester thyroidectomy as the correct management."
+169,no_figure,"The question does not refer to any image, table, or other exhibit and provides all necessary information in the text."
+170,no_figure,The question contains all necessary clinical information in the text and does not reference or require any external images or exhibits.
+171,mentions_figure_answerable,"The clinical history of chronic abdominal pain, bloody stools, weight loss, and CT findings of terminal ileum disease sufficient identify Crohn's disease leading to vitamin B12 deficiency (increased methylmalonic acid) without requiring the image."
+172,mentions_figure_answerable,"The clinical history of progressive confusion following a likely fall in an elderly patient is classic for a chronic subdural hematoma, allowing one to identify cerebral atrophy as the earliest predisposing factor without needing to view the CT image."
+173,no_figure,"The question contains all necessary clinical details in the text and makes no reference to any figures, images, or exhibits."
+174,no_figure,The question contains all necessary clinical details in the text and does not reference any images or external exhibits.
+175,requires_figure,"The patient's acute, painless monocular vision loss could represent central retinal artery occlusion, central retinal vein occlusion, or retinal detachment, making the fundoscopic image necessary to determine the correct diagnosis."
+176,requires_figure,"The fundoscopic image in Figure A is essential to determine the specific cause of acute painless vision loss (e.g., central retinal artery occlusion versus central retinal vein occlusion or retinal detachment) to select the correct management."
+177,mentions_figure_answerable,"Although Figure A shows the patient's right eye, the clinical presentation and physical examination findings in the text sufficiently describe the condition."
+178,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+179,no_figure,The question contains all necessary clinical information and laboratory values in text form without referencing any external figures or exhibits.
+180,no_figure,"The question does not refer to any image, table, or external exhibit and can be answered based solely on the clinical vignette."
+181,no_figure,"The question does not reference any images, exhibits, or figures."
+182,no_figure,The question contains all necessary clinical information in the text and does not mention or require any figure or exhibit.
+183,no_figure,The question contains no references to any images or exhibits and can be answered using the provided clinical text alone.
+184,mentions_figure_answerable,"The clinical presentation of a sudden-onset severe thunderclap headache with meningismus clearly indicates a subarachnoid hemorrhage, which occurs between the arachnoid mater and pia mater, allowing the question to be answered without the CT image."
+185,no_figure,The question contains all necessary clinical and ultrasound findings directly in the text without referring to any images or exhibits.
+186,no_figure,The question describes the chest radiograph findings directly in the text and does not refer to any external image or exhibit.
+187,no_figure,The question presents all clinical details and laboratory values directly in the text without referencing any figures or images.
+188,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+189,mentions_figure_answerable,"Although the question refers to an ocular finding in Figure A (a cherry-red spot), the presentation of neurodevelopmental regression, hyperreflexia, and absence of hepatosplenomegaly is sufficient to diagnose Tay-Sachs disease and identify GM2-ganglioside accumulation."
+190,mentions_figure_answerable,The patient's presentation of subacute right-sided heart failure with Kussmaul sign (jugular venous distension during inspiration) developing after a viral illness is clinically diagnostic of constrictive pericarditis even without viewing the pericardial calcification on the radiograph.
+191,no_figure,The question asks what would be expected on imaging based on the clinical presentation and does not refer to an external figure.
+192,no_figure,The question is entirely self-contained within the clinical text and does not mention or rely on any exhibits.
+193,no_figure,"The question contains all necessary clinical details in text and makes no reference to any figures, images, or exhibits."
+194,mentions_figure_answerable,"The clinical presentation of painless bloody stools and regurgitation in an otherwise well, thriving 6-week-old breastfed infant is pathognomonic for food protein-induced allergic proctocolitis, which is a non-IgE-mediated immunologic reaction, allowing the question to be answered without seeing Figure A."
+195,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+196,requires_figure,The question relies on findings shown in Figure A (physical examination) and Figure B (diaper appearance) to determine whether the presentation represents benign normal variants or pathology.
+197,requires_figure,"The patient's clinical scenario fits both transient tachypnea of the newborn and respiratory distress syndrome, making the chest radiograph in Figure A necessary to distinguish between them."
+198,no_figure,The question presents a full clinical scenario without mentioning or relying on any images or exhibits.
+199,mentions_figure_answerable,"Although an ECG and chest radiograph are referenced, the clinical vignette provides sufficient evidence of acute pulmonary embolism secondary to deep vein thrombosis, allowing the selection of heparin without viewing the figures."
+200,no_figure,The question is entirely text-based and does not refer to or require any images or exhibits.
+201,no_figure,The question contains all necessary clinical information in the text without referencing any figures or exhibits.
+202,no_figure,The clinical vignette provides all necessary details in text with no reference to any images or exhibits.
+203,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any images or exhibits.
+204,requires_figure,The question relies on the physical examination finding depicted in Figure A to determine the underlying diagnosis among plausible options like cholesterol embolism and pancreatitis.
+205,requires_figure,"The diagnosis depends directly on the visual characteristics of the rash shown in Figure A, as the clinical history provides conflicting clues (atopy, viral exposure, and cancer history)."
+206,no_figure,The question contains all necessary clinical information in the text and does not mention or require any figure or exhibit.
+207,no_figure,The question contains all necessary clinical information and laboratory results directly in the text without referring to any images or exhibits.
+208,no_figure,The question presents all relevant clinical information and cerebrospinal fluid analysis findings directly within the text without referring to any images or exhibits.
+209,requires_figure,The ECG image (Figure A) is required to determine whether cardiac membrane stabilization with calcium gluconate is indicated due to hyperkalemic ECG changes.
+210,no_figure,The question contains all necessary clinical and radiographic findings in the text and does not refer to any external image or exhibit.
+211,no_figure,The question contains all clinical information within the text and does not refer to any image or exhibit.
+212,no_figure,The question contains all necessary clinical information described in text without referencing an external image or exhibit.
+213,no_figure,"The question does not refer to any external figure, image, or exhibit and contains all necessary clinical information in the text."
+214,no_figure,The question contains all necessary clinical information and does not refer to any figures or exhibits.
+215,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+216,no_figure,The question contains all clinical information within the text and does not reference any external images or exhibits.
+217,no_figure,The question contains all necessary clinical and laboratory information in the text and does not mention or require an image.
+218,no_figure,The question contains all necessary clinical details in text and does not mention or require any figure or exhibit.
+219,no_figure,The question contains only text and clinical findings without mentioning or relying on any figures or exhibits.
+220,no_figure,The question contains all necessary clinical details in text format and does not refer to any external figure or image.
+221,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any external figures or exhibits.
+222,requires_figure,The initial skin lesion must be identified from Figure A to determine the specific prescribed antibiotic responsible for the phototoxic reaction.
+223,mentions_figure_answerable,"Although Figure A is referenced, the text explicitly states the diagnosis of a grade V splenic injury requiring surgical intervention (splenectomy), which is sufficient to determine the need for post-splenectomy vaccinations."
+224,requires_figure,The ECG in Figure A is required to identify the specific cardiac arrhythmia (such as multifocal atrial tachycardia versus atrial fibrillation or flutter) before selecting the appropriate treatment.
+225,no_figure,"The question contains all necessary clinical information, laboratory results, and biopsy findings in the text without referencing any figures or images."
+226,no_figure,The question contains only text and does not mention or rely on any exhibits or images.
+227,requires_figure,"The image in Figure A is necessary to identify the specific intraocular pathology, such as a hyphema versus other signs of trauma, which guides the choice between medical and surgical management."
+228,requires_figure,"The clinical presentation contains overlapping features of pericarditis, myocardial infarction, and other conditions, making the unseen ECG in Figure A necessary to confirm the diagnosis."
+229,requires_figure,"The CT scan is necessary to identify the specific abdominal pathology and choose the correct treatment, particularly because standard therapies for chronic pancreatitis (such as enzyme replacement) are not among the options."
+230,no_figure,The question presents all clinical information and laboratory results directly in the text without referencing any figures or exhibits.
+231,mentions_figure_answerable,"The clinical history of an incarcerated patient with constitutional symptoms and right upper lobe findings strongly indicates pulmonary tuberculosis, making RIPE therapy identifiable without viewing the chest radiograph."
+232,no_figure,The question contains all necessary clinical information to diagnose the condition and does not mention or rely on any exhibits.
+233,no_figure,The question contains all necessary clinical and diagnostic details in the text without referencing any figures or exhibits.
+234,no_figure,The question contains all necessary clinical information in the text and does not reference any figures or exhibits.
+235,requires_figure,The ECG in Figure A is required to differentiate the underlying etiology (such as cardiac tamponade demonstrating electrical alternans) causing the patient's shock and elevated jugular venous distension.
+236,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+237,no_figure,The question contains all necessary clinical details in text format and does not reference any image or exhibit.
+238,no_figure,The question contains all necessary clinical information to identify the diagnosis without referencing any figures or exhibits.
+239,no_figure,The question contains all necessary clinical information in the text and does not reference any images or figures.
+240,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits.
+241,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+242,no_figure,The question contains all necessary clinical details in text and does not reference any figure or exhibit.
+243,requires_figure,The electrocardiogram in Figure A is required to differentiate between the various types of atrioventricular block and sinus bradycardia listed in the options.
+244,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any external figures or exhibits.
+245,no_figure,The question presents a complete clinical ethics vignette without referencing any images or external exhibits.
+246,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures.
+247,mentions_figure_answerable,"Although an ECG is referenced, the classic history of predictable exertional chest pain relieved by rest alongside a normal troponin level is sufficient to diagnose stable angina without seeing the image."
+248,no_figure,The question presents a complete clinical vignette without any reference to external figures or images.
+249,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+250,no_figure,The question contains all necessary clinical information in the text and does not reference any image or exhibit.
+251,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+252,no_figure,The question contains all necessary clinical and laboratory information in the text without referring to any external images or exhibits.
+253,no_figure,The question contains all necessary clinical information in the text and does not reference any image or exhibit.
+254,mentions_figure_answerable,"The clinical presentation of acute respiratory distress and pulmonary edema immediately following naloxone administration is a classic board scenario for naloxone-induced noncardiogenic pulmonary edema (medication administration), allowing the question to be answered without the chest radiograph."
+255,no_figure,The question contains all necessary clinical information to identify the suspected condition and does not mention or rely on any exhibits.
+256,no_figure,The question contains all necessary clinical and laboratory information in the text without referring to any images or exhibits.
+257,no_figure,"The question contains no references to any external images, figures, or exhibits."
+258,no_figure,The question contains all clinical and laboratory details necessary to determine the diagnosis and next diagnostic step without referring to any images or exhibits.
+259,no_figure,The question contains all necessary clinical details in the text and does not refer to any external figure or exhibit.
+260,no_figure,The question contains all necessary clinical information in the text and does not refer to any image or exhibit.
+261,no_figure,The question contains all clinical information and laboratory results in the text without referencing any external image or exhibit.
+262,requires_figure,The question refers to an ECG (Figure A) which may show specific findings (such as QT prolongation or Osborn waves) essential for determining the correct laboratory abnormality among the choices.
+263,no_figure,The question contains all necessary clinical information in the text and makes no reference to an image or exhibit.
+264,requires_figure,The ECG (Figure A) and chest radiograph (Figure B) are essential to identify the underlying rhythm and acute pulmonary findings required to determine the appropriate management step.
+265,no_figure,"The echocardiogram findings are fully described in the text, and no external image or exhibit is referenced."
+266,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+267,requires_figure,"The correct management step directly depends on identifying the cardiac rhythm shown in the ECG (Figure A), which is not described in the text."
+268,mentions_figure_answerable,The clinical presentation of progressive groin pain with restricted hip range of motion in a young patient with sickle cell disease clearly indicates avascular necrosis of the femoral head without needing to see the radiograph.
+269,no_figure,The clinical vignette and question contain all necessary information and do not reference any image or exhibit.
+270,no_figure,The question presents a complete clinical vignette describing Todd paralysis following a seizure without referencing any images or external exhibits.
+271,mentions_figure_answerable,"The clinical findings of jugular venous distension, marked pulsus paradoxus (20 mmHg systolic drop with inspiration), and impaired diastolic filling following a viral prodrome strongly point to cardiac tamponade without needing to view the ECG."
+272,no_figure,The question presents a complete clinical scenario without referring to or requiring any external image or exhibit.
+273,requires_figure,"The ECG in Figure A is necessary to identify the specific cardiac rhythm (e.g., supraventricular tachycardia versus ventricular tachycardia) to guide the appropriate treatment."
+274,no_figure,"The question does not refer to any image, table, or other visual exhibit."
+275,no_figure,"The question does not mention or rely on any images, tables, or external exhibits."
+276,mentions_figure_answerable,"Although Figure A is mentioned, the text explicitly describes a cover test demonstrating left eye wandering that corrects when the right eye is covered, which is sufficient to identify strabismic amblyopia and indicate patching the normal right eye."
+277,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any external figures or exhibits.
+278,no_figure,The question presents a complete clinical vignette with no mention of or reference to any external figure or exhibit.
+279,mentions_figure_answerable,"Although an ECG is referenced, the clinical finding of profuse bloody diarrhea alone establishes that the antimotility agent loperamide is contraindicated."
+280,mentions_figure_answerable,"The clinical presentation of hypothermia, bradycardia, hypotension, altered mental status, and a history of hypothyroidism clearly indicates myxedema coma, allowing determination of the next step in management without needing to view the ECG."
+281,no_figure,The question contains all necessary clinical details in the text and does not reference any figure or exhibit.
+282,mentions_figure_answerable,"The patient's clinical presentation with nausea, vomiting, severe bradycardia, and xanthopsia (yellow-tinted vision) in the setting of heart failure and atrial fibrillation is classic for digoxin toxicity, making the ECG unnecessary to answer the question."
+283,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any figures or exhibits.
+284,no_figure,The question contains all necessary clinical details in the text and does not reference any external exhibits.
+285,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any figures or exhibits.
+286,no_figure,The question contains all necessary clinical information to select the appropriate treatment without referencing any figures or images.
+287,no_figure,The question contains all necessary information in the text and does not mention or require any images or exhibits.
+288,no_figure,The question presents a complete text-based quality improvement scenario without any reference to external figures or images.
+289,no_figure,"The question contains all necessary information in the text and does not reference any figure, image, or exhibit."
+290,no_figure,The question contains all necessary clinical details in the text and does not reference any image or exhibit.
+291,no_figure,All relevant clinical and laboratory findings are fully provided in the text without referencing any external image or exhibit.
+292,no_figure,The question presents all relevant clinical information and laboratory values within the text and does not reference any external images or exhibits.
+293,no_figure,The question contains all necessary clinical information and laboratory results in the text without referencing any figures or images.
+294,no_figure,The question presents all clinical and laboratory data entirely within the text without referring to any images or exhibits.
+295,requires_figure,"The question directly asks for the diagnosis based on the ECG findings in Figure A, which is essential to distinguish between the provided cardiac and electrolyte abnormalities."
+296,requires_figure,The ECG in Figure A is necessary to determine whether the patient has ST-elevation myocardial infarction requiring emergent cardiac catheterization versus another acute coronary syndrome requiring medical therapy.
+297,requires_figure,The question requires interpreting the baseline ECG in Figure A to identify the specific arrhythmogenic disorder responsible for the sudden cardiac death.
+298,requires_figure,"The diagnosis depends directly on identifying the specific findings on the ECG in Figure A, which is not provided."
+299,requires_figure,"The differential diagnosis for exertional syncope includes multiple conditions listed in the options, and the ECG in Figure A is necessary to identify the specific diagnosis."
+300,requires_figure,"The question asks for the most likely condition based on the ECG findings shown in Figure A, which are essential to differentiate among the options."
+301,no_figure,The question presents a full clinical vignette without referencing any figures or external exhibits.
+302,requires_figure,The answer choices consist entirely of image labels (Figures A-E) representing pathological findings that cannot be seen or evaluated without the figures.
+303,no_figure,The question contains all necessary clinical and laboratory information in the text without referring to any images or exhibits.
+304,no_figure,The question contains all clinical information in the text without referencing any figures or images.
+305,mentions_figure_answerable,"The clinical presentation of executive dysfunction, prominent cardiovascular risk factors, and focal neurological deficits (left-sided hemiparesis and pronator drift) strongly indicates vascular dementia without needing to view the MRI."
+306,no_figure,The question contains all necessary clinical details in text form and makes no mention of any figures or exhibits.
+307,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any figure or image.
+308,no_figure,The question contains all necessary clinical information to diagnose cluster headache and select the prophylactic therapy without referencing any image or exhibit.
