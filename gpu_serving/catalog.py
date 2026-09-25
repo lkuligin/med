@@ -77,7 +77,10 @@ SERVABLE: dict[str, ServedModel] = {
         sglang_args=(
             "--chunked-prefill-size", "4096",
             "--kv-cache-dtype", "fp8_e4m3",
-            "--constrained-json-disable-any-whitespace",
+            # No --constrained-json-disable-any-whitespace: with it, schema-
+            # constrained fact generation came back as {"facts": []} for 13 of
+            # 20 requests on the background prompt and 3 of 20 on the
+            # reference one; without it, 0 of 40 on each.
             "--page-size", "64",
             "--enable-metrics",
         ),

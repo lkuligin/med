@@ -40,6 +40,12 @@ class Target:
     serve: str           # the entry in gpu_serving's catalogue
     k: int
     judged: bool
+    # Ask the fact step for prose instead of a JSON schema. Needed by a model
+    # that answers the schema by satisfying it emptily: gpt-oss-20b returned
+    # {"facts": []} for 30.7% of its candidates, valid and useless, having
+    # spent 98% of its output on reasoning first. Unconstrained it writes the
+    # same number of facts (16.8 against 17.0) and none of the empties.
+    free_form: bool = False
 
 
 # The order is the order they run in. Judged models come first, so that the
@@ -49,7 +55,7 @@ SWEEP: tuple[Target, ...] = (
     Target("qwen3.5-9b-nr-local", "qwen3.5-9b", 100, True),
     Target("qwen3.5-4b-nr-local", "qwen3.5-4b", 100, True),
     Target("gemma-4-e2b-local", "gemma-4-e2b", 100, False),
-    Target("gpt-oss-20b-local", "gpt-oss-20b", 100, False),
+    Target("gpt-oss-20b-local", "gpt-oss-20b", 100, False, free_form=True),
     Target("qwen3.6-27b-nr-local", "qwen3.6-27b", 50, False),
     Target("qwen3.8-27b-nr-local", "qwen3.8-27b", 50, False),
     Target("qwen3.5-2b-nr-local", "qwen3.5-2b", 100, False),
@@ -66,14 +72,17 @@ class NotJudged(RuntimeError):
 def candidates_command(target: Target, dataset: str, python: str) -> list[str]:
     """Stage 2: generate candidates from the locally served model."""
     entry = BASE_MODELS[target.base]
-    return [python, "-m", "inference.cli",
-            "--model", entry.gateway_model,
-            "--run-name", target.base,
-            "--difficult-questions", DIFFICULT[dataset],
-            "--dataset", dataset,
-            "--n-candidates", str(target.k),
-            "--concurrency", str(GEN_CONCURRENCY),
-            "--max-tokens", str(entry.max_tokens)]
+    command = [python, "-m", "inference.cli",
+               "--model", entry.gateway_model,
+               "--run-name", target.base,
+               "--difficult-questions", DIFFICULT[dataset],
+               "--dataset", dataset,
+               "--n-candidates", str(target.k),
+               "--concurrency", str(GEN_CONCURRENCY),
+               "--max-tokens", str(entry.max_tokens)]
+    if target.free_form:
+        command.append("--free-form-facts")
+    return command
 
 
 def verdicts_command(target: Target, dataset: str, python: str) -> list[str]:
