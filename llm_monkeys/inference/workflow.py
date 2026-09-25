@@ -25,6 +25,7 @@ from inference._dataset import (
     format_fact_generation_prompt,
     load_difficult_questions,
 )
+from inference._prompts import ANSWER_PROMPTS
 from inference._schemas import (
     CandidateQuestionResult,
     CandidateResult,
@@ -39,6 +40,7 @@ from inference.agent import (
 from results_store import build_store, stored_results
 from inference.parser import (
     evaluate_prediction,
+    extract_cited_facts,
     extract_predicted_option,
     parse_medical_facts,
 )
@@ -272,7 +274,7 @@ class CandidateInferenceWorkflow:
             # Step 1: Generate atomic medical facts
             raw_facts, fact_tokens, fact_latency, fact_error = await self._invoke_step(
                 runner=self.fact_runner,
-                prompt=format_fact_generation_prompt(question),
+                prompt=format_fact_generation_prompt(question, self.config.fact_prompt),
                 session_id=f"fact_{base_session}",
                 user_id=user_id,
             )
@@ -307,7 +309,9 @@ class CandidateInferenceWorkflow:
             # Step 2: Generate final answer based on facts
             raw_ans, ans_tokens, ans_latency, ans_error = await self._invoke_step(
                 runner=self.answer_runner,
-                prompt=format_answer_generation_prompt(question, parsed_facts),
+                prompt=format_answer_generation_prompt(
+                    question, parsed_facts, self.config.answer_prompt
+                ),
                 session_id=f"ans_{base_session}",
                 user_id=user_id,
             )
@@ -330,11 +334,18 @@ class CandidateInferenceWorkflow:
                 else False
             )
 
+            cited = (
+                extract_cited_facts(raw_ans, len(parsed_facts))
+                if ANSWER_PROMPTS[self.config.answer_prompt].numbered_facts and not ans_error
+                else None
+            )
+
             return CandidateResult(
                 candidate_index=candidate_idx,
                 facts=parsed_facts,
                 facts_raw_response=raw_facts,
                 answer_raw_response=raw_ans,
+                cited_facts=cited,
                 predicted_option=predicted_opt,
                 is_correct=is_correct,
                 fact_latency_seconds=fact_latency,

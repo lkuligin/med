@@ -21,6 +21,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Sequence
 
+from one_shot.parser import rescore_results
 from results_store import OneShotResults, VerificationResults, split_run_path
 
 # Set headless matplotlib backend before importing pyplot
@@ -936,7 +937,7 @@ def load_step1_single_shot_results(
         items = []
 
     step1_map: dict[str, dict[str, Any]] = {}
-    for item in items:
+    for item in rescore_results(items):
         if not isinstance(item, dict):
             continue
         qid = str(item.get("question_id", "")).strip()

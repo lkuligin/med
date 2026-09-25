@@ -43,16 +43,32 @@ def _build_agent(
     )
 
 
+# Said in words only when the schema is not there to say it. Left free, a model
+# invents its own shape - gpt-oss-20b answered one candidate in three with
+# `{"id": 1, "statement": ...}` objects and another with entity-attribute rows,
+# neither of which is a sentence a judge can verify.
+FREE_FORM_FACT_SHAPE = (
+    "\n\nReturn only a JSON object of the form "
+    '{"facts": ["...", "..."]}, where each element is one complete '
+    "self-contained sentence. Do not wrap the sentences in objects and do not "
+    "add any other field."
+)
+
+
 def create_fact_generation_agent(
     config: CandidateInferenceConfig | None = None,
 ) -> Agent:
     """Create an ADK Agent configured with structured output schema for atomic medical facts."""
     cfg = config or CandidateInferenceConfig()
+    structured = getattr(cfg, "structured_facts", True)
+    instruction = cfg.resolved_fact_system_instruction
+    if not structured:
+        instruction += FREE_FORM_FACT_SHAPE
     return _build_agent(
         name="medqa_fact_generator",
-        instruction=cfg.fact_system_instruction,
+        instruction=instruction,
         config=cfg,
-        output_schema=MedicalFacts,
+        output_schema=MedicalFacts if structured else None,
     )
 
 
@@ -63,7 +79,7 @@ def create_answer_generation_agent(
     cfg = config or CandidateInferenceConfig()
     return _build_agent(
         name="medqa_answer_generator",
-        instruction=cfg.answer_system_instruction,
+        instruction=cfg.resolved_answer_system_instruction,
         config=cfg,
     )
 

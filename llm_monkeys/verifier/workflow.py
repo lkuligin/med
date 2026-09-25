@@ -18,11 +18,12 @@ from google.genai import types
 
 from config import VerifierConfig
 from results_store import build_store, stored_results
+from inference._dataset import load_difficult_question_ids
 from inference._schemas import StepTokenUsage
 from inference.parser import evaluate_prediction
 from inference.workflow import _calculate_backoff, is_rate_limit_error
 from verifier._dataset import Step2CandidateData, Step2QuestionData, load_step2_results
-from verifier._prompts import format_fact_verification_prompt
+from verifier._prompts import JUDGE_PROMPTS
 from verifier._schemas import (
     CandidateVerificationResult,
     FactVerificationResult,
@@ -33,6 +34,51 @@ from verifier.agent import create_fact_verifier_agent, create_runner
 from verifier.parser import parse_fact_verification
 
 logger = logging.getLogger(__name__)
+
+
+def keep_listed(
+    questions: list[Step2QuestionData], question_ids: list[str]
+) -> list[Step2QuestionData]:
+    """The questions whose id is on the list, in their original order.
+
+    Ids are compared without leading zeros: medbullets pads them to three
+    digits in some places and not in others, and '1' and '001' are one question.
+    """
+    def norm(qid: object) -> str:
+        return str(qid).strip().lstrip("0") or "0"
+
+    wanted = {norm(q) for q in question_ids}
+    kept = [q for q in questions if norm(q.question_id) in wanted]
+    logger.info("Kept %d of %d questions on the list", len(kept), len(questions))
+    return kept
+
+
+class _Spread:
+    """How many candidates one question may judge at once.
+
+    One, while there are at least as many open questions as request slots:
+    that is the schedule that keeps every slot filled with a distinct
+    question and throws nothing away, since a question stops at its first
+    valid candidate.
+
+    More only once questions run out. With three questions left and sixteen
+    slots, eleven of them would otherwise idle to the end of the run. Then
+    each of the three may judge five candidates side by side - spread evenly
+    rather than fourteen piled on one, so the work that turns out to have
+    been unnecessary is a little from each rather than a lot from one.
+    """
+
+    def __init__(self, slots: int, cap: int = 4) -> None:
+        self.slots = max(1, slots)
+        self.cap = max(1, cap)
+        self.active = 0
+
+    # However few questions remain, a question does not get the whole
+    # concurrency. Sixteen long generations queued behind one replica take
+    # minutes each, and minutes is what the per-check timeout is measured in:
+    # filling idle slots that way cancels the work it was meant to speed up.
+    def width(self) -> int:
+        return max(1, min(self.cap, self.slots // max(1, self.active)))
 
 
 class VerifierWorkflow:
@@ -103,7 +149,8 @@ class VerifierWorkflow:
                 thought_parts: list[str] = []
                 usage_metadata: types.GenerateContentResponseUsageMetadata | None = None
 
-                async with asyncio.timeout(120.0):
+                async with asyncio.timeout(
+                        getattr(self.config, "request_timeout", 120.0)):
                     async for event in runner.run_async(
                         user_id=user_id,
                         session_id=curr_session,
@@ -162,7 +209,7 @@ class VerifierWorkflow:
         semaphore: asyncio.Semaphore,
     ) -> FactVerificationResult:
         """Verify a single atomic medical fact with the verifier LLM-as-a-judge under semaphore."""
-        prompt = format_fact_verification_prompt(question_text, options, fact)
+        prompt = JUDGE_PROMPTS[self.config.judge_prompt].format(question_text, options, fact)
         t0 = time.perf_counter()
         raw_text = ""
         usage_meta = None
@@ -295,6 +342,7 @@ class VerifierWorkflow:
             Callable[[CandidateVerificationResult, int, int], None] | None
         ) = None,
         prior: list[CandidateVerificationResult] | None = None,
+        spread: _Spread | None = None,
     ) -> QuestionVerificationResult:
         """Evaluate candidates for a question, verifying their atomic facts and computing curve metrics.
 
@@ -406,18 +454,32 @@ class VerifierWorkflow:
 
         candidate_verifications: list[CandidateVerificationResult] = list(prior)
         if getattr(self.config, "early_stop_candidates", True):
-            for attempt_number, candidate in enumerate(candidates, start=len(prior) + 1):
-                cand_res = await _verify_candidate_task(attempt_number, candidate)
-                candidate_verifications.append(cand_res)
-                if cand_res.all_facts_correct:
-                    logger.info(
-                        "Question %s: Early stopping at attempt #%d (candidate %d); "
-                        "found first candidate with ALL statements correct.",
-                        question.question_id,
-                        attempt_number,
-                        candidate.candidate_index,
-                    )
-                    break
+            position = 0
+            found = False
+            while position < len(candidates) and not found:
+                # One candidate at a time while questions still fill the
+                # slots; several once they do not, so the tail of a run does
+                # not leave most of the concurrency idle. See _Spread.
+                width = spread.width() if spread is not None else 1
+                batch = candidates[position:position + width]
+                judged = await asyncio.gather(*[
+                    _verify_candidate_task(len(prior) + position + offset + 1,
+                                           candidate)
+                    for offset, candidate in enumerate(batch)
+                ])
+                for cand_res in judged:
+                    candidate_verifications.append(cand_res)
+                    if cand_res.all_facts_correct and not found:
+                        found = True
+                        logger.info(
+                            "Question %s: Early stopping at attempt #%d "
+                            "(candidate %d); found first candidate with ALL "
+                            "statements correct.",
+                            question.question_id,
+                            cand_res.attempt_number,
+                            cand_res.candidate_index,
+                        )
+                position += len(batch)
         else:
             candidate_verifications += list(
                 await asyncio.gather(
@@ -603,6 +665,10 @@ class VerifierWorkflow:
                 limit=self.config.limit,
                 offset=self.config.offset,
             )
+        if self.config.difficult_questions:
+            questions = keep_listed(
+                questions, load_difficult_question_ids(self.config.difficult_questions)
+            )
 
         if not questions:
             logger.warning("No questions found for verification.")
@@ -626,8 +692,27 @@ class VerifierWorkflow:
         existing_results = self.load_existing_results()
         results: list[QuestionVerificationResult] = []
         semaphore = asyncio.Semaphore(self.config.concurrency)
+        save_lock = asyncio.Lock()
+        # As many questions open as requests allowed: enough to fill the
+        # semaphore when facts are sequential, and a stopped run loses the
+        # partial work of only that many questions, not of every one.
+        open_questions = asyncio.Semaphore(self.config.concurrency)
+        # How wide a question may go. One while questions fill the slots;
+        # wider once they run out, so a run's tail does not leave most of the
+        # concurrency idle waiting for the last few questions.
+        # None unless asked for: without it a question judges one candidate at
+        # a time to the end of the run, which leaves slots idle over the last
+        # few questions but sends no request that the verdict does not need.
+        spread = (_Spread(self.config.concurrency,
+                          getattr(self.config, "speculate_width", 4))
+                  if getattr(self.config, "speculate_tail", False) else None)
 
-        for q_idx, question in enumerate(questions):
+        # Questions run side by side and the semaphore alone bounds requests in
+        # flight. Within a question the candidates are sequential by design (the
+        # search stops at the first valid one), and with early_stop_facts so are
+        # its facts - one question at a time would then keep a single request in
+        # flight whatever the concurrency says.
+        async def _verify(q_idx: int, question: Step2QuestionData) -> None:
             previous = existing_results.get(question.question_id)
             prior: list[CandidateVerificationResult] = []
             if previous is not None:
@@ -644,7 +729,7 @@ class VerifierWorkflow:
                         question.question_id,
                     )
                     results.append(previous)
-                    continue
+                    return
                 prior = list(previous.candidate_verifications)
                 logger.info(
                     "Question %s: %d candidates judged before without a valid one, "
@@ -661,33 +746,49 @@ class VerifierWorkflow:
                 question.question_id,
             )
 
-            q_res = await self.verify_question(
-                question=question,
-                semaphore=semaphore,
-                on_candidate_complete=on_candidate_complete,
-                prior=prior,
-            )
-            results.append(q_res)
-
-            if on_question_complete:
-                try:
-                    on_question_complete(q_res, results)
-                except Exception as e:
-                    logger.warning("on_question_complete callback error: %s", e)
-
-            if (
-                self.config.save_every_n_questions > 0
-                and len(results) % self.config.save_every_n_questions == 0
-            ):
-                interim_summary = VerifierWorkflowSummary.from_results(
-                    results=results,
-                    model=self.config.resolved_model_name,
-                    run_name=self.store.run_name,
-                    judge_name=self.store.judge_name,
-                    temperature=self.config.temperature,
-                    total_time_seconds=round(time.perf_counter() - start_time, 2),
+            if spread is not None:
+                spread.active += 1
+            try:
+                q_res = await self.verify_question(
+                    question=question,
+                    semaphore=semaphore,
+                    on_candidate_complete=on_candidate_complete,
+                    prior=prior,
+                    spread=spread,
                 )
-                self.save_results(results=results, summary=interim_summary)
+            finally:
+                if spread is not None:
+                    spread.active -= 1
+            async with save_lock:
+                results.append(q_res)
+
+                if on_question_complete:
+                    try:
+                        on_question_complete(q_res, results)
+                    except Exception as e:
+                        logger.warning("on_question_complete callback error: %s", e)
+
+                if (
+                    self.config.save_every_n_questions > 0
+                    and len(results) % self.config.save_every_n_questions == 0
+                ):
+                    interim_summary = VerifierWorkflowSummary.from_results(
+                        results=results,
+                        model=self.config.resolved_model_name,
+                        run_name=self.store.run_name,
+                        judge_name=self.store.judge_name,
+                        temperature=self.config.temperature,
+                        total_time_seconds=round(time.perf_counter() - start_time, 2),
+                    )
+                    self.save_results(results=results, summary=interim_summary)
+
+        async def _bounded(q_idx: int, question: Step2QuestionData) -> None:
+            async with open_questions:
+                await _verify(q_idx, question)
+
+        await asyncio.gather(*[_bounded(i, q) for i, q in enumerate(questions)])
+        order = {q.question_id: i for i, q in enumerate(questions)}
+        results.sort(key=lambda r: order.get(r.question_id, len(order)))
 
         total_time = time.perf_counter() - start_time
         summary = VerifierWorkflowSummary.from_results(

@@ -9,6 +9,7 @@ import sys
 from cli_utils import add_common_arguments, setup_logging
 from results_store import DEFAULT_CANDIDATES_FILE, DEFAULT_VERIFIED_FILE
 from config import DEFAULT_VERIFIER_MODEL, VerifierConfig
+from verifier._prompts import JUDGE_PROMPTS
 from verifier._schemas import VerifierWorkflowSummary
 from verifier.workflow import VerifierWorkflow
 
@@ -50,10 +51,42 @@ def create_parser() -> argparse.ArgumentParser:
         "one judge apart.",
     )
     parser.add_argument(
+        "--judge-prompt",
+        choices=sorted(JUDGE_PROMPTS),
+        default=None,
+        help=(
+            "Which judge prompt to use (default: reference, the authors' prompt). "
+            "Give an experimental prompt its own --judge-name."
+        ),
+    )
+    parser.add_argument(
         "--max-candidates-per-question",
         type=int,
         default=None,
         help="Maximum number of candidates to evaluate per question (default: evaluate all until first pass)",
+    )
+    parser.add_argument(
+        "--request-timeout",
+        type=float,
+        default=None,
+        help="Seconds one fact check may take before it is cancelled and "
+        "retried (default: 120). A judge that reasons needs more: on GLM-5.3 "
+        "the slowest check took 838s.",
+    )
+    parser.add_argument(
+        "--speculate-width",
+        type=int,
+        default=None,
+        help="Most candidates of one question to judge at once when the tail "
+        "of a run leaves slots idle (default: 4). They share a prompt prefix, "
+        "so they land on one replica; this bounds that replica's queue.",
+    )
+    parser.add_argument(
+        "--speculate-tail",
+        action="store_true",
+        help="Once fewer questions remain than the concurrency allows, judge "
+        "further candidates of them in parallel to fill the idle slots. Costs "
+        "extra requests, so leave it off for a judge that charges per call.",
     )
     parser.add_argument(
         "--early-stop-facts",
@@ -66,6 +99,12 @@ def create_parser() -> argparse.ArgumentParser:
         action=argparse.BooleanOptionalAction,
         default=True,
         help="Stop evaluating candidates immediately once a candidate has all facts correct (default: True)",
+    )
+    parser.add_argument(
+        "--difficult-questions",
+        default=None,
+        help="CSV of question ids to judge; the rest of the run's questions are "
+        "left alone (default: judge every question the run has)",
     )
     parser.add_argument(
         "--save-every-n-questions",

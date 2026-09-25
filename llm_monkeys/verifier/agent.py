@@ -12,7 +12,6 @@ from google.genai import types
 
 from config import VerifierConfig, register_litellm_model_pricing
 from model_factory import build_model
-from verifier._prompts import DEFAULT_VERIFIER_SYSTEM_INSTRUCTION
 from verifier._schemas import FactVerification
 
 # Suppress noisy LiteLLM warnings when running Gemini models via LiteLLM adapter
@@ -49,7 +48,7 @@ def create_fact_verifier_agent(
     return Agent(
         name="medqa_fact_verifier",
         model=build_model(cfg),
-        instruction=cfg.system_instruction or DEFAULT_VERIFIER_SYSTEM_INSTRUCTION,
+        instruction=cfg.resolved_system_instruction,
         output_schema=output_schema,
         generate_content_config=types.GenerateContentConfig(
             temperature=cfg.temperature,

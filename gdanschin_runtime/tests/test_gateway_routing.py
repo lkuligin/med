@@ -2,10 +2,11 @@
 
 The pool follows the provider a name resolves to, not the job the model is
 doing. Anything the internal gateway serves is reached at its own provider
-path; vendor models, and the sglang deployment, live on the external one. That
-today's base models all happen to sit on the internal gateway and today's
-judge is a vendor model is a fact about the current set, not a rule - a vendor
-model can be a base model and an open-weight one can judge.
+path; vendor models, and whatever only the external sglang serves, live on the
+external one. That today's base models all happen to sit on the internal
+gateway and today's judge is a vendor model is a fact about the current set,
+not a rule - a vendor model can be a base model and an open-weight one can
+judge.
 
 Getting it wrong is not cosmetic. The internal gateway does not serve Gemini
 at all, and the external one holds a per-user limit on requests in flight, so
@@ -47,9 +48,14 @@ EXPECTED_POOL = {
     "Qwen/Qwen3.5-9B": "local",
     "Qwen/Qwen3.6-27B-FP8": "local",
     "Qwen/Qwen3.6-35B-A3B-FP8": "local",
+    "Qwen/Qwen3.5-122B-A10B-FP8": "local",
+    "MiniMaxAI/MiniMax-M2.5": "local",
+    "zai-org/GLM-5.3-Flash": "local",
     "gemma-4-26b-internal": "internal",
     "gpt-oss-120b": "internal",
     "deepseek-v4-flash": "internal",
+    "glm5.3-flash": "internal",
+    "deepseek-v4-flash-think-high": "internal",
     "qwen3.6-27b-noreasoning": "internal",
     "qwen3.8-27b-noreasoning": "internal",
     "gemini-3.8-flash": "external",
@@ -147,14 +153,18 @@ def test_a_named_vendor_provider_is_external(model):
     assert pool_of(model) == "external"
 
 
-def test_the_two_gemmas_are_different_models_on_different_pools():
-    """gemma-4-26b is the sglang deployment on the external gateway;
-    gemma-4-26b-internal is the internal one. models.py names the second on
-    purpose: the alias without the suffix would move generation onto the
-    external gateway's quota without changing a single visible name."""
-    assert pool_of("gemma-4-26b") == "external"
-    assert pool_of("gemma-4-26b-internal") == "internal"
-    assert BASE_MODELS["gemma-4-26b"].gateway_model == "gemma-4-26b-internal"
+@pytest.mark.parametrize("model", ["gemma-4-26b", "gemma-4-26b-a4b-it",
+                                   "gemma-4-26b-internal", "qwen3-reranker-4b"])
+def test_open_weight_aliases_are_internal(model):
+    """The external gateway's sglang serves these too, but open-weight models
+    are reached on the internal gateway, so a manual ask("gemma-4-26b") hits
+    the same deployment the runs do rather than the external quota."""
+    assert pool_of(model) == "internal"
+
+
+def test_an_unlisted_gemma_is_not_guessed_onto_a_gateway():
+    with pytest.raises(ValueError):
+        gateway.resolve("gemma-9-99b")
 
 
 def test_an_internal_model_is_reached_at_its_own_provider_path():
@@ -194,3 +204,46 @@ def test_thinking_is_turned_off_where_the_name_says_so(model):
 def test_a_model_no_pool_claims_is_refused():
     with pytest.raises(ValueError, match="cannot tell which provider"):
         gateway.completion_kwargs("some-model-nobody-serves")
+
+
+def test_two_entries_on_one_served_name_are_told_apart_by_run_name():
+    """The same weights with thinking on and off are two entries, and both
+    answer to one served name. Keyed on the served name alone, whichever was
+    written last wins - and the run completes under the name that was asked
+    for while measuring the other configuration, which is the kind of mistake
+    that is only found by reading the numbers and disbelieving them."""
+    from types import SimpleNamespace
+
+    from gdanschin_runtime.adapters.factory import build
+
+    def thinking_of(run_name):
+        model = build(SimpleNamespace(
+            resolved_model_name="Qwen/Qwen3.6-35B-A3B-FP8", run_name=run_name))
+        extra = getattr(model, "_additional_args", None) or {}
+        return extra["extra_body"]["chat_template_kwargs"]["enable_thinking"]
+
+    assert thinking_of("qwen3.6-35b-a3b-local") is True
+    assert thinking_of("qwen3.6-35b-a3b-nr-local") is False
+    # No run name: the served-name lookup, as before.
+    assert thinking_of(None) in (True, False)
+
+
+def test_a_judge_is_named_by_judge_name_not_by_the_run_it_judges():
+    """A verifier run carries the generator's name as run_name and the judge's
+    separately. Keying the model on run_name there builds the generator as its
+    own judge - the wrong model, under the right directory, with no error."""
+    from types import SimpleNamespace
+
+    from gdanschin_runtime.adapters.factory import build
+
+    judging = SimpleNamespace(
+        resolved_model_name="Qwen/Qwen3.6-35B-A3B-FP8",
+        run_name="qwen3.6-27b-nr-local",      # the generator being judged
+        judge_name="qwen3.6-35b-a3b-local",   # the judge
+        input_filepath="candidates.json",     # what marks this a verifier config
+    )
+    model = build(judging)
+    assert model.model.endswith("Qwen3.6-35B-A3B-FP8"), model.model
+    extra = getattr(model, "_additional_args", None) or {}
+    thinking = extra["extra_body"]["chat_template_kwargs"]["enable_thinking"]
+    assert thinking is True, "the judge's own settings, not the generator's"

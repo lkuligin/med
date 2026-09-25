@@ -1,0 +1,1274 @@
+question_id,label,reason
+0,no_figure,The question is entirely text-based and does not refer to any figures or exhibits.
+1,no_figure,The question contains all necessary clinical information in the text without referencing any figures or images.
+2,no_figure,The question contains all necessary clinical and biopsy findings within the text without referring to any images or exhibits.
+3,no_figure,The question presents a complete clinical scenario and laboratory values entirely in text without referencing any figures or exhibits.
+4,no_figure,The question presents a complete clinical vignette describing allergic conjunctivitis without referencing or requiring any external figures or exhibits.
+5,no_figure,"The question contains no reference to any images, tables, or external exhibits."
+6,no_figure,The question contains all necessary clinical information in the text and does not refer to any external figure or image.
+7,no_figure,"The question contains all necessary clinical, ECG, and echocardiographic details in text form and does not reference any external images or exhibits."
+8,no_figure,"The question contains no references to any external images, figures, or exhibits."
+9,requires_figure,The question relies entirely on a photograph of the nails to diagnose the underlying condition associated with the findings in the options.
+10,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits.
+11,mentions_figure_answerable,"Although a blood smear is mentioned, the provided clinical presentation, splenomegaly, bone marrow fibrosis, and positive JAK2 assay are sufficient to diagnose myelofibrosis and select ruxolitinib."
+12,no_figure,The question contains all necessary clinical and genetic details in the text and does not mention or rely on any figures or exhibits.
+13,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+14,no_figure,The question contains all necessary information within the text and does not mention or rely on any images or exhibits.
+15,no_figure,The CT scan finding is described entirely within the text of the vignette without referencing an external image or exhibit.
+16,no_figure,The question contains all necessary clinical details and references no figures or exhibits.
+17,no_figure,"The question does not reference any figure, table, or external exhibit and can be answered entirely from the text."
+18,mentions_figure_answerable,"The clinical presentation and physical exam findings (pleuritic chest pain relieved by leaning forward and a pericardial friction rub) are diagnostic of acute pericarditis, allowing determination of the first-line treatment (ibuprofen + colchicine) without the ECG image."
+19,no_figure,The question contains all clinical information in the text and does not refer to any external image or exhibit.
+20,no_figure,The question contains all necessary clinical information in the text and makes no reference to any images or exhibits.
+21,no_figure,"The question contains all clinical information in the text with no reference to any figures, images, or exhibits."
+22,no_figure,The question contains all necessary clinical and laboratory information in the text and does not reference any external images or exhibits.
+23,no_figure,The question contains all necessary clinical and radiographic findings within the text without referencing any external image or exhibit.
+24,no_figure,The question contains all necessary clinical information in the text and does not mention or require any figure or exhibit.
+25,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+26,no_figure,"The question asks what an X-ray is likely to show based on the clinical presentation, without referring to an accompanying image."
+27,no_figure,The question contains all necessary clinical details in text and does not reference any figure or exhibit.
+28,no_figure,The question does not reference or rely on any images or exhibits.
+29,no_figure,The question describes all clinical and radiographic findings in the text without referencing any external image or exhibit.
+30,no_figure,"The question contains all imaging and laboratory findings fully described within the text, with no reference to an external figure or exhibit."
+31,requires_figure,The question relies entirely on comparing the patient's pressure-volume loop to a normal reference curve to identify the underlying pathology.
+32,no_figure,The question contains all necessary clinical and laboratory information in the text with no reference to any external figure or exhibit.
+33,no_figure,"The question contains all clinical, endoscopic, and biopsy findings directly in the text without referring to any images or exhibits."
+34,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any images or external exhibits.
+35,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+36,no_figure,The question contains all necessary clinical information in the text and does not mention or refer to any external figure or exhibit.
+37,no_figure,The question contains all necessary clinical information in the text and does not reference any external images or exhibits.
+38,no_figure,All dose-response and safety data needed to calculate the therapeutic index are fully provided in the text without referencing any external image or exhibit.
+39,no_figure,The question contains all necessary clinical information to identify conduction aphasia and does not reference any image or exhibit.
+40,no_figure,The question presents a complete clinical scenario without any reference to an external figure or exhibit.
+41,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+42,no_figure,The question contains all necessary clinical and screening details without referencing any external image or exhibit.
+43,no_figure,"The question does not refer to any figure, table, or external exhibit and can be answered using standard physiological principles."
+44,no_figure,The question contains all necessary clinical details in the text and does not mention or require an image.
+45,mentions_figure_answerable,"The clinical presentation of acute intoxication with a severe high anion gap metabolic acidosis and acute kidney injury strongly indicates toxic alcohol poisoning (ethylene glycol or methanol), for which fomepizole is the standard treatment regardless of the urinalysis image."
+46,no_figure,The question presents all relevant trial results directly within the text without referencing any external image or exhibit.
+47,no_figure,The question contains all necessary clinical details in text and does not refer to any figures or exhibits.
+48,no_figure,The question contains a complete clinical description and does not mention or rely on any external images or exhibits.
+49,no_figure,The question describes imaging findings directly in the text without referencing an external image or exhibit.
+50,no_figure,"The question contains no reference to any image, exhibit, or figure and can be answered entirely from the provided text."
+51,no_figure,The question contains all necessary clinical information and laboratory results within the text and does not reference any external figures or exhibits.
+52,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or external exhibits.
+53,no_figure,"The question does not refer to any image, table, or other exhibit and can be evaluated entirely from the text provided."
+54,no_figure,The question contains all necessary clinical information in the text and does not mention or require an image.
+55,no_figure,The question presents a complete clinical vignette describing tinea cruris without referring to any images or exhibits.
+56,no_figure,"The question does not refer to any image, exhibit, or figure and can be answered entirely from the text."
+57,no_figure,The question is entirely text-based and does not mention or rely on any exhibits or images.
+58,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+59,no_figure,"The question contains no reference to any image, figure, or exhibit and can be answered solely from the provided text."
+60,no_figure,The question contains all clinical information needed to diagnose Salmonella typhi without referencing any images or exhibits.
+61,no_figure,The question presents a complete clinical scenario without any reference to images or other exhibits.
+62,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+63,no_figure,The question contains all necessary clinical information in the text and does not refer to any external image or exhibit.
+64,no_figure,"The question does not refer to any image, exhibit, or figure and contains all necessary clinical information in the text."
+65,no_figure,"The question asks for the most likely imaging finding based solely on the clinical history, without referencing any provided image or exhibit."
+66,no_figure,The question presents all clinical and ethical details in the text without referencing any external image or exhibit.
+67,no_figure,The question does not mention or rely on any exhibits or images.
+68,no_figure,The question contains all necessary clinical information in text form and does not reference any figures or external exhibits.
+69,no_figure,The question describes the imaging findings in the text without referencing any separate image or exhibit.
+70,no_figure,"The question contains all clinical, laboratory, and imaging findings directly in the text without referencing any external image or exhibit."
+71,no_figure,The question contains all clinical information in the text and does not refer to any external figure or image.
+72,no_figure,The question presents a complete clinical vignette without referencing any figures or images.
+73,no_figure,The question presents a complete clinical vignette without referencing any images or external exhibits.
+74,mentions_figure_answerable,"The clinical history of a pruritic, hypopigmented rash on the upper back and shoulders after a beach trip in a tropical climate is classic for tinea versicolor, which is confirmed using a potassium hydroxide (KOH) preparation."
+75,no_figure,The question presents a complete clinical vignette describing cri-du-chat syndrome without referencing any images or exhibits.
+76,no_figure,The question contains all necessary clinical details in text format and does not refer to any external figure or image.
+77,mentions_figure_answerable,The clinical presentation of 2nd and 3rd MCP joint arthropathy along with laboratory evidence of hemochromatosis (elevated transferrin saturation and ferritin) is sufficient to identify calcium pyrophosphate (CPP) crystal deposition without needing the radiograph.
+78,no_figure,The question describes radiographic findings directly in the text without referencing any external image or exhibit.
+79,no_figure,The question contains all necessary clinical and diagnostic details in the text and does not refer to any external figure or image.
+80,no_figure,The question does not refer to any image or exhibit and can be answered based on the provided clinical vignette alone.
+81,no_figure,The question contains all necessary clinical and genetic details in the text without referring to any images or exhibits.
+82,no_figure,The question does not reference any images or external exhibits.
+83,no_figure,The question contains all clinical information and laboratory values in text form without referencing any figures or exhibits.
+84,no_figure,"The question does not refer to any image, figure, or exhibit."
+85,no_figure,"The question does not refer to any figures, images, or external exhibits."
+86,no_figure,The question contains all clinical information within the text and does not mention or rely on any external figures or exhibits.
+87,no_figure,The question contains all necessary clinical and laboratory information directly in the text and does not refer to any external figure or image.
+88,no_figure,The question fully describes the chest x-ray findings in the text and does not reference an external image or exhibit.
+89,no_figure,The question contains all clinical information in the text and makes no reference to an image or exhibit.
+90,no_figure,The question contains all necessary clinical and diagnostic details in the text without referencing any figures or images.
+91,no_figure,The question contains all necessary clinical details in text form and does not refer to any external figures or exhibits.
+92,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+93,no_figure,The question contains all clinical information in the text and does not mention or rely on any figures or exhibits.
+94,no_figure,The question presents a complete clinical scenario without referencing any figures or images.
+95,mentions_figure_answerable,"The clinical history of familial early-onset kidney failure, refractory hypertension, elevated creatinine, and bilateral palpable flank masses clearly diagnoses autosomal dominant polycystic kidney disease, making MR angiography of the brain identifiable as the screening test for intracranial aneurysms without needing to see the ultrasound."
+96,no_figure,The question contains all necessary clinical details in the text and does not mention or require any images or exhibits.
+97,no_figure,The question contains all necessary clinical and diagnostic details in the text and does not mention or require an image.
+98,no_figure,The question presents a clinical scenario with all necessary details in text and does not reference any figure or exhibit.
+99,no_figure,The question contains all necessary clinical information in the text and does not reference any image or exhibit.
+100,no_figure,The question presents all clinical details and laboratory values entirely in the text without referring to any images or exhibits.
+101,no_figure,The question contains all necessary clinical information to identify the prescribed drug and does not reference any figure or exhibit.
+102,no_figure,The question contains all necessary clinical information in the text and makes no reference to any image or exhibit.
+103,no_figure,The question presents all clinical findings and laboratory data directly in the text and does not reference any external images or exhibits.
+104,no_figure,The question contains all necessary clinical information in the text and makes no reference to any external image or exhibit.
+105,no_figure,The question contains all necessary clinical information to diagnose the condition without referencing any figures or exhibits.
+106,no_figure,The question contains all necessary clinical and radiologic descriptions directly in the text without referencing any figures or exhibits.
+107,no_figure,The question contains all necessary clinical and genetic details in the text and does not refer to any external figure or exhibit.
+108,no_figure,The question presents a complete clinical vignette of slipped capital femoral epiphysis without referencing any exhibits or images.
+109,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any exhibits.
+110,no_figure,The question contains all clinical information and laboratory values within the text and does not mention or rely on any figures.
+111,mentions_figure_answerable,"The clinical presentation of barking cough, hoarseness, and inspiratory stridor in an 18-month-old clearly diagnoses croup, which is managed with racemic epinephrine and corticosteroids without needing the X-ray image."
+112,no_figure,The question contains all necessary clinical details in text and does not reference any figure or exhibit.
+113,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or images.
+114,no_figure,All lab values and clinical information are provided directly in the text without referencing any external image or exhibit.
+115,no_figure,The question contains all necessary information in the text and does not reference any figure or exhibit.
+116,mentions_figure_answerable,"The clinical features of seizures, cognitive delay, a cardiac murmur suggestive of rhabdomyoma, and bilateral calcified multinodular retinal lesions (astrocytic hamartomas) diagnostic of tuberous sclerosis allow identification of a TSC1 gene mutation without the skin photograph."
+117,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any external image or exhibit.
+118,no_figure,The question contains all necessary clinical and pulmonary function test data directly within the text without referring to any images or exhibits.
+119,no_figure,The question contains all necessary clinical information and findings in the text without referencing any figures or exhibits.
+120,no_figure,The question contains all necessary clinical information in the text and does not refer to any image or exhibit.
+121,no_figure,The question contains all necessary clinical information to identify the virus associated with Hodgkin's lymphoma and does not reference any figure or exhibit.
+122,no_figure,"The question presents a complete clinical vignette with ultrasound findings described in the text, without referencing an actual image."
+123,mentions_figure_answerable,"Although a CT head image is referenced, the clinical vignette of stroke-like symptoms, recurrent miscarriages, and an isolated prolonged PTT provides sufficient information to identify antiphospholipid antibody syndrome and select a mixing study as the next diagnostic step."
+124,no_figure,The question contains all necessary information to determine the clinical features of congenital hypothyroidism without referencing any figures or exhibits.
+125,no_figure,"The question does not refer to any image or exhibit, and all findings are described directly in the text."
+126,mentions_figure_answerable,"The clinical presentation of an ipsilateral fixed dilated pupil, contralateral hemiparesis, and altered consciousness following head trauma while on anticoagulation is classic for uncal herniation, making the CT scan unnecessary to answer the question."
+127,no_figure,The question contains all necessary clinical and immunologic details within the text and does not reference any image or exhibit.
+128,no_figure,The question presents a complete clinical vignette with laboratory results and does not mention or rely on any exhibits or images.
+129,no_figure,The question contains all necessary clinical information to identify botulism without referring to any images or exhibits.
+130,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or images.
+131,no_figure,The question presents a complete clinical scenario of postoperative hypocalcemia and asks for the expected ECG finding without referencing any images or exhibits.
+132,no_figure,The question presents all clinical and laboratory data in the text without referencing any figures or images.
+133,no_figure,The question contains all clinical information needed to diagnose Leriche syndrome (aortoiliac atherosclerosis) and does not reference any figure or exhibit.
+134,no_figure,The question contains all necessary clinical information in the text and does not refer to any external figure or exhibit.
+135,no_figure,The question contains all necessary information within the text and does not mention or rely on any external figures or exhibits.
+136,no_figure,The question contains all necessary clinical details in the text and does not refer to any external figure or exhibit.
+137,no_figure,The question describes the CT findings directly in the text without referring to any external image or exhibit.
+138,no_figure,The question contains all necessary clinical information in the text and does not reference any external images or exhibits.
+139,requires_figure,The question relies on identifying the specific region of the spinal cord indicated by the arrow to determine the corresponding neurological deficit.
+140,mentions_figure_answerable,"Although an accompanying photograph of the rash is mentioned, the clinical history of a tick bite followed by rash and systemic symptoms in a pregnant woman provides sufficient information to determine the appropriate treatment for Lyme disease."
+141,no_figure,The question contains all clinical and laboratory information in the text without referencing any external image or exhibit.
+142,no_figure,The question contains all necessary clinical and pharmacological details within the text and makes no reference to any images or exhibits.
+143,no_figure,"The question fully describes the clinical, imaging, and biopsy findings in the text without referencing any external image or exhibit."
+144,no_figure,The question describes the x-ray findings directly in the text without referencing any external image or exhibit.
+145,no_figure,The question contains all necessary clinical and laboratory information in the text without referring to any images or exhibits.
+146,mentions_figure_answerable,"The clinical description of steroid-refractory dermatitis with scaly patches, plaques, erythroderma, and a cutaneous tumor (>1 cm) is sufficient to identify mycosis fungoides (a cutaneous T-cell lymphoma) without needing the image."
+147,no_figure,"The question presents a complete clinical scenario without referring to any images, tables, or other exhibits."
+148,no_figure,The question contains all necessary clinical details in the text and does not reference any figure or exhibit.
+149,no_figure,The question does not mention or rely on any images or exhibits.
+150,no_figure,The question describes the chest X-ray findings directly in the text without referring to any external figure or image.
+151,no_figure,The question describes the ultrasound findings entirely within the text without referencing an external image or exhibit.
+152,no_figure,The question contains all necessary clinical and microbiological details in the text without referencing any figures or exhibits.
+153,no_figure,"The question contains a complete clinical vignette with no references to any figures, images, or exhibits."
+154,no_figure,The question contains all necessary clinical information in the text and does not mention or refer to any figure or exhibit.
+155,no_figure,The question presents all clinical details purely in text without referencing any figures or external exhibits.
+156,no_figure,The question contains all necessary clinical information to diagnose acute dystonia and select the appropriate treatment without referencing any figures or exhibits.
+157,no_figure,The question contains all necessary clinical and genetic details in the text and does not mention or rely on any images or figures.
+158,no_figure,The question contains all necessary clinical information and laboratory results directly in the text without referring to any images or exhibits.
+159,no_figure,The question contains all necessary clinical and laboratory information in the text with no mention of an image or figure.
+160,requires_figure,"The question asks to identify a numbered zone on an unspecified histology slide, making it impossible to answer without viewing the image."
+161,no_figure,The question contains all necessary clinical details in text format and does not refer to any figures or exhibits.
+162,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+163,no_figure,The question contains all necessary clinical information in the text without referencing any figures or exhibits.
+164,no_figure,The question contains all necessary clinical information to identify herpes zoster without referencing any external image or exhibit.
+165,no_figure,"The question is entirely text-based and contains no references to any figures, images, or exhibits."
+166,no_figure,The question describes the chest radiograph findings within the text without referencing any external image or exhibit.
+167,no_figure,"The question presents all clinical, ECG, and echocardiographic findings directly in text without referring to any images or exhibits."
+168,no_figure,The question presents a full clinical vignette without any reference to an external image or exhibit.
+169,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any exhibits.
+170,no_figure,The question contains all necessary clinical information in text and does not mention or require any figure or exhibit.
+171,no_figure,The question describes the ultrasound findings entirely within the text without referencing any separate image or exhibit.
+172,no_figure,The question presents a complete clinical scenario without any reference to an image or exhibit.
+173,no_figure,The question contains all necessary clinical information in the text and does not refer to any image or exhibit.
+174,no_figure,The question contains all necessary information in the text and does not reference any figure or exhibit.
+175,no_figure,The clinical vignette provides all necessary information to diagnose tension pneumothorax and determine the next step in management without referencing any figures or exhibits.
+176,no_figure,The question presents all necessary data within the text to calculate specificity without referring to any images or exhibits.
+177,no_figure,The question contains all clinical information in the text and does not mention or rely on any exhibits or images.
+178,no_figure,The question describes the MRI findings directly in the text without referencing an external image or exhibit.
+179,no_figure,The question contains all necessary clinical and diagnostic details in the text without referring to any images or exhibits.
+180,no_figure,The question contains all necessary clinical information and laboratory findings within the text without referencing any figures or images.
+181,no_figure,The question contains all necessary clinical information to identify the causal virus and does not refer to any external figure or exhibit.
+182,no_figure,"The question does not reference any images, figures, or external exhibits."
+183,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any images or exhibits.
+184,no_figure,The question contains all necessary clinical details in text format and does not reference any image or exhibit.
+185,no_figure,"The question contains no references to any images, exhibits, or figures."
+186,no_figure,The question is entirely self-contained text describing an experimental scenario with no reference to any figures or exhibits.
+187,no_figure,The question contains all necessary clinical details and does not mention or rely on any exhibits or images.
+188,no_figure,The question describes the X-ray findings directly in the text without referencing any external image or exhibit.
+189,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+190,no_figure,The question contains all necessary clinical information to identify the diagnosis and appropriate long-term pharmacotherapy without referencing any exhibits.
+191,no_figure,The question describes x-ray findings within the text without referencing any external image or exhibit.
+192,no_figure,"The question refers to a preceding text summary rather than an image or graphical exhibit, and the provided text contains all information needed to identify effect modification."
+193,no_figure,The question contains all necessary information in the text and does not reference any figure or exhibit.
+194,no_figure,The question contains all necessary clinical and peripheral blood smear findings described directly in the text without referencing any external image or exhibit.
+195,no_figure,"The question is entirely text-based and contains no references to any figures, images, or exhibits."
+196,no_figure,The question contains all necessary information in the text without referencing any images or figures.
+197,no_figure,All relevant laboratory values are provided directly within the text of the question without referencing any external figures or exhibits.
+198,no_figure,The question contains all necessary clinical information in the text without referencing any images or external exhibits.
+199,no_figure,The question contains only text describing ultrasound and voiding cystourethrography findings without referencing any external image or exhibit.
+200,no_figure,The question contains all necessary clinical details in the text and does not refer to any external figures or exhibits.
+201,no_figure,The question contains all necessary clinical information in the text and does not mention or require an image.
+202,no_figure,The question contains all necessary clinical and diagnostic details in the text and does not reference any image or exhibit.
+203,no_figure,The question contains all necessary clinical details in the text and does not refer to any external image or exhibit.
+204,no_figure,"The question mentions an imaging study in the clinical history, but does not reference an exhibit or require viewing an image to answer."
+205,mentions_figure_answerable,"The question mentions Figures A, B, and C, but the diagnosis of a Grade V splenic laceration and subsequent splenectomy are explicitly stated in the text, allowing the required post-splenectomy vaccines to be identified without the images."
+206,no_figure,The question does not reference any image or exhibit and can be answered using standard genetics knowledge regarding LOD scores.
+207,no_figure,"The question does not refer to any figures, images, or external exhibits."
+208,no_figure,The question contains all necessary information and does not reference any external images or exhibits.
+209,no_figure,The question contains all necessary clinical information in the text without referring to any image or exhibit.
+210,no_figure,The question relies purely on text-based biochemical knowledge of the cell cycle and does not mention or require an external image or figure.
+211,no_figure,"The question does not refer to any image, figure, or exhibit in its text."
+212,no_figure,The question presents a scenario evaluating study design methodologies without referencing or requiring any figures or exhibits.
+213,no_figure,The question describes the ultrasound findings entirely within the text and does not refer to any external image or exhibit.
+214,no_figure,The question contains all necessary clinical information in the text and does not mention or require any figure or exhibit.
+215,no_figure,"The question does not reference any image, figure, or exhibit and can be evaluated solely on its text."
+216,no_figure,The question contains all clinical information and laboratory findings within the text without referencing any figures or external exhibits.
+217,no_figure,The question contains all necessary clinical and ultrasound findings in the text without referring to any images or exhibits.
+218,no_figure,The question contains all necessary clinical details and does not reference any figure or image.
+219,no_figure,The question contains all necessary clinical information and does not refer to any image or exhibit.
+220,mentions_figure_answerable,"The clinical history of amiodarone use presenting with chronic dry cough, dyspnea, and bibasilar crackles is sufficient to identify amiodarone-induced pulmonary toxicity and its characteristic restrictive spirometry pattern without viewing the chest radiograph."
+221,no_figure,The question contains all necessary clinical details in text and does not reference any figure or exhibit.
+222,no_figure,The question contains all necessary clinical information in text form and makes no reference to any images or exhibits.
+223,no_figure,The question presents a complete clinical scenario without referencing any figures or images.
+224,no_figure,The question contains all necessary clinical information to identify the virus and its mode of transmission without referencing any figures or images.
+225,no_figure,The question contains all necessary clinical and biopsy findings in the text without referencing any figures or exhibits.
+226,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+227,no_figure,The question presents all clinical information and laboratory values entirely in text without referencing any figures or images.
+228,no_figure,The question contains all clinical and laboratory information in the text without referencing any figures or images.
+229,no_figure,The question contains all necessary clinical and laboratory information entirely within the text without referring to any external figure or image.
+230,no_figure,The question contains all clinical and chest X-ray findings directly in the text without referencing an external image.
+231,no_figure,The question contains all necessary clinical information to identify the causal organism without referencing any figures or images.
+232,mentions_figure_answerable,"Although an abdominal ultrasound is mentioned, the clinical features of fever, tender hepatomegaly in a diabetic patient, and negative Entamoeba testing clearly indicate a pyogenic liver abscess treated with antibiotics and drainage."
+233,mentions_figure_answerable,"Although the question refers to an image, the clinical presentation of thickened skin lesions, loss of peripheral sensation in an immigrant from India, and question about bacterial properties uniquely identifies leprosy caused by acid-fast bacteria."
+234,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+235,no_figure,The question contains all necessary serologic laboratory values within the text and does not refer to any external figure or exhibit.
+236,no_figure,The question presents a complete clinical vignette describing xeroderma pigmentosum without referencing any external figures or exhibits.
+237,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any exhibits or images.
+238,no_figure,The question contains all necessary information in text form and does not reference any figure or exhibit.
+239,no_figure,The question contains all clinical information in the text and makes no reference to any external image or exhibit.
+240,no_figure,The question contains all necessary clinical details and the confirmed diagnosis in the text without referencing any external image or exhibit.
+241,no_figure,"The question does not refer to any image, exhibit, or figure and can be answered using the clinical vignette alone."
+242,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits.
+243,no_figure,"The question contains all necessary clinical information in the text and makes no reference to any figures, images, or exhibits."
+244,no_figure,The question describes the histochemical findings entirely in the text without referencing any images or exhibits.
+245,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or external exhibits.
+246,no_figure,"The question does not reference any images, tables, or external exhibits."
+247,no_figure,The question contains all necessary clinical details in the text without any mention of or reliance on an external image or exhibit.
+248,no_figure,The question contains no references to any images or exhibits and can be answered entirely from the provided text.
+249,no_figure,The question contains all necessary epidemiological data within the text and does not refer to any external figure or exhibit.
+250,no_figure,"The question contains no reference to any image, exhibit, or figure."
+251,mentions_figure_answerable,"The clinical presentation of urinary hesitancy, nocturia, and an enlarged prostate is sufficient to diagnose benign prostatic hyperplasia and identify finasteride as the appropriate treatment without viewing the ultrasound image."
+252,no_figure,The question contains all necessary clinical details in text format and does not mention or require any figure or exhibit.
+253,no_figure,The question contains all clinical information in the text and does not mention or require any figure or exhibit.
+254,no_figure,The question describes the CT scan findings entirely in the text without referencing any external image or exhibit.
+255,no_figure,The question asks what a blood smear would theoretically be expected to show based on the patient's genetic mutation without referencing any actual image or exhibit.
+256,requires_figure,"The lesion on the scalp is only presented in an image with no textual description, making it impossible to differentiate among the listed skin conditions without the figure."
+257,no_figure,The question contains all clinical and laboratory details directly within the text and does not refer to any external figure or image.
+258,no_figure,The question contains all clinical and imaging findings described purely in text without referencing any external image or exhibit.
+259,no_figure,The question contains all necessary clinical information in the text without referencing any figures or exhibits.
+260,no_figure,The question presents a purely text-based clinical scenario with laboratory values and does not reference any external images or exhibits.
+261,no_figure,The question contains all necessary clinical details in text form and does not reference any figure or exhibit.
+262,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or images.
+263,no_figure,The question contains all necessary clinical details in text and does not mention or require an image.
+264,mentions_figure_answerable,"Although Image A (a chest x-ray) is mentioned, the patient's severe hypoxemia with normal PCWP following trauma and massive transfusion clearly points to ARDS (diffuse alveolar damage) without needing to view the radiograph."
+265,no_figure,The question describes the imaging findings textually and does not reference any external image or exhibit.
+266,no_figure,The question contains all necessary clinical details in the text and does not reference any external images or exhibits.
+267,no_figure,The question contains all necessary information about the mode of inheritance within the text and makes no reference to any figures.
+268,no_figure,The question presents all clinical information in the text with no references to any external images or exhibits.
+269,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits.
+270,mentions_figure_answerable,"Although an MRI (Figure 1) is mentioned, the classic clinical presentation of multiple sclerosis (young female with episodes separated in time and space, including internuclear ophthalmoplegia) is sufficient to identify oligoclonal bands as the expected CSF finding."
+271,no_figure,The question contains all necessary clinical and laboratory information in the text and does not refer to any external figure or exhibit.
+272,no_figure,The question contains all necessary clinical and genetic details in the text without referencing any figures or exhibits.
+273,no_figure,The question contains all necessary clinical details in text and does not mention or require an image or figure.
+274,mentions_figure_answerable,"Although an image is referenced, the comprehensive clinical and histopathological description of a rapidly growing, dome-shaped nodule with a central keratin-filled crater is sufficient to diagnose keratoacanthoma."
+275,no_figure,"The question contains no reference to any figures, images, or exhibits and can be answered using the provided text alone."
+276,no_figure,The question contains all clinical information and laboratory results directly in the text without referring to any images or exhibits.
+277,no_figure,The question describes all relevant clinical and renal biopsy findings in the text without referencing any figures or exhibits.
+278,no_figure,The question presents a complete clinical scenario without referencing any figures or images.
+279,no_figure,The findings of the chest x-ray are described directly in the text without referencing an external image or exhibit.
+280,no_figure,The question is completely self-contained in text and does not mention or rely on any exhibits.
+281,no_figure,The question contains all necessary clinical and biopsy findings within the text and does not refer to any external image or exhibit.
+282,no_figure,The question presents a clinical vignette without referencing any images or external exhibits.
+283,no_figure,The question describes the chest X-ray findings directly in the text without referencing an external image or exhibit.
+284,requires_figure,The question relies on a cardiac physiology curve depicted with a dashed line to identify the specific medication given for heart failure.
+285,no_figure,The question contains all clinical information in text and does not mention or rely on any exhibits.
+286,no_figure,The question contains all necessary clinical details in text and does not reference any image or exhibit.
+287,no_figure,The question contains all clinical information in the text and does not reference any figure or exhibit.
+288,no_figure,The question describes the MRI findings directly in the text without referencing any image or exhibit.
+289,no_figure,The question contains all necessary clinical details directly in the text and does not mention or require an image.
+290,no_figure,"The question presents all necessary data and clinical study details entirely within the text, with no reference to an external figure or exhibit."
+291,no_figure,"The question does not refer to any image, figure, or exhibit and contains all necessary clinical information in the text."
+292,no_figure,"The question contains all necessary clinical findings in the text, including echocardiography results, without referencing any external image or exhibit."
+293,no_figure,"The question does not reference any external images, figures, or exhibits and can be answered entirely from the text."
+294,no_figure,The question describes the microscopic findings in the text without referencing any external image or exhibit.
+295,no_figure,The question contains all necessary clinical and diagnostic ultrasound findings described in the text without referencing any images or external exhibits.
+296,no_figure,The question contains no reference to any images or exhibits and can be answered using clinical knowledge from the provided text.
+297,no_figure,"The question contains all necessary clinical information, laboratory values, and CT scan findings in text form without referring to an external exhibit or image."
+298,no_figure,The question describes the clinical and plain radiograph findings completely in the text without referencing any external image or exhibit.
+299,no_figure,The question contains all necessary information to calculate the change in resistance using Poiseuille's law and does not reference any figure.
+300,no_figure,The question presents all necessary clinical findings in the text without referring to any images or exhibits.
+301,no_figure,"The question contains all necessary clinical, radiological, and histological findings in the text without referencing any external image or exhibit."
+302,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+303,no_figure,"The question presents all clinical findings, laboratory results, and imaging descriptions in the text without referencing any external image or exhibit."
+304,no_figure,The question contains all necessary clinical information in the text and does not refer to any external figure or exhibit.
+305,no_figure,The question contains all necessary clinical information to identify lactulose as the cause of diarrhea and improvement in hepatic encephalopathy without referring to any images or exhibits.
+306,no_figure,The question contains all necessary clinical details within the text and does not mention or require an image.
+307,no_figure,The question is entirely text-based and describes the imaging findings without referencing or requiring an image.
+308,no_figure,The question contains only text and does not reference any figure or exhibit.
+309,no_figure,The question presents a complete clinical ethics scenario without referencing any figures or exhibits.
+310,no_figure,The question contains all necessary information in the text and does not mention or require an exhibit.
+311,mentions_figure_answerable,"The clinical presentation of microcytic anemia and a large ascending colon mass is classic for colorectal adenoma/adenocarcinoma, which is driven by the APC pathway involving impaired degradation of β-catenin, allowing the question to be answered without the photomicrograph."
+312,no_figure,The question contains all necessary clinical and biopsy findings in the text without referencing any external image or exhibit.
+313,no_figure,The question contains all necessary clinical information directly in the text without referencing any external image or exhibit.
+314,no_figure,The question contains all necessary clinical details in text format and does not reference any image or exhibit.
+315,no_figure,The question contains all necessary clinical and laboratory details without referencing any image or exhibit.
+316,no_figure,"The question does not mention or rely on any images, exhibits, or figures."
+317,no_figure,The question contains all necessary clinical information in the text without referencing any figures or exhibits.
+318,no_figure,The question presents a fully text-based clinical vignette without any reference to an external figure or exhibit.
+319,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any figures or exhibits.
+320,no_figure,The question contains all necessary clinical information in the text and does not reference any external images or exhibits.
+321,no_figure,The question contains all necessary clinical information in the text without referencing any images or external exhibits.
+322,no_figure,The question contains all necessary clinical information in the text and does not reference any image or exhibit.
+323,no_figure,The question contains all necessary clinical details in the text and makes no reference to any image or exhibit.
+324,no_figure,The clinical vignette and laboratory findings are entirely described in the text with no reference to an image or exhibit.
+325,no_figure,The question describes all clinical and ultrasonography findings directly in the text without referring to any image or exhibit.
+326,no_figure,The question contains all necessary clinical details in the text and does not reference any figure or exhibit.
+327,no_figure,The question contains no reference to any image or exhibit and can be solved completely through the clinical vignette provided.
+328,no_figure,The question contains all necessary clinical information to be answered directly from the text without referring to any images or exhibits.
+329,no_figure,The question contains all necessary clinical information in the text without referencing any figures or images.
+330,mentions_figure_answerable,"The clinical history of severe trauma followed by refractory hypoxemia and heavy red lungs at autopsy clearly indicates acute respiratory distress syndrome (ARDS) characterized by interstitial edema, making the question answerable without viewing Image A."
+331,requires_figure,The question relies on an unprovided hemoglobin electrophoresis image to definitively differentiate between hemoglobinopathies such as sickle cell disease and hemoglobin SC disease.
+332,no_figure,The question contains all necessary clinical information in the text without referencing any external image or exhibit.
+333,no_figure,The question contains all clinical information in the text and does not mention or require an image.
+334,no_figure,The question does not refer to or rely on any images or exhibits.
+335,no_figure,The question contains all clinical information in the text and makes no mention of or reference to any external figure or exhibit.
+336,mentions_figure_answerable,"The brain biopsy finding of perivascular clusters of lymphocytes in the setting of CNS disease points directly to primary central nervous system lymphoma, which is classically associated with Epstein-Barr virus, allowing the question to be answered without the MRI."
+337,no_figure,The question contains all necessary clinical information in the text and does not refer to any figures or exhibits.
+338,no_figure,The question contains all necessary clinical information in the text and does not reference any images or exhibits.
+339,no_figure,The question contains all necessary clinical information to identify the treatment for arachnophobia and makes no reference to any external image or exhibit.
+340,requires_figure,The CT scan is necessary to confirm the diagnosis (such as normal-pressure hydrocephalus indicated by ventriculomegaly) and guide the appropriate management among the provided options.
+341,no_figure,The question contains all necessary clinical information and does not reference any image or exhibit.
+342,no_figure,The question contains all clinical information needed to diagnose tension pneumothorax and does not reference any figure or exhibit.
+343,no_figure,The question poses an anatomical knowledge question regarding where fluid from a ruptured ovarian cyst typically accumulates without referring to an image or exhibit.
+344,no_figure,The question contains all necessary clinical information and does not reference any figure or exhibit.
+345,no_figure,The question contains all necessary clinical details in text and makes no reference to any figures or exhibits.
+346,no_figure,The question is entirely self-contained text describing a clinical scenario about psychological defense mechanisms and does not reference any figures or exhibits.
+347,no_figure,The question contains all necessary clinical and laboratory information in the text with no reference to any figures or exhibits.
+348,no_figure,The question does not mention or rely on any image or external exhibit.
+349,no_figure,The question contains all clinical findings within the text and does not reference any image or exhibit.
+350,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any images or external figures.
+351,no_figure,The question contains all necessary clinical and laboratory information in the text with no reference to any external figure or image.
+352,no_figure,"The question presents all clinical, laboratory, and histopathological findings in the text without referencing any figures or images."
+353,no_figure,The question contains all necessary clinical and laboratory information in the text with no mention of or reliance on any figure.
+354,no_figure,"The question contains all necessary clinical details in text and makes no reference to any figures, images, or exhibits."
+355,no_figure,The question contains all necessary clinical information in the text and does not refer to any external figure or exhibit.
+356,no_figure,The question presents a complete clinical vignette and can be answered entirely from the provided text without any reference to a figure.
+357,no_figure,"The arterial blood gas results are fully provided within the text, and no external images or figures are referenced."
+358,no_figure,The question is entirely text-based and does not mention or rely on any exhibits or images.
+359,no_figure,The question contains all necessary clinical and biopsy findings in the text without referring to any images or exhibits.
+360,no_figure,The question presents a complete clinical vignette describing spinal muscular atrophy without referencing any figures or exhibits.
+361,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any exhibits or images.
+362,no_figure,The question presents a complete clinical scenario describing reactive arthritis without referencing any images or exhibits.
+363,no_figure,The question contains all necessary clinical and ultrasound findings directly in the text without referencing any external image or exhibit.
+364,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+365,mentions_figure_answerable,"Although a Darrow-Yannet diagram is mentioned, the patient's clinical presentation of acute diarrhea, vomiting, tachycardia, and hypotension sufficiently indicates hypovolemia leading to increased renin secretion without needing the image."
+366,no_figure,"The question contains no references to any external images or exhibits, providing all diagnostic findings within the text."
+367,no_figure,All clinical findings and serology results are provided entirely within the text without referencing any external image or exhibit.
+368,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figure or exhibit.
+369,no_figure,The question contains all necessary clinical details and does not mention or rely on any image or exhibit.
+370,no_figure,The question contains all necessary clinical information in the text and makes no reference to any images or exhibits.
+371,no_figure,The question contains all necessary clinical information in text and does not mention or rely on any exhibits.
+372,no_figure,The question contains all necessary clinical information and laboratory values within the text and does not refer to any external figure or exhibit.
+373,requires_figure,"The question requires viewing the photograph of the eye to distinguish between various forms of keratitis and corneal pathology, such as differentiating a bacterial corneal ulcer from a dendritic ulcer of herpes simplex keratitis."
+374,no_figure,The question contains all necessary clinical and diagnostic findings within the text without referencing any external image or exhibit.
+375,no_figure,The question describes CT scan findings in the text without referencing any external image or exhibit.
+376,no_figure,The question contains all clinical information in text and does not mention or rely on any exhibits.
+377,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+378,no_figure,The question contains all necessary clinical information in the text and does not reference any figures or exhibits.
+379,no_figure,The question contains all clinical information needed to diagnose cardiac tamponade/pericardial effusion and does not mention any exhibits or figures.
+380,mentions_figure_answerable,"Although Figures A and B are mentioned, the clinical vignette and specific laboratory abnormalities (hypokalemic metabolic alkalosis with hypercalcemia) provide sufficient information to determine the answer."
+381,no_figure,The question describes the peripheral blood smear findings directly in the text without referencing any external image or exhibit.
+382,no_figure,The question presents a complete clinical scenario without referencing any figures or exhibits.
+383,no_figure,"The question does not refer to any external image or exhibit, and all relevant X-ray findings are fully described in the text."
+384,no_figure,The question contains all necessary clinical information and laboratory values within the text and does not mention or require an image.
+385,no_figure,The question describes the CT scan findings entirely in the text without referencing an external image.
+386,no_figure,The question contains all clinical information and laboratory findings in text format with no reference to an image or exhibit.
+387,no_figure,The question contains all necessary clinical details in the text and makes no reference to any figures or exhibits.
+388,no_figure,The question does not mention or refer to any image or exhibit.
+389,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any external images or exhibits.
+390,no_figure,The question contains all necessary clinical details in text and does not mention or require any images or exhibits.
+391,no_figure,The question describes the findings from the EKG and chest radiograph entirely in the text without referring to any accompanying figures.
+392,no_figure,The question contains all clinical information and spirometry values directly within the text with no mention of an external figure or exhibit.
+393,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+394,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or external exhibits.
+395,no_figure,The clinical vignette contains all necessary clinical information to determine the next step in asthma management without referencing any figures or exhibits.
+396,no_figure,The question presents all relevant clinical and ultrasound findings entirely in the text without referring to any external images or exhibits.
+397,mentions_figure_answerable,"The family history of mild anemia across generations in both sexes, combined with splenomegaly and an aplastic crisis, points directly to hereditary spherocytosis, which has an autosomal dominant inheritance pattern."
+398,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or external exhibits.
+399,no_figure,"The question presents all clinical details, vital signs, and lab values in the text without referring to any images or exhibits."
+400,no_figure,The question contains all clinical information and laboratory results in the text without referencing any figures or exhibits.
+401,no_figure,The question contains all necessary clinical details in text and does not refer to any figures or exhibits.
+402,no_figure,The question contains all necessary clinical information in the text and does not reference any external images or figures.
+403,no_figure,The question contains all clinical information in the text and does not mention or rely on any exhibit or figure.
+404,no_figure,The question describes the clinical and imaging findings entirely in the text without referencing any figures or exhibits.
+405,no_figure,The question contains all necessary clinical information directly in the text and does not mention or rely on any exhibits.
+406,mentions_figure_answerable,"The clinical history of bat exposure followed by rapidly fatal encephalitis is diagnostic for rabies virus, which targets acetylcholine receptors, allowing the question to be answered without the histology image."
+407,no_figure,The question contains all necessary clinical information in the text and does not reference or require any figure or exhibit.
+408,no_figure,The question contains all necessary clinical and laboratory information in the text with no reference to any external figure or exhibit.
+409,no_figure,The question contains all necessary clinical and histological findings in the text without referring to any images or exhibits.
+410,no_figure,The question is entirely text-based and does not reference any images or external exhibits.
+411,mentions_figure_answerable,"Although the prompt refers to an image of the lesions ('as shown'), the clinical presentation and markedly elevated IgA tissue transglutaminase titer provide sufficient information to diagnose celiac disease."
+412,no_figure,The question relies entirely on clinical text and laboratory values with no reference to any images or external figures.
+413,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or images.
+414,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+415,mentions_figure_answerable,"Although the question refers to a table, the contingency table data is fully provided in the text, allowing the question to be answered without an external image."
+416,no_figure,The question contains all necessary clinical and laboratory information in the text with no mention of an external figure or image.
+417,no_figure,The question contains all necessary clinical information and laboratory findings within the text without referencing any figures or exhibits.
+418,no_figure,The question contains all clinical and laboratory information in the text and does not mention or rely on any figures or exhibits.
+419,no_figure,"The question does not reference or rely on any images, tables, or other exhibits."
+420,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any figure.
+421,no_figure,"The question presents all clinical details, examination findings, and echocardiogram results entirely within the text without referring to any images or exhibits."
+422,no_figure,The question relies purely on the clinical vignette and laboratory values provided in the text without referencing any images or external figures.
+423,no_figure,The question contains all necessary clinical and laboratory information directly in the text without referring to any external images or exhibits.
+424,no_figure,The question contains no references to any images or figures and can be answered using clinical knowledge alone.
+425,no_figure,The question presents a clinical ethics scenario without referencing any images or external exhibits.
+426,no_figure,The question contains all necessary clinical details in the text and does not mention or require any figure or exhibit.
+427,no_figure,The question contains all necessary information to determine the mechanism of action of miglitol without referencing any figures or exhibits.
+428,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any figures or exhibits.
+429,no_figure,The text describes the findings of the barium swallow study directly without referring to an image or exhibit.
+430,no_figure,The question does not mention or rely on any images or exhibits to be answered.
+431,no_figure,The question contains all necessary clinical information in the text and makes no reference to any external figure or image.
+432,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+433,no_figure,The question contains no references to any external images or figures and can be answered fully using the provided clinical details.
+434,no_figure,The question is entirely self-contained text describing a clinical scenario of Alzheimer's disease without referencing any images or exhibits.
+435,no_figure,The question presents a complete clinical vignette describing organophosphate poisoning without referencing any image or exhibit.
+436,no_figure,The question contains all necessary clinical and genetic details in the text and does not reference any figure or exhibit.
+437,no_figure,The question contains all necessary clinical details in text and does not refer to any external image or exhibit.
+438,no_figure,The question presents a complete clinical vignette with no mention or need of any figure or exhibit.
+439,no_figure,The question contains all necessary clinical and diagnostic details in the text without referencing any figures or images.
+440,no_figure,The question contains all necessary clinical information in text form and does not reference any figure or exhibit.
+441,no_figure,The question contains all necessary clinical and biopsy descriptions in the text without referring to any images or exhibits.
+442,no_figure,"The question does not refer to any figures, images, or external exhibits."
+443,no_figure,The question contains all necessary clinical information and laboratory results directly in the text without referencing any images or external figures.
+444,no_figure,The question contains all necessary clinical and ethical details entirely in text with no mention of or reference to any figure or exhibit.
+445,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any images or external exhibits.
+446,no_figure,"The question contains all necessary clinical and electrocardiographic findings entirely within the text, with no reference to an external image or exhibit."
+447,no_figure,"The question does not refer to any image, exhibit, or figure and can be answered solely from the provided clinical text."
+448,mentions_figure_answerable,"Although the prompt references a picture of the patient's feet, the clinical text already describes 'bruising on his feet' alongside a symptomatic abdominal aortic aneurysm with all key imaging and hemodynamic findings needed to determine management."
+449,no_figure,The question contains all necessary clinical details in the text and makes no reference to any images or exhibits.
+450,no_figure,The question contains all necessary clinical details within the text and does not mention or require any figure or exhibit.
+451,no_figure,The question contains all necessary clinical information in the text and does not mention or require an image.
+452,no_figure,The question presents all chest radiograph findings textually and does not reference an external figure or image.
+453,no_figure,The question contains all necessary clinical details in the text and does not reference any image or exhibit.
+454,requires_figure,"The answer choices refer to labeled regions on an unseen histology slide of the adrenal gland, making the question impossible to answer without the image."
+455,no_figure,The question contains all necessary clinical information in the text and does not reference any external images or exhibits.
+456,no_figure,The clinical vignette provides all necessary details to determine the diagnosis without referencing any figures or exhibits.
+457,no_figure,All clinical information and laboratory test results are provided directly in the text with no reference to an external figure or image.
+458,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+459,no_figure,"The question does not refer to any external figure or exhibit, and all relevant radiograph findings are fully described in the text."
+460,no_figure,The question contains only clinical text and does not mention or rely on any exhibits or images.
+461,no_figure,The question contains all necessary clinical details in the text without referencing any images or exhibits.
+462,no_figure,"The question contains all necessary clinical information in the text and makes no reference to any figures, images, or exhibits."
+463,no_figure,The question presents a complete clinical scenario without referencing any figures or exhibits.
+464,no_figure,The question contains all necessary clinical information in the text without referencing any figures or exhibits.
+465,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+466,no_figure,The question contains all necessary clinical information in the text and makes no reference to any figures or exhibits.
+467,requires_figure,"The question asks about an immunologic process in a region indicated by an arrow on an unseen photomicrograph of the thymus, which is needed to distinguish between the cortex and medulla."
+468,no_figure,The question contains all necessary clinical information in the text and does not refer to any external figure or exhibit.
+469,mentions_figure_answerable,"Although a chest x-ray is mentioned, the constellation of respiratory symptoms, bilateral ankle pain, anterior uveitis, and demographic risk factors points definitively to sarcoidosis despite multiple environmental and travel-related distractors."
+470,mentions_figure_answerable,"The text explicitly describes a small outpouching in the posterior neck on a swallowing study, which sufficiently identifies a Zenker diverticulum without needing to view the image."
+471,no_figure,The question contains all necessary clinical and diagnostic details in the text without referencing any external figures or exhibits.
+472,no_figure,The question contains all necessary information within the text and does not refer to any external figure or exhibit.
+473,no_figure,"The question does not refer to any figures, images, or external exhibits and provides all necessary clinical details in the text."
+474,no_figure,The question is entirely text-based and contains no references to any images or exhibits.
+475,mentions_figure_answerable,"Although an ECG is referenced, the patient presents with an unstable tachyarrhythmia (hypotension, chest pain, pulse 136/min), which dictates immediate synchronized cardioversion regardless of the specific rhythm shown."
+476,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any external image or exhibit.
+477,no_figure,The question contains all necessary clinical information to identify the injured nerve and affected muscle action without referencing any figures or exhibits.
+478,no_figure,"The question contains all necessary clinical and serologic details within the text, with no reference to any figures or exhibits."
+479,no_figure,The question contains all necessary clinical details in the text and makes no reference to any images or exhibits.
+480,no_figure,The question contains all necessary clinical details in text and makes no reference to any external image or exhibit.
+481,no_figure,The question contains all necessary information in the text and does not mention or rely on any figures.
+482,no_figure,The question contains all necessary information to answer without referencing any images or external exhibits.
+483,no_figure,The question contains all necessary clinical and laboratory information directly in the text without referring to any external figures or exhibits.
+484,requires_figure,The photograph is required to visually confirm the presence of a constricting hair or fiber around the swollen toe to differentiate hair tourniquet syndrome from other causes.
+485,mentions_figure_answerable,"Although an endoscopic image is mentioned, the patient's presentation, atopic history, and explicit biopsy finding of eosinophilic infiltration provide all the necessary information to determine the appropriate pharmacotherapy."
+486,no_figure,The question presents a clinical vignette without referencing any images or external exhibits.
+487,no_figure,The question contains only text describing a clinical scenario and makes no reference to any figures or exhibits.
+488,no_figure,The question contains all necessary clinical information in the text and does not refer to any external figure or exhibit.
+489,no_figure,The question contains no references to any images or exhibits and can be fully answered using the provided text alone.
+490,no_figure,The question presents a complete clinical vignette describing Kallmann syndrome without referring to any images or exhibits.
+491,no_figure,The question is entirely text-based and does not refer to any figures or exhibits.
+492,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any external image or exhibit.
+493,no_figure,"The question does not reference any image, figure, or exhibit and can be answered using only the provided text."
+494,no_figure,The question contains all necessary clinical information to diagnose twin-to-twin transfusion syndrome and determine chorionicity without referencing any figures or exhibits.
+495,no_figure,"The question contains no reference to any figures, images, or exhibits."
+496,no_figure,The question contains all necessary clinical and laboratory data in the text without referencing any figures or images.
+497,no_figure,The question contains all necessary clinical information in the text and makes no reference to any external image or exhibit.
+498,no_figure,The question presents a clinical scenario and asks for lab values without referencing any figures or exhibits.
+499,no_figure,The question presents all clinical details purely in text without referencing any images or external exhibits.
+500,no_figure,The question describes the abdominal x-ray findings directly in the text without referring to any external figure or image.
+501,no_figure,"The question contains all necessary clinical and microbiological details entirely within the text, with no reference to an external figure or exhibit."
+502,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any figures.
+503,no_figure,The question contains all necessary clinical information in the text without referencing any figures or images.
+504,no_figure,The question presents all relevant clinical findings directly in the text and does not mention or rely on any exhibits or images.
+505,no_figure,The question contains all necessary clinical and biochemical information to answer without referencing any images or figures.
+506,no_figure,The question contains all necessary clinical information in the text and does not mention or require any figure or exhibit.
+507,no_figure,"The question contains all clinical, radiographic, and laboratory findings within the text without referencing any external image or exhibit."
+508,no_figure,The question is entirely text-based and does not mention or require any figure or exhibit.
+509,no_figure,The question contains all necessary clinical information to diagnose vascular dementia without referencing any figures or images.
+510,no_figure,The question contains all necessary clinical and communication context within the text and does not reference any figure or exhibit.
+511,no_figure,The question presents all findings in the text and does not mention or rely on any external exhibits or figures.
+512,no_figure,The question contains all necessary clinical information in text and does not reference or require any images or exhibits.
+513,no_figure,The question contains all clinical information in the text and does not reference or require an external image or exhibit.
+514,no_figure,The question presents all clinical details and microscopic findings directly in the text without referring to any images or exhibits.
+515,no_figure,The question contains all necessary clinical information to diagnose the condition and identify the histopathologic finding without referencing any external image or figure.
+516,no_figure,The question contains all necessary clinical information in the text and does not mention or require any images or exhibits.
+517,no_figure,The clinical vignette does not reference any images or external exhibits.
+518,mentions_figure_answerable,"The clinical presentation (fever, neurological symptoms, thrombocytopenia, and Coombs-negative hemolytic anemia in early pregnancy) is sufficient to diagnose thrombotic thrombocytopenic purpura without viewing the peripheral blood smear."
+519,no_figure,The question contains all necessary clinical information in the text and does not reference any external images or exhibits.
+520,no_figure,The question contains all necessary information within the text and does not mention or rely on any figures or exhibits.
+521,mentions_figure_answerable,"Although the prompt mentions an ECG, the patient clearly has an acute myocardial infarction with elevated troponins and ongoing ischemic symptoms, making percutaneous coronary intervention the clear best next step over the other options."
+522,no_figure,The question contains all necessary clinical information and findings in the text without referencing any external image or exhibit.
+523,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any image or exhibit.
+524,no_figure,The question describes imaging and staining results entirely in text without referencing an external image or figure.
+525,no_figure,The question contains all necessary clinical and laboratory information in the text without referring to any images or external figures.
+526,no_figure,The question contains all necessary clinical information in the text and does not mention or require any figure or exhibit.
+527,no_figure,The question presents a complete clinical scenario and laboratory findings without referring to any images or exhibits.
+528,no_figure,The question contains all necessary clinical and diagnostic details in the text without referencing any figures or exhibits.
+529,no_figure,The question contains all necessary clinical and fundoscopic findings within the text without referring to any images or exhibits.
+530,no_figure,"The question does not refer to any image, table, or other exhibit and provides all necessary clinical details in text."
+531,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+532,no_figure,The question contains all necessary clinical details in the text and does not refer to any external figure or exhibit.
+533,no_figure,The question contains all necessary clinical and biopsy descriptions entirely in the text without referring to any images or exhibits.
+534,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+535,mentions_figure_answerable,"Although the question refers to a table in the abstract, the table data and relevant participant numbers are fully provided in the text."
+536,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or external exhibits.
+537,mentions_figure_answerable,"Although a CT image is mentioned, the clinical vignette clearly describes acute elevated intracranial pressure from severe head trauma requiring an anesthetic agent like propofol that decreases cerebral blood flow and intracranial pressure."
+538,no_figure,The question contains all necessary clinical and microbiological details in the text without referencing any figures or images.
+539,no_figure,The question describes the CT scan findings in the text without referencing an external image.
+540,no_figure,The question describes the ECG findings entirely in the text without referring to any image or exhibit.
+541,no_figure,The question contains all necessary epidemiological data within the text and does not reference any figure or exhibit.
+542,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+543,no_figure,The question contains all necessary clinical information in the text and does not mention or require an image.
+544,no_figure,The question contains all necessary clinical information in the text and does not mention or require any figure or exhibit.
+545,no_figure,The question does not reference or rely on any images or exhibits.
+546,mentions_figure_answerable,"The clinical presentation of acute shortness of breath and decreased breath sounds at the lung base within 24 hours of major abdominal surgery is classic for postoperative atelectasis, allowing the question to be answered without the chest radiograph."
+547,no_figure,The question contains all necessary clinical information to determine the next step in management and does not reference any figure or image.
+548,no_figure,The question contains all necessary clinical and diagnostic details in the text without referencing any external figures or exhibits.
+549,no_figure,The question contains all clinical and ultrasound findings in the text without referencing any image or external exhibit.
+550,no_figure,The question contains all necessary clinical information in the text and does not refer to any figures or exhibits.
+551,no_figure,The question contains all necessary clinical and laboratory information in the text with no mention of or reliance on any figures or exhibits.
+552,no_figure,"The question presents all clinical, laboratory, and ultrasound findings entirely in the text without referencing any images or exhibits."
+553,no_figure,"The question does not refer to any image, exhibit, or figure and can be answered entirely through the text."
+554,no_figure,The question contains all clinical information in the text and does not refer to any external image or exhibit.
+555,no_figure,The question contains all necessary clinical information in the text and does not mention or require any figure or exhibit.
+556,no_figure,The question contains all clinical and histopathologic findings directly in the text without referencing any figures or exhibits.
+557,mentions_figure_answerable,"Although a CT scan is mentioned, the clinical vignette provides a classic description of bubonic plague progressing to pneumonic plague acquired in the southwestern United States, allowing the correct answer to be identified without the image."
+558,no_figure,The question contains a full clinical description without referencing any images or external exhibits.
+559,no_figure,The question is entirely text-based and does not mention or rely on any exhibits.
+560,no_figure,The question contains all necessary clinical information and laboratory values within the text itself without referencing an external image or figure.
+561,no_figure,The question contains all necessary clinical information in the text and does not refer to any figures or exhibits.
+562,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+563,no_figure,"The question does not reference any images, figures, or exhibits."
+564,no_figure,The question is entirely text-based and does not reference any image or exhibit.
+565,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or images.
+566,no_figure,The question contains all clinical and diagnostic details in the text without referring to any figures or exhibits.
+567,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+568,no_figure,"The question presents all relevant clinical, laboratory, and histopathological findings in text without referencing any figures or exhibits."
+569,no_figure,The question contains all necessary clinical information in the text and does not refer to any external figure or exhibit.
+570,no_figure,The question describes the X-ray findings directly in the text without referencing any external image or exhibit.
+571,no_figure,The question contains all necessary clinical details in the text and makes no reference to any figures or external exhibits.
+572,requires_figure,The exhibit of the facial rash is required to determine the specific subtype and severity of the condition in order to select the correct initial treatment.
+573,no_figure,The question contains all necessary clinical findings in the text and does not mention or rely on any exhibits or images.
+574,no_figure,The question contains all necessary clinical details in text and does not reference any image or exhibit.
+575,mentions_figure_answerable,"The clinical history of neck pain radiating to the arm with wrist extension weakness indicates cervical disc herniation causing nerve root compression by the nucleus pulposus, which is embryologically derived from the notochord, allowing the question to be answered without the MRI."
+576,no_figure,The question describes the pelvic ultrasound findings directly in the text and does not reference any external images or exhibits.
+577,no_figure,The question presents a clinical scenario and asks for the expected echocardiogram finding without referencing any external image or exhibit.
+578,no_figure,The question contains all necessary clinical information in the text and makes no reference to any figures or exhibits.
+579,no_figure,"The question asks what a hypothetical radiograph would show based on the provided clinical vignette and laboratory findings, without referring to an accompanying image or exhibit."
+580,no_figure,The question is entirely self-contained within the clinical vignette and does not reference any external images or exhibits.
+581,mentions_figure_answerable,"Although the electrocardiogram is mentioned as being shown in a picture, the clinical findings of hyperthyroidism with an irregular pulse of 140–150/min clearly identify atrial fibrillation, which strongly correlates with age."
+582,no_figure,The question contains all necessary clinical details and does not mention or rely on any figures or exhibits.
+583,no_figure,The question describes the EKG findings directly in the text without referencing any external image or exhibit.
+584,no_figure,The text describes the chest radiography findings directly without referencing an external image.
+585,no_figure,The question contains all clinical and ECG findings directly described in the text without referencing any external image or exhibit.
+586,no_figure,The question describes the findings of the MRI within the text without referring to any external figure or image.
+587,requires_figure,"The question asks to identify the specific congenital abnormality shown on an ultrasound, which cannot be determined without viewing the missing image."
+588,no_figure,The question contains all necessary clinical details in the text and makes no reference to any figures or exhibits.
+589,no_figure,The question contains all necessary clinical information in the text without referencing any figures or exhibits.
+590,no_figure,The question contains all clinical information in the text and makes no reference to any image or exhibit.
+591,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any external images or exhibits.
+592,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+593,no_figure,The question contains all necessary clinical information in the text and does not refer to any images or exhibits.
+594,no_figure,The question presents a complete clinical vignette without any reference to an external image or exhibit.
+595,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+596,no_figure,The question contains all necessary clinical details in the text without referencing any external image or exhibit.
+597,no_figure,"The question is entirely text-based and does not refer to any figures, images, or external exhibits."
+598,no_figure,The question contains all necessary clinical information in the text and does not refer to any image or external exhibit.
+599,no_figure,The question describes the MRI findings in the text without referring to an accompanying image or exhibit.
+600,no_figure,"The question contains no references to any external figures, images, or exhibits and can be answered using text alone."
+601,no_figure,The question contains all necessary information in the text and does not refer to any figures or exhibits.
+602,no_figure,The question contains only text describing a clinical vignette and mechanism of drug interaction without referencing any images or exhibits.
+603,mentions_figure_answerable,"Although a photograph is mentioned, the description of a hyperpigmented papule that retracts inward upon squeezing (dimple sign) is pathognomonic for a dermatofibroma."
+604,no_figure,The question contains all necessary clinical details describing Kawasaki disease without referencing any images or external figures.
+605,no_figure,The question contains all necessary clinical details in the text and does not mention or require an image.
+606,no_figure,The question presents a complete clinical scenario without referencing any images or exhibits.
+607,no_figure,"The question does not refer to any external image, graph, table, or exhibit and can be answered entirely from the text."
+608,no_figure,The question contains all necessary clinical details in text and does not mention or require an image.
+609,no_figure,The question does not mention or rely on any images or exhibits to be answered.
+610,no_figure,The question contains all necessary clinical and laboratory information in the text and does not refer to any external images or exhibits.
+611,mentions_figure_answerable,"Although a chest X-ray is noted without provided findings (implying an accompanying exhibit), the clinical triad of heart failure, achalasia/dysphagia, and origin from Mexico sufficiently identifies Chagas disease (parasitic infection)."
+612,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+613,no_figure,The question contains all necessary clinical and diagnostic details in the text without referring to any images or exhibits.
+614,no_figure,The question contains all necessary clinical and diagnostic details in text form and does not reference any external figures or exhibits.
+615,no_figure,The question contains all necessary clinical information in the text with no mention of any external figures or exhibits.
+616,requires_figure,The diagnosis of the underlying hematologic malignancy (such as Hodgkin lymphoma) relies on identifying the histopathological features shown in the lymph node biopsy (Image A) to determine the associated renal pathology.
+617,no_figure,The question contains no reference to any images or exhibits and can be answered entirely from the provided text.
+618,no_figure,The question contains all necessary clinical information in the text with no mention of any exhibit or image.
+619,no_figure,The question contains all clinical information in the text and does not mention or rely on any figures or exhibits.
+620,no_figure,The question contains all necessary information in the text and does not reference any images or exhibits.
+621,no_figure,The question contains all necessary clinical details in text and makes no reference to any image or exhibit.
+622,mentions_figure_answerable,"The clinical presentation describes characteristic features of multiple sclerosis, including Uhthoff phenomenon and upper motor neuron signs in a young woman, allowing the identification of CSF oligoclonal bands without needing the MRI."
+623,no_figure,The question presents a complete text-based epidemiology scenario without referencing any figures or exhibits.
+624,no_figure,The question describes the ECG findings entirely in the text without referencing any image or external exhibit.
+625,no_figure,The question contains all necessary clinical information in the text and does not reference any external images or exhibits.
+626,no_figure,The question contains all necessary clinical and laboratory information in the text and does not refer to any external figure or exhibit.
+627,no_figure,"The question does not refer to any image, exhibit, or figure."
+628,no_figure,The question describes the ultrasound findings in text and does not refer to any external figure or image.
+629,no_figure,The question contains all necessary clinical and physical examination details within the text without referring to any images or exhibits.
+630,no_figure,The question contains all necessary clinical details in the text and does not reference any external images or exhibits.
+631,no_figure,The peripheral blood smear findings are described entirely in the text without referencing an external image.
+632,no_figure,The question contains all necessary clinical and diagnostic details in text without referencing any external image or exhibit.
+633,requires_figure,The diagnosis depends on interpreting the histopathologic findings of the lymph node biopsy shown in the image to distinguish among several plausible causes of cervical lymphadenopathy.
+634,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+635,mentions_figure_answerable,"Although an ECG and chest X-ray are mentioned, the clinical history of classic congestive heart failure symptoms following a myocardial infarction is sufficient to identify an echocardiogram as the next best step in management."
+636,no_figure,The question presents a complete clinical vignette with no mention of or reference to any external figures or exhibits.
+637,no_figure,The question is entirely text-based and does not mention or rely on any figures or exhibits.
+638,no_figure,The question contains all necessary clinical details in text and does not refer to any external figures or exhibits.
+639,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+640,mentions_figure_answerable,The diagnosis of lead poisoning and indication for treatment can be determined directly from the clinical history and the provided venous lead level of 60 mcg/dL without seeing the peripheral blood smear.
+641,no_figure,The question contains all necessary clinical details in text and does not reference any figure or exhibit.
+642,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+643,no_figure,The question presents a complete clinical scenario without referencing any figures or exhibits.
+644,requires_figure,"The question asks about physiological changes occurring at a specific point (point D) on an unseen graph, making it impossible to answer without the visual exhibit."
+645,no_figure,The question contains all necessary clinical and surgical findings in the text without referring to any image or figure.
+646,no_figure,The question contains all necessary clinical information in the text and does not refer to any external figure or image.
+647,no_figure,The question presents all clinical and diagnostic findings textually without referencing any images or external figures.
+648,no_figure,The question contains all necessary clinical details in the text and makes no reference to any figures or exhibits.
+649,no_figure,The question contains all clinical information in the text without referencing any figures or images.
+650,no_figure,The question contains all necessary clinical information in the text and does not refer to any external images or exhibits.
+651,no_figure,The question contains all necessary clinical details in text form and does not reference any figure or exhibit.
+652,no_figure,The question contains all necessary clinical and laboratory information in the text without referring to any images or exhibits.
+653,mentions_figure_answerable,"Although an ultrasound image is referenced, the patient's typical presentation of recurrent postprandial pain and absence of critical illness definitively points to acute calculous rather than acalculous cholecystitis."
+654,no_figure,The clinical vignette and laboratory values are fully described in text with no mention of or reliance on any figures or exhibits.
+655,no_figure,The question contains all necessary clinical and anatomical details to be answered directly from the text without referencing any figures.
+656,no_figure,The question mentions ordering an x-ray as part of the clinical narrative but does not reference an external figure or image.
+657,mentions_figure_answerable,The physical examination finding of a new-onset irregular rate and rhythm combined with palpitations sufficiently identifies atrial fibrillation without needing to view the ECG.
+658,no_figure,The question contains all necessary information in the text to identify the study design without referring to any images or exhibits.
+659,no_figure,The question presents all imaging results and clinical information directly in the text without referencing any external image or exhibit.
+660,no_figure,"The question is entirely text-based and makes no reference to any figures, images, or exhibits."
+661,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any external figures or exhibits.
+662,no_figure,The question asks to predict chest x-ray findings based on clinical presentation and physical examination findings without referencing any external image.
+663,no_figure,The clinical vignette does not reference or rely on any images or exhibits.
+664,no_figure,The question contains all necessary clinical information and laboratory values within the text and does not reference any figure or exhibit.
+665,no_figure,The question presents a complete clinical vignette without referencing any images or external exhibits.
+666,no_figure,The question contains complete clinical details in text and does not mention or rely on any figures or exhibits.
+667,no_figure,The question contains all necessary clinical information to diagnose compartment syndrome and choose emergent fasciotomy without mentioning or requiring any external figures.
+668,mentions_figure_answerable,The clinical history of an unvaccinated toddler with fever and a pruritic rash that began on the trunk and progressed outward is classically diagnostic of varicella without needing the photograph.
+669,no_figure,The question describes the endoscopy findings textually without referencing any external image or exhibit.
+670,no_figure,The question contains no references to any images or exhibits and asks directly about the mechanism of action of chlorhexidine.
+671,no_figure,The question contains complete clinical descriptions and does not reference or require any external images or exhibits.
+672,no_figure,The question is entirely text-based and does not reference any images or exhibits.
+673,no_figure,The question contains all necessary clinical details in text and does not reference or require any visual exhibit.
+674,no_figure,The question contains all necessary information to determine the drug with a similar mechanism of action and does not refer to any figures or exhibits.
+675,no_figure,The question contains all necessary clinical information in the text and does not refer to any figures or external exhibits.
+676,requires_figure,"The question asks for the mediator responsible for the specific cell type indicated by an arrow on an autopsy photomicrograph, which cannot be identified without the image."
+677,no_figure,The clinical vignette and question contain no mention of or reliance on any image or exhibit.
+678,no_figure,"The question does not refer to any figures, images, or external exhibits and is fully answerable from the text alone."
+679,no_figure,The question contains all clinical and biopsy descriptions in text and does not mention or rely on any external figures or exhibits.
+680,no_figure,The question contains all necessary clinical details and laboratory values directly in the text without referencing any external figures or exhibits.
+681,no_figure,The question contains all necessary clinical and laboratory information in the text without referring to any images or exhibits.
+682,mentions_figure_answerable,"Although the question refers to a chest radiograph, the text explicitly describes the diagnostic findings of 'glove-finger shadows' and brown mucus plugs in an asthma patient with elevated IgE, which is sufficient to diagnose allergic bronchopulmonary aspergillosis and select prednisone."
+683,mentions_figure_answerable,"Although a peripheral smear is mentioned as shown below, the autopsy finding of gram-positive, lancet-shaped diplococci definitively identifies Streptococcus pneumoniae without needing the image."
+684,no_figure,The question contains all necessary clinical information in the text and does not reference or require an external image or exhibit.
+685,requires_figure,The question requires viewing the graph to determine which lung volume is indicated by the dotted line.
+686,no_figure,The question contains all necessary clinical and laboratory information in the text with no mention of or reference to any external figure or exhibit.
+687,no_figure,The question contains all necessary clinical details without mentioning or referencing any images or exhibits.
+688,no_figure,The question contains all necessary clinical and laboratory information in the text and does not reference any external images or exhibits.
+689,no_figure,The question contains all necessary clinical information in the text and makes no reference to any figures or exhibits.
+690,no_figure,The question contains all necessary clinical information directly in the text and does not mention or require any images or exhibits.
+691,no_figure,The question contains all necessary information in the text and does not mention or rely on any exhibits.
+692,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any figures or exhibits.
+693,no_figure,The question contains all necessary clinical information to diagnose vasospastic angina and choose an appropriate medication without referencing any figures or exhibits.
+694,no_figure,The question presents all relevant clinical details directly in the text without referencing any figures or exhibits.
+695,no_figure,The question contains all clinical and laboratory data in the text and does not mention or rely on any external figures or exhibits.
+696,no_figure,The question contains all necessary clinical details in text and does not mention or require an image.
+697,no_figure,The question describes the chest X-ray findings entirely in the text without referencing any missing visual exhibit.
+698,no_figure,The question contains all necessary clinical details in the text and does not reference any figure or exhibit.
+699,no_figure,The question contains all necessary clinical information to diagnose myasthenia gravis and select the appropriate management without referencing any figures or exhibits.
+700,no_figure,The question contains all necessary clinical information and does not reference any external images or exhibits.
+701,no_figure,The question contains all necessary clinical information in the text without referencing any figures or exhibits.
+702,no_figure,The question is entirely self-contained text describing epidemiological test properties without referencing any figures or exhibits.
+703,no_figure,The question contains all necessary clinical information and laboratory findings in text format without referring to any images or exhibits.
+704,no_figure,The question presents a complete clinical vignette with no mention of or reference to any external image or exhibit.
+705,no_figure,The question contains all necessary clinical details in text format and does not reference any external images or exhibits.
+706,no_figure,"All relevant clinical details and laboratory values are fully provided within the text, and no external figures or exhibits are referenced."
+707,no_figure,The question contains no reference to any image or exhibit and can be answered based solely on the provided text.
+708,no_figure,The question includes all clinical information and laboratory values in the text without referencing any figures or exhibits.
+709,requires_figure,"The answer choices correspond to labeled curves on an unprovided graph (figure A), making it impossible to answer without viewing the image."
+710,no_figure,"The question contains all clinical information, including urinalysis and CT scan findings, directly within the text without referring to any images or exhibits."
+711,mentions_figure_answerable,"Although an image is referenced, the comprehensive clinical description detailing fine scales sparing the flexural creases, keratosis pilaris, and hyperlinear palms is pathognomonic for ichthyosis vulgaris."
+712,no_figure,The question contains all clinical information in the text and does not mention or rely on any external images or exhibits.
+713,no_figure,The question presents all clinical information and laboratory values in the text without referring to any images or exhibits.
+714,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits.
+715,no_figure,The question is entirely text-based and contains no references to any images or exhibits.
+716,mentions_figure_answerable,"The sudden onset of a pruritic rash two hours after starting ceftriaxone is characteristic of acute urticaria, which is caused by hyperpermeability of the superficial dermal microvasculature."
+717,no_figure,The question describes the x-ray finding entirely in the text without referencing an external image.
+718,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any figure or image.
+719,no_figure,The question contains all necessary information in the text to identify the cell type and answer the question without any figures.
+720,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any figures or exhibits.
+721,no_figure,The question describes the MRI findings directly in the text without referring to any accompanying image or exhibit.
+722,no_figure,"The question contains all necessary clinical information and does not refer to any figures, images, or exhibits."
+723,no_figure,The question contains all necessary clinical details in the text and does not refer to any external figure or image.
+724,no_figure,"The question presents all relevant findings, including CSF analysis, directly in the text without referencing any external image or exhibit."
+725,mentions_figure_answerable,"The clinical presentation of a sore mouth in a patient using an inhaled corticosteroid strongly indicates oral candidiasis, which is treated with nystatin, making the question answerable without viewing the photograph."
+726,no_figure,The question contains all necessary clinical and microbiological details in the text without referencing any figure or exhibit.
+727,mentions_figure_answerable,"The clinical presentation of classic Pel-Ebstein fevers, B symptoms, cervical lymphadenopathy, and mediastinal mass in a young adult strongly indicates Hodgkin lymphoma (CD15 and CD30 positive) without needing to view the photomicrograph."
+728,no_figure,The question contains all necessary clinical information to identify the most accurate predictor of gestational age without referencing any external image or exhibit.
+729,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any external exhibits or images.
+730,requires_figure,The diagnosis of the patient's specific eye condition relies on viewing the eye examination findings presented exclusively in the missing image.
+731,no_figure,The question contains all necessary clinical information in the text and does not reference any figures or exhibits.
+732,no_figure,The question contains all necessary clinical information in the text and does not reference any external images or figures.
+733,no_figure,The question contains all necessary clinical details describing pyloric stenosis without mentioning or requiring any image or exhibit.
+734,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+735,no_figure,The question presents all relevant laboratory values within the text and does not refer to any external figures or exhibits.
+736,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+737,no_figure,The question contains all necessary clinical details in text and does not reference any image or exhibit.
+738,no_figure,The question contains all necessary epidemiological data directly in the text and does not mention or require an image.
+739,mentions_figure_answerable,"The classic clinical vignette describing head trauma followed by a lucid interval, rapid neurological decline, and uncal herniation (ipsilateral fixed and dilated pupil) sufficiently identifies an epidural hematoma caused by tearing of the middle meningeal artery without needing to view the CT scan."
+740,no_figure,The question contains only clinical text and does not mention or rely on any exhibits.
+741,no_figure,The question contains all necessary information in the text and does not refer to any figures or exhibits.
+742,no_figure,The question does not refer to any images or exhibits and can be answered directly from the clinical text.
+743,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any external figures or exhibits.
+744,no_figure,The question presents a complete clinical vignette without any reference to an external image or exhibit.
+745,no_figure,The question contains all necessary clinical details in the text and makes no reference to any images or exhibits.
+746,no_figure,The question contains all necessary clinical information in the text without referencing any figures or images.
+747,no_figure,The question contains all necessary clinical information and laboratory findings directly in the text without referencing any figures or images.
+748,no_figure,The question merely describes CT scan findings in the text without referencing any attached image or exhibit.
+749,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figure or exhibit.
+750,no_figure,The question contains all necessary clinical information in the text and does not reference any images or external exhibits.
+751,no_figure,The question contains all necessary clinical details in the text and does not refer to or require any images or exhibits.
+752,no_figure,The question contains all necessary clinical and laboratory information in the text with no reference to any figures or exhibits.
+753,no_figure,The question describes the chest x-ray findings entirely within the text without referencing an external image.
+754,no_figure,The question contains all necessary clinical and ultrasound findings in the text without referencing any figures or exhibits.
+755,no_figure,The question contains all clinical information in the text and does not mention or rely on any images or exhibits.
+756,no_figure,The question contains all necessary clinical details in text and does not mention or require an image.
+757,no_figure,The question presents a full clinical vignette with laboratory findings in the text and does not refer to any external figure or exhibit.
+758,no_figure,The question contains all necessary clinical information and laboratory results directly in the text without referencing any figures or exhibits.
+759,no_figure,The question contains all necessary clinical and laboratory information in the text with no reference to any figures or exhibits.
+760,no_figure,The question contains all necessary clinical information in text form and does not reference any external images or exhibits.
+761,requires_figure,The question requires viewing the right upper quadrant ultrasound to identify the specific hepatobiliary pathology (such as a pyogenic liver abscess versus another biliary or hepatic lesion) to select the correct management.
+762,no_figure,"The question contains no reference to any image, table, or other exhibit and provides all necessary information in the text."
+763,no_figure,The question contains all necessary clinical information in the text and does not refer to any image or figure.
+764,no_figure,The question contains all necessary clinical and legal scenario details in the text and does not mention or require an image.
+765,no_figure,The question contains all necessary clinical information in the text and does not refer to any external figure or exhibit.
+766,no_figure,The question contains all necessary clinical information in the text and does not mention or require an image.
+767,no_figure,"The question does not reference any image, table, or external exhibit and can be answered entirely from the provided clinical text."
+768,no_figure,The question contains all necessary clinical details in text and does not reference any external images or exhibits.
+769,no_figure,The question contains all necessary clinical information in the text and does not mention or reference any exhibits.
+770,no_figure,"The question does not reference any external images, figures, or exhibits and can be answered using only the provided text."
+771,no_figure,The question contains all necessary clinical details in the text and does not reference any figure or exhibit.
+772,no_figure,The question contains all necessary clinical details in text form and does not reference any external images or exhibits.
+773,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+774,no_figure,"The question does not mention or rely on any figures, tables, or images."
+775,no_figure,The question contains all necessary anatomical details in the text and makes no reference to any image or exhibit.
+776,no_figure,The question contains all necessary clinical and numerical data directly in the text and does not reference any figure or exhibit.
+777,no_figure,The question presents a complete clinical vignette with no mention of or reliance on any figures or images.
+778,no_figure,The question contains all necessary information in the text and does not mention or rely on any images or exhibits.
+779,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits.
+780,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or images.
+781,no_figure,The question contains all necessary information in the text and does not refer to any figures or exhibits.
+782,no_figure,The question contains all necessary clinical information in the text and makes no reference to any images or exhibits.
+783,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+784,no_figure,The question contains all necessary clinical information in the text and does not reference any image or exhibit.
+785,requires_figure,"The question asks to identify the specific structure indicated by arrows on a biopsy photomicrograph, which cannot be determined without viewing the image."
+786,no_figure,The question contains all necessary clinical information and laboratory findings in the text without referencing any figures or exhibits.
+787,no_figure,The question describes the cystoscopy and biopsy findings directly in the text without referencing any images or exhibits.
+788,no_figure,The question is entirely text-based and contains no references to any external images or exhibits.
+789,no_figure,The question describes telemetry findings purely through text without referencing any images or external exhibits.
+790,no_figure,The question is a standard pharmacokinetics calculation that does not mention or require any figure or exhibit.
+791,no_figure,The question contains all clinical information and urinalysis values in the text without referencing any figures or exhibits.
+792,no_figure,The question contains all necessary clinical information in the text and does not mention or require any images or exhibits.
+793,mentions_figure_answerable,"The text explicitly states that the EEG shows a 3-Hz spike and wave pattern, which provides all the necessary information to identify absence seizures and the side effects of ethosuximide without viewing the image."
+794,mentions_figure_answerable,"Although the cardiac examination exhibit is shown, the patient's age, exertional dyspnea and dizziness, narrow pulse pressure, and weak peripheral pulses are classic and sufficient to diagnose aortic valve stenosis."
+795,no_figure,The question contains all necessary clinical and laboratory information in the text without referring to any images or exhibits.
+796,no_figure,The question is entirely text-based and does not refer to or require any figures or exhibits.
+797,no_figure,The question contains all necessary clinical and diagnostic details in the text without referencing any external image or exhibit.
+798,no_figure,The question describes the ultrasound findings entirely within the text and does not refer to any external figure or image.
+799,no_figure,The question describes the electrocardiogram findings directly in the text without referencing any external image or exhibit.
+800,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+801,no_figure,The question contains all necessary clinical information to identify the teratogenic risk of carbamazepine without referencing any figures or exhibits.
+802,no_figure,The question presents clinical descriptions of three pediatric patients' developmental milestones entirely through text with no reference to any image or exhibit.
+803,no_figure,"The question presents all relevant findings, including the head CT results, within the text without referencing any external image or exhibit."
+804,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+805,no_figure,The question does not refer to any image or exhibit and provides all necessary clinical findings in the text.
+806,no_figure,The question does not reference any images or figures and can be answered entirely from the provided text.
+807,no_figure,The question contains all necessary clinical information in the text without referencing any figures or images.
+808,no_figure,The question contains all necessary clinical information in text form and does not reference any figure or exhibit.
+809,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any figure or exhibit.
+810,no_figure,The question presents all relevant clinical information and laboratory findings directly in the text without referring to any images or exhibits.
+811,no_figure,The question asks about expected MRI findings based entirely on the clinical description and does not refer to or require any visual exhibit.
+812,no_figure,The question describes the chest X-ray findings directly in the text without referencing an external image or exhibit.
+813,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+814,no_figure,The question contains all necessary clinical details in text and makes no reference to any image or exhibit.
+815,no_figure,The question presents all relevant clinical information entirely in text with no mention of or reliance on any figure or image.
+816,no_figure,The question does not refer to any figures or exhibits and is purely text-based.
+817,no_figure,The question is entirely text-based and does not mention or rely on any exhibits or images.
+818,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any exhibit or figure.
+819,no_figure,The question contains all necessary clinical and diagnostic details in the text with no mention of or reference to an external figure.
+820,no_figure,The question contains all clinical and laboratory details necessary to determine the diagnosis and does not refer to any external figure or exhibit.
+821,requires_figure,"The question asks to identify the substance composing the inclusions indicated by arrows on a photomicrograph, which could represent neurofibrillary tangles (hyperphosphorylated tau) or senile plaques (amyloid-beta) in Alzheimer's disease."
+822,no_figure,The question contains all necessary clinical and laboratory information in the text with no reference to an external image or figure.
+823,no_figure,The question contains all necessary clinical information and does not reference any external images or exhibits.
+824,no_figure,"The question contains all necessary clinical and pharmacological information entirely within the text, with no reference to any figures or exhibits."
+825,no_figure,The question presents a complete clinical vignette describing a fibroadenoma without referring to any images or exhibits.
+826,no_figure,The question contains all necessary clinical information in the text and does not reference any external images or exhibits.
+827,no_figure,The question contains no references to any images or exhibits and is fully answerable from the clinical description provided in the text.
+828,no_figure,The question contains all necessary clinical and laboratory information in the text and does not mention or require any figure.
+829,no_figure,The question contains all necessary clinical information in the text and does not refer to any figures or exhibits.
+830,mentions_figure_answerable,"The clinical presentation describes an acute ischemic stroke, which classically results in liquefactive necrosis in the brain, allowing the question to be answered without viewing the CT scan."
+831,no_figure,"The question contains no references to any external images, figures, or exhibits."
+832,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any images or exhibits.
+833,no_figure,"The question presents all clinical, laboratory, and biopsy findings in the text without referring to any images or exhibits."
+834,no_figure,The question contains all necessary clinical information in the text and does not mention or require an image or exhibit.
+835,mentions_figure_answerable,"The clinical presentation of body and fundus gastritis, hypergastrinemia, anemia, and concurrent autoimmune disease (hypothyroidism) is sufficient to identify parietal cell destruction as the underlying cause without needing the photomicrograph."
+836,no_figure,The question contains no reference to any images or exhibits and can be answered using clinical pharmacology knowledge alone.
+837,no_figure,The question presents a full clinical vignette without referencing any figures or images.
+838,mentions_figure_answerable,"The question mentions an X-ray image, but the key radiographic findings of brown tumors and osteolysis of the distal phalanges are explicitly provided in the text, allowing the diagnosis of hyperparathyroidism to be made without the image."
+839,no_figure,The question contains all necessary clinical details in the text and makes no reference to any images or exhibits.
+840,no_figure,The question contains all necessary clinical information directly in the text without referencing any figures or images.
+841,no_figure,The question presents all relevant clinical and histopathological findings in the text without referencing any figures or exhibits.
+842,no_figure,The question contains all clinical information needed to identify the diagnosis without referencing any figures or exhibits.
+843,no_figure,The question contains all necessary clinical and diagnostic details in the text without referencing any images or exhibits.
+844,no_figure,The question contains all necessary clinical details in the text and makes no reference to any images or exhibits.
+845,no_figure,The question mentions images collected as part of a research study description rather than referring to an accompanying exhibit needed to answer the question.
+846,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any exhibit or figure.
+847,no_figure,The question contains no reference to any images or exhibits and can be answered using only the provided text.
+848,no_figure,The question contains all necessary clinical information in the text with no mention of an image or exhibit.
+849,no_figure,The question is entirely self-contained text and does not reference any figure or exhibit.
+850,no_figure,The question contains all necessary clinical information in the text and does not mention or require any figure or exhibit.
+851,no_figure,The question presents a complete clinical vignette and asks for expected laboratory findings without referencing any images or exhibits.
+852,no_figure,"The clinical scenario and diagnostic findings are entirely provided in text, without referring to any missing images or figures."
+853,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits.
+854,no_figure,"The question contains no references to any figures, images, or exhibits and can be answered using the provided clinical text alone."
+855,no_figure,The question contains all necessary clinical findings in the text and does not refer to any figures or exhibits.
+856,no_figure,The question contains all necessary information in the text and does not reference any figure or exhibit.
+857,no_figure,The question does not refer to any figures or exhibits and asks directly about the mechanism of action of aldesleukin.
+858,no_figure,The question presents all clinical findings and epidemiology in the text and does not reference any figure or exhibit.
+859,no_figure,The question does not mention or rely on any exhibits or images.
+860,no_figure,The question presents a complete clinical scenario without referencing any images or external exhibits.
+861,mentions_figure_answerable,"The clinical presentation of jaundice, splenomegaly, negative Coombs test, and markedly elevated MCHC (39%) diagnostic of hereditary spherocytosis allows identification of cholecystitis (pigment gallstones) as the complication without needing the peripheral blood smear."
+862,no_figure,The question contains all necessary clinical details in text and makes no reference to any external image or exhibit.
+863,no_figure,The question contains all clinical information and results in the text without referencing any external image or exhibit.
+864,no_figure,The question describes bedside sonography findings in the text without referencing any external image or exhibit.
+865,no_figure,The clinical presentation and arterial blood gas values are provided entirely within the text without referencing any figures or images.
+866,no_figure,The question contains all necessary clinical and radiographic findings in the text without referencing an external image or exhibit.
+867,no_figure,The question contains all clinical information and ultrasound findings directly in the text without referencing any external image or exhibit.
+868,no_figure,The ECG findings are described entirely in the text without referencing any external image or exhibit.
+869,no_figure,The question contains all necessary data within the text to calculate the population attributable fraction and does not refer to any external figure or exhibit.
+870,no_figure,The question contains all clinical information and colonoscopy findings directly in the text without referring to any images or exhibits.
+871,mentions_figure_answerable,"The prompt mentions a table, but the table's contents are transcribed directly in the text, allowing the question to be fully answered without an external image."
+872,no_figure,The question contains all necessary anatomical details directly in the text and makes no reference to any figures or exhibits.
+873,no_figure,The question contains all necessary clinical details and laboratory values in text form without referencing any external image or exhibit.
+874,no_figure,The question contains all necessary clinical details in text format and does not mention or rely on any figures.
+875,no_figure,The question contains all necessary clinical information in the text and does not refer to any external figures or exhibits.
+876,no_figure,The question presents a complete clinical vignette describing an acute migraine attack and does not reference any external images or exhibits.
+877,no_figure,The entire dataset needed to calculate the mode is provided directly within the text of the question without referencing any external exhibit.
+878,no_figure,The question contains all necessary clinical information to identify the correct method of transporting an amputated digit without referencing any figure.
+879,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or images.
+880,no_figure,The question presents a clinical scenario without mentioning or relying on any accompanying images or figures.
+881,mentions_figure_answerable,The clinical presentation of pulmonary toxicity with restrictive lung disease following chemotherapy for testicular cancer points directly to bleomycin without needing to view the chest CT.
+882,no_figure,The question contains all necessary clinical information in the text and does not refer to any external image or exhibit.
+883,no_figure,The question contains all necessary clinical and biochemical details to identify the next enzyme activated in the inflammasome pathway without referencing any figures or exhibits.
+884,no_figure,"The question does not reference any image, figure, or exhibit and can be answered using text alone."
+885,no_figure,The question does not refer to any figures or exhibits and can be answered using the provided clinical text alone.
+886,no_figure,The question contains all necessary clinical information in the text and makes no reference to any figures or exhibits.
+887,no_figure,The question contains all necessary clinical details in text form and does not reference any image or exhibit.
+888,no_figure,The question is entirely self-contained text describing a study scenario with no figures or exhibits mentioned.
+889,no_figure,The question contains all necessary clinical information and laboratory results directly in the text without referring to any images or exhibits.
+890,no_figure,The question contains all necessary clinical information in the text without referring to any images or exhibits.
+891,no_figure,The question presents all relevant clinical information in text and does not reference any external images or exhibits.
+892,no_figure,"The question does not mention or rely on any images, tables, or external exhibits."
+893,no_figure,The question contains all necessary clinical details in text and does not refer to any image or exhibit.
+894,no_figure,"The question does not refer to any figures, images, or exhibits and contains all necessary clinical information in the text."
+895,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any exhibits or images.
+896,no_figure,The question contains all necessary clinical information in the text and does not mention or require any figure or exhibit.
+897,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+898,no_figure,"The question contains no references to any figures, images, or exhibits and can be answered solely from the provided text."
+899,no_figure,The question contains all necessary clinical information in the text and does not mention or require any figure or exhibit.
+900,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+901,no_figure,The question contains all ultrasound and clinical findings described entirely in the text without referencing any external image or exhibit.
+902,no_figure,The question contains all necessary clinical details within the text and does not mention or rely on any exhibits or images.
+903,no_figure,The question contains all necessary clinical information in the text without referencing any figures or exhibits.
+904,no_figure,The question contains all necessary clinical and biopsy findings within the text without referencing any images or exhibits.
+905,no_figure,The question presents a textual study abstract and asks a conceptual biostatistics question without referencing any figures or exhibits.
+906,no_figure,The question contains all necessary clinical and diagnostic details in the text without referencing any external image or exhibit.
+907,no_figure,"The question presents all clinical findings, including chest x-ray and ECG results, entirely within the text without referencing any external image or exhibit."
+908,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+909,no_figure,"The question does not refer to any image, figure, or exhibit and can be evaluated entirely from the provided clinical text."
+910,mentions_figure_answerable,"Although the question refers to an MRI image, the text explicitly describes a solitary brain lesion with predominant hemorrhage, which is sufficient to identify melanoma as the malignancy with the highest propensity for hemorrhagic brain metastases."
+911,no_figure,The question contains all necessary clinical information in the text and does not mention or require an image or exhibit.
+912,no_figure,The question does not refer to any image or exhibit and can be solved completely using the provided clinical description and culture results.
+913,no_figure,The question describes all clinical and laboratory findings in the text without referencing any external image or exhibit.
+914,no_figure,The question contains all necessary information in the text and does not mention or rely on any exhibits or images.
+915,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits.
+916,no_figure,The question describes the ECG findings entirely in the text without referencing an external image or exhibit.
+917,no_figure,The question contains all necessary clinical and laboratory information in the text with no mention of or reference to any figure or exhibit.
+918,no_figure,"The question contains all clinical findings and test results purely in the text, without referencing any external image or exhibit."
+919,no_figure,The question contains all necessary clinical information in the text and does not mention or require an image.
+920,no_figure,The question contains all clinical and diagnostic findings within the text without referring to an image or exhibit.
+921,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures.
+922,no_figure,The question presents a purely text-based clinical vignette without any reference to an external image or exhibit.
+923,no_figure,The question contains all necessary clinical details in text and makes no reference to any external figure or exhibit.
+924,no_figure,"The question does not reference or require any images, as it asks for the predicted imaging finding based solely on the clinical presentation."
+925,no_figure,The question contains all necessary clinical details in text and does not mention or reference any image or exhibit.
+926,no_figure,The question contains all necessary clinical information to diagnose a suspected pulmonary embolism and does not reference any external images or exhibits for the user to interpret.
+927,mentions_figure_answerable,"The clinical presentation of acute podagra, hydrochlorothiazide use, nephrolithiasis, and marked hyperuricemia is sufficient to diagnose gout and determine that long-term therapy involves xanthine oxidase inhibition without viewing the microscopy."
+928,no_figure,The question contains all necessary clinical information in the text without referencing any figures or exhibits.
+929,no_figure,The question contains all necessary clinical details in text and does not refer to any image or exhibit.
+930,no_figure,"The question presents a clinical scenario with no reference to any figures, images, or external exhibits."
+931,no_figure,The question contains all necessary clinical details in text form and does not reference any external images or exhibits.
+932,no_figure,The question presents a clinical scenario with options and contains no mention of or reference to any figure or exhibit.
+933,no_figure,The question contains all necessary clinical and laboratory information in the text and does not reference any figure or exhibit.
+934,no_figure,The question contains no references to any external images or figures and can be answered solely from the provided text.
+935,requires_figure,"The question asks for characteristics of the cell type displayed in an image, which cannot be identified from the text alone."
+936,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+937,no_figure,The question contains all necessary clinical and laboratory information in the text with no reference to any figures or exhibits.
+938,no_figure,The question contains all necessary clinical details and does not reference any figure or exhibit.
+939,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits.
+940,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any figure or exhibit.
+941,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+942,no_figure,The question contains all clinical and laboratory information in the text without referencing any figures or exhibits.
+943,no_figure,The question contains no reference to any images or exhibits and can be answered based on the provided text alone.
+944,no_figure,"The question relies entirely on the provided clinical vignette and laboratory values, with no reference to any figures or exhibits."
+945,requires_figure,"The question asks for the function of a specific structure indicated by an arrow on an ultrasound exhibit, making it impossible to answer without viewing the image."
+946,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any exhibits.
+947,no_figure,The question contains all necessary clinical information in the text and makes no reference to any external image or exhibit.
+948,no_figure,The question contains all clinical information in the text without referencing any figures or exhibits.
+949,no_figure,The question describes chest x-ray findings in the text without referencing an external image or exhibit.
+950,no_figure,The question describes the histopathologic findings completely in the text without referencing any external image or exhibit.
+951,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+952,no_figure,The question contains all necessary clinical information in the text without referencing any images or external exhibits.
+953,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+954,no_figure,The question contains all necessary clinical information and laboratory values in text form and does not reference any external images or exhibits.
+955,no_figure,"The question contains no mention of any figure, image, or exhibit and can be answered directly from the text."
+956,no_figure,The question contains all necessary clinical details in the text and makes no reference to any external image or exhibit.
+957,no_figure,"The question does not refer to any image, exhibit, or figure and contains all necessary clinical information to be answered directly."
+958,no_figure,All clinical findings and urinalysis results are fully described in the text with no reference to an external image or exhibit.
+959,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+960,no_figure,The question contains all necessary clinical and laboratory information in the text with no mention of an external figure or image.
+961,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any external figures or exhibits.
+962,no_figure,The question contains all necessary clinical information in the text and does not reference any images or figures.
+963,no_figure,The question contains all necessary hemodynamic parameters in the text to calculate the ejection fraction and does not refer to any figures or exhibits.
+964,no_figure,"The question presents all clinical details, physical examination findings, and lab results directly in the text without referring to any images or exhibits."
+965,no_figure,The question contains all necessary clinical details in the text without referencing any figures or exhibits.
+966,no_figure,The question contains all necessary clinical information in the text and does not reference any image or exhibit.
+967,no_figure,The question contains all necessary clinical findings and radiograph results in the text without referencing any external image or exhibit.
+968,no_figure,The question contains all necessary clinical and diagnostic details in the text without referencing any figures or exhibits.
+969,no_figure,The question contains all clinical information needed in text and does not mention or require an image.
+970,no_figure,The question does not reference any image or external exhibit and can be evaluated solely through the provided text.
+971,no_figure,"The question does not mention or rely on any images, tables, or external exhibits."
+972,requires_figure,"The correct management step directly depends on interpreting the cardiotocograph tracing, which is not provided in the text."
+973,no_figure,The question describes the peripheral blood smear findings directly in the text without referring to any accompanying image or exhibit.
+974,no_figure,The question contains all necessary clinical information in the text and does not refer to any figures or exhibits.
+975,no_figure,The question contains no references to any images or exhibits and can be answered entirely from the text.
+976,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+977,mentions_figure_answerable,"The description of multiple brown, greasy-appearing lesions on the forehead of an elderly patient that cannot be peeled off is classic and sufficient to diagnose seborrheic keratosis without viewing the image."
+978,no_figure,"The question does not reference any external images, figures, or exhibits and can be answered entirely from the provided clinical text."
+979,no_figure,"The question does not refer to any external image or exhibit, and all relevant diagnostic and laboratory findings are provided in the text."
+980,no_figure,The question contains all clinical information and laboratory results directly in the text without referencing any external image or exhibit.
+981,no_figure,The question contains all necessary clinical and pharmacological information within the text and does not refer to any figures or exhibits.
+982,no_figure,The question describes CT scan findings entirely within the text and does not reference any external image or exhibit.
+983,no_figure,"The question mentions a gastroduodenoscopy report as part of the medical history rather than an attached visual exhibit, so it can be answered using the text alone."
+984,no_figure,The question presents a complete clinical vignette with no references to any images or external exhibits.
+985,no_figure,The question presents all clinical and laboratory information directly in the text without referring to any images or exhibits.
+986,no_figure,The question describes the chest X-ray findings directly in the text without referencing any external image or exhibit.
+987,no_figure,The question contains all necessary clinical information in the text without referencing any figures or exhibits.
+988,no_figure,"The question presents a biostatistics scenario entirely in the text without referencing any images, figures, or exhibits."
+989,no_figure,The question contains all necessary clinical information and laboratory results directly in the text without referencing any external image or exhibit.
+990,no_figure,The question describes the abdominal x-ray findings entirely in the text and does not reference any external image or exhibit.
+991,no_figure,The question describes the imaging and biopsy findings entirely within the text without referencing any external image or exhibit.
+992,no_figure,The question contains all necessary clinical information in the text and does not mention or require an image.
+993,no_figure,The question contains all necessary clinical information in the text and does not reference any external images or exhibits.
+994,no_figure,"The question contains no reference to any figures, images, or exhibits."
+995,no_figure,The question contains all necessary clinical information in the text and makes no reference to any figures or exhibits.
+996,no_figure,"The question does not refer to any image, exhibit, or figure."
+997,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+998,no_figure,The question presents a complete clinical vignette regarding communication skills without referencing any figures or images.
+999,no_figure,The question contains all necessary clinical information in the text and makes no reference to any image or exhibit.
+1000,no_figure,The question contains all necessary clinical and laboratory information entirely in the text and does not reference any external images or exhibits.
+1001,no_figure,The question contains all necessary clinical details in the text and does not refer to any figures or exhibits.
+1002,mentions_figure_answerable,"The clinical presentation of acute palpitations and dizziness following heavy binge drinking (holiday heart syndrome) strongly points to paroxysmal atrial fibrillation, making the question answerable without viewing the ECG."
+1003,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any exhibits or images.
+1004,no_figure,"The question mentions that a chest radiograph was obtained as part of the clinical narrative, but does not present or refer to any external figure or image."
+1005,no_figure,The question contains all necessary clinical and laboratory information in text form without referencing any figures or images.
+1006,no_figure,The question contains all necessary clinical details in the text and makes no reference to any images or exhibits.
+1007,no_figure,The question contains all necessary clinical details in the text and does not refer to any external figure or exhibit.
+1008,no_figure,The question contains all necessary clinical information and urinalysis values within the text and does not reference any external images or exhibits.
+1009,no_figure,The question describes the blood smear findings directly in the text without referencing any external image or exhibit.
+1010,no_figure,The question contains all necessary clinical information in the text without referencing any images or exhibits.
+1011,no_figure,"Although diagnostic imaging modalities are mentioned in the clinical history, no actual figure or exhibit is referenced or needed to answer this pathology question."
+1012,no_figure,The question does not mention or rely on any image or exhibit.
+1013,no_figure,The question does not refer to any image or exhibit and can be evaluated entirely from the provided clinical text.
+1014,no_figure,The question contains all necessary clinical and microbiological details in the text without referencing any images or exhibits.
+1015,no_figure,The question contains all necessary clinical information to diagnose Tetralogy of Fallot without referencing any figures or images.
+1016,no_figure,The question contains all necessary clinical information in the text and does not refer to any external figure or exhibit.
+1017,no_figure,The question contains all necessary clinical and diagnostic imaging details fully described in the text without referencing any external image or exhibit.
+1018,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+1019,no_figure,The question contains all necessary information within the text and does not mention or rely on any external exhibits.
+1020,mentions_figure_answerable,"Although a chest X-ray is mentioned, the clinical features of restrictive lung disease are clearly provided in the text to identify radial traction on airway walls as the cause of increased expiratory flow rate."
+1021,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+1022,no_figure,The question does not mention or rely on any image or external exhibit to be answered.
+1023,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or exhibits.
+1024,no_figure,The question describes the microscopic findings in the text and does not refer to any image or exhibit.
+1025,no_figure,The question contains all necessary clinical information in the text and does not reference any images or external exhibits.
+1026,no_figure,"The question presents a complete clinical vignette without referencing any figures, images, or external exhibits."
+1027,no_figure,The question contains all necessary pharmacokinetic parameters directly within the text and does not mention or require any figure.
+1028,no_figure,The question contains all necessary clinical and diagnostic details in the text without referring to any images or exhibits.
+1029,no_figure,The question contains all necessary clinical details in text format and does not refer to any external figures or exhibits.
+1030,no_figure,The question contains all clinical information within the text and does not refer to any external figure or image.
+1031,no_figure,The question contains all necessary clinical and biopsy findings described entirely in the text without referencing any external image or exhibit.
+1032,mentions_figure_answerable,"The clinical description of acute severe pain out of proportion, crepitus, fever, and foul-smelling discharge is diagnostic of a necrotizing soft-tissue infection requiring immediate surgical debridement and broad-spectrum antibiotics without needing to see the picture."
+1033,no_figure,The question presents a complete clinical vignette describing anticholinergic toxicity without referencing any figures or exhibits.
+1034,no_figure,The question contains all necessary clinical information in the text and does not reference any figure or exhibit.
+1035,no_figure,The question contains all necessary clinical information to diagnose hot tub folliculitis and does not refer to any figures or exhibits.
+1036,no_figure,The question contains all necessary clinical information to diagnose an anterior shoulder dislocation and identify axillary nerve involvement without referencing any figures.
+1037,no_figure,The question contains all necessary clinical and imaging findings within the text and does not reference any external images.
+1038,no_figure,The question contains all clinical findings and EKG results within the text and does not refer to any external figure or exhibit.
+1039,no_figure,"The question does not reference any figure, image, or exhibit and can be evaluated entirely from the text."
+1040,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any external image or exhibit.
+1041,no_figure,The question presents a complete clinical vignette describing a metabolic disorder without referencing any figures or images.
+1042,no_figure,The question contains all necessary information in the text and makes no reference to any image or exhibit.
+1043,no_figure,"The question contains only clinical text and does not reference any figure, image, or exhibit."
+1044,no_figure,The question contains all necessary clinical information in the text and does not refer to any figures or exhibits.
+1045,no_figure,The question contains all clinical information needed to diagnose conduction aphasia and does not mention or require an image.
+1046,no_figure,The question contains all necessary data for the statistical calculation and makes no reference to any figures or exhibits.
+1047,no_figure,The question contains all clinical and laboratory details directly in the text with no mention of or reference to any external image or exhibit.
+1048,no_figure,The question contains all necessary clinical information in the text without referencing any images or exhibits.
+1049,no_figure,The question is entirely text-based and does not refer to any images or exhibits.
+1050,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any exhibits or images.
+1051,no_figure,The question contains all necessary pharmacokinetic parameters directly within the text and does not reference any figure or exhibit.
+1052,no_figure,The question presents a complete clinical vignette without referencing any images or external exhibits.
+1053,no_figure,"The question does not refer to any image, exhibit, or figure."
+1054,no_figure,The question contains all necessary clinical information to identify the injured muscle without any reference to an external figure or image.
+1055,no_figure,The question does not reference any image or exhibit and can be answered solely from the provided text.
+1056,no_figure,The question contains all necessary information to determine the appropriate monitoring test for clozapine without referencing any external image or exhibit.
+1057,no_figure,The question describes all clinical and imaging findings within the text without referencing any external image or exhibit.
+1058,no_figure,The question does not reference any image or exhibit and can be answered based solely on the clinical presentation provided in the text.
+1059,no_figure,The question contains all necessary clinical information in the text and does not refer to any external figure or exhibit.
+1060,requires_figure,"The differential diagnosis for neonatal hemolytic jaundice includes several conditions represented in the options (e.g., G6PD deficiency, hereditary spherocytosis, pyruvate kinase deficiency), which cannot be differentiated without viewing the peripheral blood smear."
+1061,no_figure,The question contains all necessary clinical information to identify thyroid storm and does not refer to any image or exhibit.
+1062,no_figure,The question contains all necessary clinical information in the text without referencing any images or figures.
+1063,no_figure,The question contains all necessary clinical and pharmacological information to determine the mechanism of action of atracurium without referencing any figures.
+1064,mentions_figure_answerable,"Although a picture of the patient's swollen hand is mentioned, the clinical description of recurrent swelling, maternal family history, and extremely low C1-inhibitor levels are sufficient to diagnose hereditary angioedema without the image."
+1065,no_figure,The question contains all necessary clinical information in the text and does not reference any external images or exhibits.
+1066,no_figure,The question contains all clinical and diagnostic findings within the text without referencing any external image or exhibit.
+1067,no_figure,The question contains all necessary clinical information in text form and does not reference any images or external exhibits.
+1068,no_figure,"The question contains no references to any external images, figures, or exhibits."
+1069,no_figure,"The question contains all necessary clinical, radiological, and histological descriptions in the text without referring to any images or exhibits."
+1070,no_figure,The question contains all necessary clinical details in text and makes no reference to any image or exhibit.
+1071,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or images.
+1072,no_figure,The question is entirely text-based and asks for the mechanism of action of clomipramine without referring to any images or exhibits.
+1073,no_figure,The question contains all necessary clinical information and does not refer to any images or exhibits.
+1074,no_figure,The clinical vignette contains all necessary clinical information directly in the text with no reference to any figures or exhibits.
+1075,no_figure,The clinical vignette contains all necessary information without referencing any figures or exhibits.
+1076,no_figure,"The question contains all necessary clinical and ethical details entirely in text format, without referencing any images or figures."
+1077,no_figure,The question includes all clinical information and laboratory values within the text and does not reference any external images or figures.
+1078,no_figure,The question contains all necessary clinical information in text and does not refer to any external image or exhibit.
+1079,requires_figure,The specific pattern of extraocular movement impairment needed to localize the lesion among the options is only provided in the image.
+1080,no_figure,The question contains all necessary clinical details in the text and does not mention or require an image.
+1081,no_figure,The question contains all necessary clinical and radiographic findings within the text without referencing any external image or exhibit.
+1082,no_figure,The question contains all necessary clinical and immunofluorescence findings in the text without referring to any images or exhibits.
+1083,no_figure,The question describes the x-ray findings within the text without referencing any external image or exhibit.
+1084,no_figure,The question contains all necessary clinical information to identify choanal atresia without referencing any external image or exhibit.
+1085,no_figure,The question contains all necessary clinical details in text and does not mention or require an image.
+1086,no_figure,The question presents a complete clinical vignette without referencing any images or external exhibits.
+1087,no_figure,The question contains all necessary clinical findings in the text and does not mention or rely on any figures or exhibits.
+1088,no_figure,The question contains all necessary clinical information and laboratory results within the text and does not reference any external figures or exhibits.
+1089,no_figure,The question contains no reference to any images or exhibits.
+1090,no_figure,"The question presents a complete clinical vignette without referencing any images, tables, or external exhibits."
+1091,no_figure,"The question presents all clinical details, laboratory findings, and echocardiogram results entirely within the text without referring to any images or exhibits."
+1092,no_figure,The question contains all necessary clinical details in text and does not mention or require any figure or exhibit.
+1093,no_figure,The question contains all necessary clinical information in the text and does not refer to any external figures or exhibits.
+1094,no_figure,The question contains all necessary clinical information and lab values within the text and does not reference any figure or exhibit.
+1095,mentions_figure_answerable,"The clinical presentation describes a Spigelian hernia (bulge inferior and lateral to the umbilicus), which allows identification of the rectus abdominis muscle lying directly medial to the defect without viewing the CT scan."
+1096,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any exhibits or images.
+1097,no_figure,The question contains all necessary clinical information in the text and does not mention or require an image.
+1098,no_figure,The question describes all clinical and ultrasound findings entirely in the text without referencing an external figure or exhibit.
+1099,no_figure,"The question contains no references to any figures, images, or exhibits and provides all necessary information in the text."
+1100,no_figure,The question contains all necessary clinical information to identify the organism without referencing any figures or exhibits.
+1101,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits.
+1102,no_figure,All laboratory results and clinical details are provided directly in the text without reference to an external image or figure.
+1103,no_figure,"The question describes all clinical and diagnostic findings, including the ECG, in the text without referencing any images or exhibits."
+1104,no_figure,The question contains all necessary clinical information in the text and does not refer to any external figure or exhibit.
+1105,no_figure,The question describes imaging and scintigraphy findings entirely in the text without referencing any external image or exhibit.
+1106,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits.
+1107,no_figure,"The question presents a standard text-based clinical vignette without any reference to an external figure, image, or exhibit."
+1108,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any exhibits or images.
+1109,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or images.
+1110,mentions_figure_answerable,"The clinical vignette describing an Achilles tendon nodule in an adolescent with a family history of premature myocardial infarction is sufficient to diagnose familial hypercholesterolemia presenting with a tendon xanthoma, which is associated with increased low-density lipoprotein, without needing the biopsy photomicrograph."
+1111,no_figure,The question contains all necessary clinical information to identify celiac disease and does not reference any figure or exhibit.
+1112,no_figure,The question is entirely text-based and does not refer to or require any images or exhibits.
+1113,no_figure,The question contains all necessary clinical information to diagnose condylomata acuminata and determine prevention without referencing any external image or exhibit.
+1114,no_figure,The question contains all necessary clinical and biopsy findings in the text without referring to any images or exhibits.
+1115,no_figure,The question contains all necessary clinical information in the text and does not refer to any external figure or exhibit.
+1116,no_figure,The question presents all clinical and laboratory information directly in the text without referencing any figures or images.
+1117,no_figure,The question presents all clinical and radiograph findings entirely in text without referring to any external figure or exhibit.
+1118,no_figure,The question contains all necessary clinical details describing classic acute gout without referencing any figures or images.
+1119,no_figure,The question contains all clinical and radiograph findings within the text without referring to any external exhibit or image.
+1120,no_figure,The question contains all necessary clinical information in the text and does not reference any external images or exhibits.
+1121,no_figure,The question contains all necessary clinical findings and does not reference any external images or exhibits.
+1122,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any figure or exhibit.
+1123,no_figure,The question contains all necessary clinical information in the text and does not reference any external images or exhibits.
+1124,no_figure,The question contains all necessary clinical information to identify Trichomonas vaginalis without referencing any figures or images.
+1125,no_figure,The question contains all clinical information within the text and does not mention or rely on any exhibits.
+1126,no_figure,The question mentions CT scan findings directly in the text and does not refer to any external image or exhibit.
+1127,no_figure,The question contains all necessary clinical information in text form and does not reference any image or exhibit.
+1128,no_figure,The question presents a complete clinical vignette and can be answered directly from the text without any mention of or reliance on an external figure.
+1129,mentions_figure_answerable,"The question refers to the table in the abstract, which is fully provided as text within the prompt and contains sufficient information (comparing continuous variables across three groups) to identify the correct statistical test."
+1130,no_figure,The question contains all clinical information in the text without referencing any figures or exhibits.
+1131,no_figure,"The question contains no references to any figures, images, or external exhibits and can be evaluated entirely from the text."
+1132,no_figure,"The question presents a complete clinical scenario without referencing any figures, images, or external exhibits."
+1133,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any figures or exhibits.
+1134,no_figure,The question contains all necessary clinical details in the text and makes no reference to any external image or exhibit.
+1135,no_figure,"The question contains only text with no reference to any figures, images, or exhibits."
+1136,no_figure,The question presents a complete clinical vignette without referencing any figures or images.
+1137,no_figure,The question contains all necessary clinical information in the text and does not mention or require an image.
+1138,no_figure,The question contains all necessary clinical details in text and does not mention or refer to any external figure or exhibit.
+1139,no_figure,"The question does not refer to any image, exhibit, or figure and can be answered entirely from the text."
+1140,no_figure,"The question describes all clinical details, history, and laboratory findings entirely in the text without referring to any images or exhibits."
+1141,no_figure,The question contains all necessary clinical information and does not reference any external images or exhibits.
+1142,no_figure,The question contains all necessary clinical information in text and does not mention or require any figure or exhibit.
+1143,mentions_figure_answerable,"The pedigree chart is mentioned, but the clinical description of an unaffected mother who tests negative for a disease-causing mutation despite having multiple affected male relatives is sufficient to identify gonadal mosaicism."
+1144,no_figure,The question contains all necessary clinical details in text and does not reference any figure or exhibit.
+1145,no_figure,The question contains all necessary clinical and biopsy descriptions in the text and does not refer to any external figure or image.
+1146,no_figure,"The question presents a complete clinical ethics scenario in text without referring to any images, tables, or external exhibits."
+1147,no_figure,"The question does not refer to any image, exhibit, or figure and can be answered entirely from the provided text."
+1148,no_figure,The question contains all necessary information within the text and does not reference any external image or figure.
+1149,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any exhibits or images.
+1150,no_figure,The question contains all necessary clinical details describing a benign Nabothian cyst directly in the text without referencing any images or external exhibits.
+1151,no_figure,The question presents a complete clinical description of Edwards syndrome without referencing any images or external exhibits.
+1152,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any exhibits.
+1153,no_figure,The question includes all clinical findings and laboratory values directly in the text without referencing any external image or exhibit.
+1154,no_figure,The question does not refer to any external image or exhibit and tests the diagnostic T-score range for osteopenia directly from the clinical scenario.
+1155,no_figure,The question contains all necessary culture and clinical details directly in the text without referencing any figures or exhibits.
+1156,no_figure,The question describes all chest x-ray findings in the text and does not reference any external image or exhibit.
+1157,no_figure,The question contains all necessary clinical and laboratory information in the text with no mention of any figures or exhibits.
+1158,no_figure,The question contains all necessary clinical information and laboratory findings directly in the text without referencing any figures or images.
+1159,no_figure,The question contains all necessary clinical and microbiological details in the text without referencing any figures or exhibits.
+1160,no_figure,The clinical scenario does not reference any images or figures and provides all necessary information in the text.
+1161,no_figure,The question contains all necessary clinical details in text format and does not reference any external images or exhibits.
+1162,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+1163,mentions_figure_answerable,"The clinical history of chronic pancreatitis from heavy alcohol use paired with the histology options uniquely points to a pancreatic pseudocyst, which is classically lined by granulation tissue rather than epithelium."
+1164,no_figure,The question contains all clinical information in text form and does not reference any images or external exhibits.
+1165,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any external image or exhibit.
+1166,no_figure,The question does not reference any figure or exhibit and can be answered entirely from the text.
+1167,no_figure,"The question mentions that an echocardiogram was performed as part of the clinical narrative, but does not refer to any image, exhibit, or figure."
+1168,no_figure,The question contains no reference to any image or exhibit and can be answered purely from the provided text.
+1169,no_figure,The question contains all necessary clinical details and does not refer to any figures or exhibits.
+1170,no_figure,The question presents a full clinical vignette with all necessary information in the text and makes no reference to any figures or images.
+1171,no_figure,The question contains all necessary clinical information and laboratory values within the text without referencing any figures or external exhibits.
+1172,no_figure,The question presents all relevant clinical details in the text and does not reference or require any images or exhibits.
+1173,no_figure,The question contains all necessary clinical information and laboratory results directly in the text without referring to any images or exhibits.
+1174,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any figures or exhibits.
+1175,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits.
+1176,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any figures or images.
+1177,mentions_figure_answerable,"The text describes neuropsychiatric symptoms and Kayser-Fleischer rings in detail, allowing the identification of Wilson's disease and copper accumulation without viewing the photo."
+1178,no_figure,The question presents a complete clinical vignette without any reference to an image or exhibit.
+1179,no_figure,The question does not refer to any image or exhibit and can be answered solely from the clinical description provided in the text.
+1180,no_figure,The question does not refer to or require any images or exhibits to be answered.
+1181,no_figure,The question contains all necessary clinical and laboratory information in the text without referring to any figure or exhibit.
+1182,no_figure,The question includes all clinical findings and test results directly in the text without referencing an external image or exhibit.
+1183,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+1184,no_figure,The question describes imaging results directly within the clinical text and does not refer to any external figure or exhibit.
+1185,no_figure,The question does not refer to or rely on any images or exhibits to be answered.
+1186,mentions_figure_answerable,"The clinical presentation of thigh pain and cortical thickening paired with an isolated, markedly elevated alkaline phosphatase level in an older man is classic for osteitis deformans (Paget disease of bone) without needing the biopsy image."
+1187,no_figure,The question contains all clinical information needed to diagnose malignant hyperthermia and select the correct treatment without referring to any figure or exhibit.
+1188,no_figure,The question contains all necessary text-based information without referencing any image or external exhibit.
+1189,no_figure,The question contains all necessary clinical information in the text and does not mention or require an image.
+1190,no_figure,The question contains all necessary information in the text and does not mention or rely on any exhibits or images.
+1191,no_figure,The question contains no references to any images or exhibits and can be answered entirely from the clinical vignette.
+1192,no_figure,The clinical vignette contains all necessary information to determine the long-term management and does not mention or require an image.
+1193,no_figure,The question contains all necessary clinical information in the text and does not refer to any figures or exhibits.
+1194,no_figure,The question describes the chest radiograph findings in the text and does not refer to any external figure or exhibit.
+1195,no_figure,The question contains all clinical information in the text without referencing any figures or exhibits.
+1196,no_figure,The question contains all necessary clinical details in text and does not mention or require an image.
+1197,requires_figure,"The patient presents with non-specific acute cardiopulmonary symptoms that could be caused by several of the listed options, making the referenced 12-lead ECG necessary to determine the correct diagnosis."
+1198,no_figure,The question contains all necessary clinical information in the text without referencing any figures or exhibits.
+1199,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+1200,no_figure,The question contains all necessary clinical information in text and does not refer to any external figure or exhibit.
+1201,requires_figure,"The clinical presentation indicates anemia, but differentiating among the various causes listed in the options requires identifying specific morphological features on the omitted peripheral blood smear."
+1202,mentions_figure_answerable,"The clinical history of chronic alcohol use, postprandial epigastric pain radiating to the back, weight loss, and abdominal calcifications is pathognomonic for chronic pancreatitis affecting the pancreas."
+1203,no_figure,The question contains all necessary information in the text and does not mention or require any figure.
+1204,no_figure,The question presents a complete clinical vignette and communication scenario with no reference to any figures or exhibits.
+1205,no_figure,The question fully describes the peripheral blood smear findings in the text without referencing any external image or exhibit.
+1206,no_figure,The question contains all necessary information within the text and does not reference any external figures or exhibits.
+1207,no_figure,The question does not refer to any image or exhibit and provides all necessary clinical details in the text.
+1208,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any exhibits or images.
+1209,no_figure,The question contains complete clinical text and options without any reference to an external image or exhibit.
+1210,no_figure,The question contains all necessary clinical details and does not mention or rely on any exhibits or images.
+1211,mentions_figure_answerable,"The clinical presentation of progressive unilateral tinnitus, hearing loss, and vertigo strongly points to a vestibular schwannoma (acoustic neuroma), which is characterized histopathologically by alternating hypercellular and hypocellular myxoid areas (Antoni A and B)."
+1212,no_figure,The question contains all necessary clinical details in the text and does not reference any external images or exhibits.
+1213,no_figure,The question presents a complete clinical vignette of essential tremor without referencing any images or exhibits.
+1214,no_figure,The question contains all clinical and biopsy findings described directly in the text without referencing any figures or exhibits.
+1215,no_figure,The question contains all necessary clinical information in the text and does not refer to any image or exhibit.
+1216,no_figure,The question contains all necessary clinical findings and diagnostic results in text without referencing any figures or images.
+1217,no_figure,The question contains all necessary clinical and laboratory information in the text without referring to any images or exhibits.
+1218,no_figure,The question contains all necessary clinical details in text and does not mention or rely on any figure or exhibit.
+1219,no_figure,The question describes the chest X-ray findings directly in the text without referencing any external image or exhibit.
+1220,no_figure,The question contains all necessary clinical information in the text and does not reference any external images or exhibits.
+1221,no_figure,The question contains all necessary clinical and microscopic findings described purely in text without referring to any images or exhibits.
+1222,no_figure,The question contains all necessary information in the text and does not reference any image or exhibit.
+1223,no_figure,The question contains all necessary clinical and diagnostic details in the text and does not mention or rely on any exhibits or images.
+1224,no_figure,"The question contains no reference to any figures, images, or exhibits."
+1225,no_figure,The question contains all necessary clinical information and laboratory values in the text without referencing any figures or exhibits.
+1226,no_figure,The question contains all necessary clinical details in text and does not mention or require any images or exhibits.
+1227,no_figure,The question contains all necessary clinical information and does not reference any external figures or exhibits.
+1228,no_figure,The question contains all clinical information and laboratory findings within the text without referring to any images or exhibits.
+1229,no_figure,The question contains all necessary clinical information in the text and does not mention or rely on any exhibits or images.
+1230,no_figure,The question describes CT scan findings entirely in the text without referencing any external image or exhibit.
+1231,no_figure,"The question contains only text and does not mention or refer to any figure, table, or external exhibit."
+1232,no_figure,The question presents a textual abstract and conceptual biostatistics question with no images or exhibits mentioned or required.
+1233,no_figure,"The question does not refer to any image, table, or other exhibit and provides all necessary information in the text."
+1234,no_figure,The question contains all necessary clinical findings in the text and makes no mention of any figure or image.
+1235,no_figure,The question contains all necessary information in the text to calculate the genetic probability without referring to any figure or exhibit.
+1236,no_figure,The question contains all necessary clinical and laboratory information and does not refer to any image or exhibit.
+1237,mentions_figure_answerable,"The clinical history of extensive shipyard work and supradiaphragmatic pleural plaques reliably points to asbestosis, which leads to an increased alveolar-arterial gradient without needing to view the sputum photomicrograph."
+1238,no_figure,The question contains all necessary clinical information in the text and does not mention or require any images or exhibits.
+1239,mentions_figure_answerable,"Although a histopathologic image is mentioned, the clinical presentation of an enlarging jaw mass in a young boy from Nigeria is classic for endemic Burkitt lymphoma, which is associated with Epstein-Barr virus."
+1240,no_figure,"The question contains no references to any figures, images, or exhibits and can be answered entirely from the text."
+1241,no_figure,The question contains all necessary clinical details in text and does not refer to any image or exhibit.
+1242,no_figure,The question contains no reference to any images or exhibits and can be answered using only the provided clinical vignette.
+1243,no_figure,The question contains all necessary clinical and laboratory information in the text without referencing any external image or exhibit.
+1244,no_figure,The question contains all necessary clinical information in the text and does not mention or require an image.
+1245,no_figure,"The question contains all relevant clinical, laboratory, and radiographic findings directly in the text without referencing an external image."
+1246,no_figure,The question presents all clinical and laboratory details within the text and does not mention or require an image.
+1247,no_figure,All clinical parameters and values required to solve the question are completely provided in the text without any mention of or reliance on an external figure.
+1248,mentions_figure_answerable,"The diagnosis of sarcoidosis, which is treated with prednisone, can be established directly from the cervical lymph node biopsy showing non-caseating granulomas without viewing the chest CT scan."
+1249,no_figure,"The question does not refer to any figure or exhibit and provides all relevant clinical, imaging, and biopsy findings directly in the text."
+1250,no_figure,The question contains all necessary information within the text and does not mention or rely on any exhibits or images.
+1251,no_figure,The question contains all necessary clinical information directly in the text and does not mention or rely on any exhibits.
+1252,no_figure,The question is entirely text-based and does not mention or require any figure or exhibit.
+1253,no_figure,The question contains all clinical information needed to diagnose staphylococcal scalded skin syndrome without referencing any images or exhibits.
+1254,no_figure,The question contains all clinical information in the text and makes no reference to an image or exhibit.
+1255,no_figure,The question contains all necessary clinical details in the text without referencing any images or external exhibits.
+1256,no_figure,The question contains all necessary clinical and diagnostic ultrasound findings within the text without referencing any external image or exhibit.
+1257,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any figure or exhibit.
+1258,no_figure,The question contains all necessary clinical and diagnostic details in the text without referencing any images or external exhibits.
+1259,requires_figure,"The decision between nonoperative management with a simple sling and surgical fixation with a clavicular plate depends on radiographic features such as fracture displacement, shortening, or comminution shown on the chest x-ray."
+1260,no_figure,The question contains all necessary clinical information to identify the drug and its mechanism of action without referencing any figures or exhibits.
+1261,no_figure,The question contains all clinical and laboratory information in the text without referencing any figures or exhibits.
+1262,no_figure,"The question contains all necessary clinical and laboratory details entirely within the text, with no reference to any external figure or exhibit."
+1263,no_figure,The question presents a complete clinical scenario describing normal pressure hydrocephalus without mentioning or requiring any figure or exhibit.
+1264,no_figure,The question contains all necessary clinical details in the text and does not mention or rely on any exhibits.
+1265,no_figure,The question contains all necessary clinical information in the text and does not refer to any figures or exhibits.
+1266,no_figure,The question contains all necessary clinical information in the text and makes no reference to any external figure or exhibit.
+1267,no_figure,"The question does not refer to any external image or exhibit, and all findings are described in the text."
+1268,no_figure,The question contains all necessary clinical details in the text and does not mention or require any figure.
+1269,no_figure,The question contains all clinical and endoscopic findings in text and does not refer to any external figures or exhibits.
+1270,no_figure,The question contains all necessary clinical information in the text and does not refer to any external figure or exhibit.
+1271,no_figure,The question contains all necessary clinical information in the text and makes no mention of any figure or exhibit.
+1272,no_figure,The question contains all necessary clinical and diagnostic findings within the text and does not refer to any external figure or exhibit.

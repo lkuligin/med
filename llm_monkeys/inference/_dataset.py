@@ -8,6 +8,12 @@ import re
 from pathlib import Path
 
 from dataset import MedQAQuestion, load_medqa_dataset
+from inference._prompts import (
+    ANSWER_PROMPTS,
+    DEFAULT_ANSWER_PROMPT,
+    DEFAULT_FACT_PROMPT,
+    FACT_PROMPTS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -83,12 +89,17 @@ def load_difficult_questions(
     return selected
 
 
-def format_fact_generation_prompt(question: MedQAQuestion) -> str:
-    """Format prompt for Step 1: generating atomic verifiable medical facts."""
+def format_fact_generation_prompt(
+    question: MedQAQuestion,
+    fact_prompt: str = DEFAULT_FACT_PROMPT,
+) -> str:
+    """Format prompt for Step 1: generating atomic verifiable medical facts.
+
+    `fact_prompt` names an entry of FACT_PROMPTS; the default is the reference
+    wording every stored run was generated with.
+    """
     return (
-        "Analyze the following multiple-choice medical examination question and options. "
-        "Extract and generate all key atomic, verifiable medical facts, clinical principles, "
-        "pathophysiological mechanisms, and pharmacological properties relevant to solving this question accurately.\n\n"
+        f"{FACT_PROMPTS[fact_prompt].task}\n\n"
         f"Question: {question.question}\n\n"
         f"Options:\n{question.format_options()}\n\n"
         "Generate atomic, verifiable statements as structured JSON conforming to the schema."
@@ -98,17 +109,24 @@ def format_fact_generation_prompt(question: MedQAQuestion) -> str:
 def format_answer_generation_prompt(
     question: MedQAQuestion,
     facts: list[str],
+    answer_prompt: str = DEFAULT_ANSWER_PROMPT,
 ) -> str:
-    """Format prompt for Step 2: reasoning and generating final answer from facts."""
-    facts_block = (
-        "\n".join(f"- {f}" for f in facts) if facts else "No additional facts provided."
-    )
+    """Format prompt for Step 2: reasoning and generating final answer from facts.
+
+    `answer_prompt` names an entry of ANSWER_PROMPTS; numbered prompts show the
+    facts as [1], [2], ... so the answer can refer to them.
+    """
+    spec = ANSWER_PROMPTS[answer_prompt]
+    if not facts:
+        facts_block = "No additional facts provided."
+    elif spec.numbered_facts:
+        facts_block = "\n".join(f"[{i}] {f}" for i, f in enumerate(facts, start=1))
+    else:
+        facts_block = "\n".join(f"- {f}" for f in facts)
     return (
         "The following is a multiple-choice medical examination question.\n\n"
         f"Question: {question.question}\n\n"
         f"Options:\n{question.format_options()}\n\n"
         f"Relevant Medical Facts:\n{facts_block}\n\n"
-        "Based on these clinical facts, reason through the scenario and determine the single best option. "
-        "Conclude your response on a new line with:\n"
-        "FINAL ANSWER: [Option Letter]"
+        f"{spec.instructions}"
     )

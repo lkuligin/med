@@ -132,21 +132,23 @@ def test_with_no_list_a_chart_reads_the_whole_run(monkeypatch):
     assert inspect_run._questions_on_list(store, "med_qa") == ["1", "2"]
 
 
-def test_step_1_is_found_under_the_full_run_beside_it(monkeypatch):
-    """A step 2 run is named for the model; the whole-split step 1 run of the
-    same model is named <model>-full, because one name for two coverages
-    leaves a directory nothing can describe. Every reader of a step 2 run
-    needs the step 1 next door, and finding it is not the reader's job."""
-    stored = {"qwen-local-full": {"1": answered(1)}}
+def test_step_1_is_found_under_the_difficult_run_beside_it(monkeypatch):
+    """A step 2 run is named for the model, and so is the whole-split step 1
+    run; a step 1 run over only the difficult list is named
+    <model>-difficult, because one name for two coverages leaves a directory
+    nothing can describe. Every reader of a step 2 run needs a step 1 next
+    door, and finding it is not the reader's job."""
+    stored = {"qwen-local-difficult": {"1": answered(1)}}
     monkeypatch.setattr(inspect_run, "OneShotResults",
                         lambda root, run, dataset: FakeOneShot(
                             stored.get(run, {})))
 
-    assert inspect_run._step1_run("qwen-local", "medbullets") == "qwen-local-full"
+    assert inspect_run._step1_run("qwen-local", "medbullets") == "qwen-local-difficult"
 
 
-def test_a_run_with_step_1_of_its_own_is_left_alone(monkeypatch):
-    stored = {"gemma": {"1": answered(1)}, "gemma-full": {"2": answered(1)}}
+def test_a_baseline_without_a_difficult_run_falls_back_to_the_split(monkeypatch):
+    """The split answers the difficult questions too, so it is a baseline."""
+    stored = {"gemma": {"1": answered(1)}}
     monkeypatch.setattr(inspect_run, "OneShotResults",
                         lambda root, run, dataset: FakeOneShot(
                             stored.get(run, {})))
@@ -166,24 +168,24 @@ def test_the_whole_split_block_asks_for_the_split(monkeypatch):
     ones: a pipeline baseline wants the difficult-list run beside it, while
     the block headed WHOLE SPLIT wants the split. Reading the first there
     printed "WHOLE SPLIT, 483 questions" for a split of 1273."""
-    stored = {"gemma": {"1": answered(1)}, "gemma-full": {"2": answered(1)}}
+    stored = {"gemma-difficult": {"1": answered(1)}, "gemma": {"2": answered(1)}}
     monkeypatch.setattr(inspect_run, "OneShotResults",
                         lambda root, run, dataset: FakeOneShot(
                             stored.get(run, {})))
 
-    assert inspect_run._step1_run("gemma", "medbullets") == "gemma"
+    assert inspect_run._step1_run("gemma", "medbullets") == "gemma-difficult"
     assert inspect_run._step1_run("gemma", "medbullets",
-                                  prefer_full=True) == "gemma-full"
+                                  prefer_full=True) == "gemma"
 
 
 def test_asking_for_the_split_falls_back_when_there_is_none(monkeypatch):
-    stored = {"gemma": {"1": answered(1)}}
+    stored = {"gemma-difficult": {"1": answered(1)}}
     monkeypatch.setattr(inspect_run, "OneShotResults",
                         lambda root, run, dataset: FakeOneShot(
                             stored.get(run, {})))
 
     assert inspect_run._step1_run("gemma", "medbullets",
-                                  prefer_full=True) == "gemma"
+                                  prefer_full=True) == "gemma-difficult"
 
 
 def test_the_x_axis_stays_readable_however_far_k_goes():
@@ -194,3 +196,17 @@ def test_the_x_axis_stays_readable_however_far_k_goes():
         stride = inspect_run._tick_stride(count)
         assert count / stride <= 14, count
         assert stride in (1, 2, 5, 10, 20, 25, 50, 100), stride
+
+
+def test_a_medbullets_run_gets_its_split_and_not_the_default():
+    """Medbullets has no config and its split is op5_test. Naming only the
+    dataset leaves the default "test", and the run stops on Unknown split
+    before it reaches a model - which is how this was found."""
+    from gdanschin_runtime.run_step1 import _dataset_kwargs
+
+    medbullets = _dataset_kwargs("medbullets")
+    assert medbullets["dataset_split"] == "op5_test"
+    assert medbullets["dataset_config"] is None
+    # MedQA keeps the defaults it has always had.
+    assert "dataset_split" not in _dataset_kwargs("med_qa")
+    assert _dataset_kwargs(None) == {}

@@ -1,7 +1,18 @@
 """Assemble a stored run back into the single file the reference reads.
 
     python3 gdanschin_runtime/export_run.py --run gemma-4-26b
+    python3 gdanschin_runtime/export_run.py --run gemma-4-26b --steps one-shot
     python3 gdanschin_runtime/export_run.py --run gemma-4-26b --judge gemini-3.8-flash
+
+Exports are gzipped: a step 1 file is a record per question with the raw model
+response in it, and these are handed over by upload, where the size is the cost.
+Gzip is written directly, so the uncompressed file never exists on disk.
+
+Steps 2 and 3 export the difficult questions only, with their summaries
+recomputed over those questions. A run can hold more - some were started on the
+whole split before the list existed - and those extra questions are the easy
+ones, which the pipeline is not about. Step 1 covers the whole split, as it
+always has.
 
 Our runs are kept as a directory per run, one file per record, which is what
 makes them resumable and safe to read while they are still going. Everything
@@ -20,12 +31,14 @@ comes back out.
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import sys
 from pathlib import Path
 from typing import Any
 
 from gdanschin_runtime import _bootstrap
+from gdanschin_runtime.question_ids import resolve
 
 from results_store import (
     CandidateResults,
@@ -43,6 +56,10 @@ RESULTS = _bootstrap.LLM_MONKEYS_ROOT / "results"
 # runs of one model on two datasets would land on the same name.
 DATASET_SUFFIX = {"med_qa": "", "medbullets": "_mb"}
 
+# One directory per step under exports/, so a handover of a single step is a
+# directory rather than a pattern over file names.
+STEP_DIR = {"one-shot": "one_shot", "candidates": "candidates", "verdicts": "verdicts"}
+
 
 def _suffix(dataset: str) -> str:
     """What to append to an exported file name for this dataset."""
@@ -50,9 +67,12 @@ def _suffix(dataset: str) -> str:
 
 
 def _write(path: Path, payload: dict[str, Any]) -> Path:
+    """Write the payload gzipped, atomically, at <path>.gz."""
+    path = path.with_suffix(path.suffix + ".gz")
     path.parent.mkdir(parents=True, exist_ok=True)
-    temp = path.with_suffix(".json.tmp")
-    temp.write_text(json.dumps(payload, indent=1, ensure_ascii=False), encoding="utf-8")
+    temp = path.with_suffix(".gz.tmp")
+    with gzip.open(temp, "wt", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=1, ensure_ascii=False)
     temp.replace(path)
     return path
 
@@ -79,15 +99,64 @@ def _dataset_fields(question_ids: list[str], summary: dict[str, Any] | None) -> 
     }
 
 
+def _on_list(results: list[dict[str, Any]], dataset: str) -> list[dict[str, Any]]:
+    """The questions the difficult-questions list names, and no others.
+
+    A run can hold more than the list: the list has been shortened since some
+    of these runs were made, and nothing stored is ever thrown away. Those
+    extra questions are the easy ones, so a file exporting them is not the
+    measurement its name claims.
+
+    Ids are compared with the padding stripped - MedBullets writes 001 in its
+    list and the dataset hands the same question over as 1.
+    """
+    from inference._dataset import load_difficult_question_ids
+
+    from gdanschin_runtime.fetch_dataset import KNOWN
+
+    known = KNOWN.get(dataset)
+    path = _bootstrap.LLM_MONKEYS_ROOT / known.difficult.name if known else None
+    if path is None or not path.is_file():
+        print(f"  warning: no difficult-questions list for {dataset}; "
+              f"exporting every question the run holds")
+        return results
+
+    wanted = resolve(load_difficult_question_ids(path),
+                     (q["question_id"] for q in results))
+    return [q for q in results if str(q["question_id"]) in wanted]
+
+
+def _difficult(results: list[dict[str, Any]], dataset: str) -> list[dict[str, Any]]:
+    """The questions on the difficult list, saying so when others are dropped."""
+    kept = _on_list(results, dataset)
+    if len(kept) != len(results):
+        print(f"  {len(kept)} of {len(results)} questions are on the "
+              f"difficult list; the rest are left out")
+    return kept
+
+
+def _resummarised(stored: dict[str, Any] | None, fresh: Any) -> dict[str, Any]:
+    """A summary recomputed over the exported questions only.
+
+    The stored summary describes every question the run holds, so a file that
+    carried it over the difficult list alone would state totals for questions
+    it does not contain. Keys the recomputation does not produce (the sampling
+    settings, the creation time) are kept from the stored one.
+    """
+    stored = stored or {}
+    return {**stored, **fresh.to_dict(), "created_at": stored.get("created_at")}
+
+
 def export_candidates(run: str, out: Path, dataset: str) -> Path | None:
-    """Step 2, with the aggregates the single-file layout carries per question."""
-    from inference._schemas import CandidateQuestionResult
+    """Step 2, difficult questions only, with the aggregates the single-file
+    layout carries per question."""
+    from inference._schemas import CandidateQuestionResult, CandidateWorkflowSummary
 
     stored = CandidateResults(RESULTS, run, dataset).load()
     if stored is None:
         return None
 
-    results = stored["results"]
+    results = _difficult(stored["results"], dataset)
     incomplete = [q["question_id"] for q in results if not q.get("ground_truth_answer")]
     from_dataset = _dataset_fields(incomplete, stored.get("summary")) if incomplete else {}
     if incomplete and not from_dataset:
@@ -101,9 +170,20 @@ def export_candidates(run: str, out: Path, dataset: str) -> Path | None:
         # from_dict recomputes total_candidates, accuracy, the token totals and
         # the rest, which are per-question sums the directory layout does not
         # store because they are always derivable from the candidates.
-        assembled.append(CandidateQuestionResult.from_dict(question).to_dict())
+        assembled.append(CandidateQuestionResult.from_dict(question))
 
-    return _write(out, {"summary": stored.get("summary"), "results": assembled})
+    summary = stored.get("summary") or {}
+    fresh = CandidateWorkflowSummary.from_results(
+        assembled,
+        model=summary.get("model", ""),
+        dataset=summary.get("dataset", ""),
+        config=summary.get("config"),
+        split=summary.get("split", "test"),
+        n_candidates=summary.get("n_candidates") or 0,
+        total_time_seconds=summary.get("total_time_seconds") or 0.0,
+    )
+    return _write(out, {"summary": _resummarised(summary, fresh),
+                        "results": [q.to_dict() for q in assembled]})
 
 
 def export_one_shot(run: str, out: Path, dataset: str) -> Path | None:
@@ -113,9 +193,23 @@ def export_one_shot(run: str, out: Path, dataset: str) -> Path | None:
 
 
 def export_verdicts(run: str, judge: str, out: Path, dataset: str) -> Path | None:
-    """Step 3, likewise stored whole, one file per judge."""
+    """Step 3, difficult questions only, one file per judge."""
+    from verifier._schemas import QuestionVerificationResult, VerifierWorkflowSummary
+
     stored = VerificationResults(RESULTS, run, judge, dataset).load()
-    return None if stored is None else _write(out, stored)
+    if stored is None:
+        return None
+    results = _difficult(stored["results"], dataset)
+    summary = stored.get("summary") or {}
+    fresh = VerifierWorkflowSummary.from_results(
+        [QuestionVerificationResult.from_dict(q) for q in results],
+        model=summary.get("model", ""),
+        run_name=summary.get("run_name", run),
+        judge_name=summary.get("judge_name", judge),
+        total_time_seconds=summary.get("total_time_seconds") or 0.0,
+        temperature=summary.get("temperature"),
+    )
+    return _write(out, {"summary": _resummarised(summary, fresh), "results": results})
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -126,7 +220,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dataset", default=None,
                         help="which dataset's copy of the run (default: med_qa)")
     parser.add_argument("--out-dir", default="exports",
-                        help="where the files go (default: exports/)")
+                        help="where the files go; each step lands in its own "
+                             "subdirectory of it (default: exports/)")
+    parser.add_argument("--steps", nargs="+", default=["one-shot", "candidates", "verdicts"],
+                        choices=["one-shot", "candidates", "verdicts"],
+                        help="which steps to export (default: all of them)")
     args = parser.parse_args(argv)
 
     run = args.run
@@ -137,21 +235,33 @@ def main(argv: list[str] | None = None) -> int:
 
     written: list[Path] = []
     mark = _suffix(dataset)
-    one_shot = export_one_shot(run, out_dir / f"results_one_shot_{run}{mark}.json", dataset)
-    if one_shot:
-        written.append(one_shot)
-    candidates = export_candidates(
-        run, out_dir / f"results_step2_{run}_candidates{mark}.json", dataset)
-    if candidates:
-        written.append(candidates)
-
-    judges = ([args.judge] if args.judge
-              else VerificationResults(RESULTS, run, "", dataset).judges())
-    for judge in judges:
-        path = export_verdicts(
-            run, judge, out_dir / f"results_step3_{run}_{judge}{mark}.json", dataset)
-        if path:
-            written.append(path)
+    if "one-shot" in args.steps:
+        one_shot = export_one_shot(
+            run,
+            out_dir / STEP_DIR["one-shot"] / f"results_one_shot_{run}{mark}.json",
+            dataset,
+        )
+        if one_shot:
+            written.append(one_shot)
+    if "candidates" in args.steps:
+        candidates = export_candidates(
+            run,
+            out_dir / STEP_DIR["candidates"] / f"results_step2_{run}_candidates{mark}.json",
+            dataset,
+        )
+        if candidates:
+            written.append(candidates)
+    if "verdicts" in args.steps:
+        judges = ([args.judge] if args.judge
+                  else VerificationResults(RESULTS, run, "", dataset).judges())
+        for judge in judges:
+            path = export_verdicts(
+                run, judge,
+                out_dir / STEP_DIR["verdicts"] / f"results_step3_{run}_{judge}{mark}.json",
+                dataset,
+            )
+            if path:
+                written.append(path)
 
     if not written:
         print(f"nothing stored for {run} under {RESULTS / dataset}", file=sys.stderr)
@@ -159,6 +269,8 @@ def main(argv: list[str] | None = None) -> int:
     for path in written:
         size = path.stat().st_size / 1_000_000
         print(f"  {path}  {size:.1f} MB")
+    return 0
+
     return 0
 
 

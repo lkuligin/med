@@ -68,7 +68,7 @@ sys.path.insert(0, '$REPO')
 from gdanschin_runtime import _bootstrap
 from results_store import CandidateResults, OneShotResults, VerificationResults, dataset_dir_for
 dataset = dataset_dir_for('$DATASET_NAME')
-one_shot = OneShotResults('$MONKEYS/results', '$BASE', dataset)
+one_shot = OneShotResults('$MONKEYS/results', '$BASE-difficult', dataset)
 candidates = CandidateResults('$MONKEYS/results', '$BASE', dataset)
 verdicts = VerificationResults('$MONKEYS/results', '$BASE', '$JUDGE', dataset)
 qs = candidates.questions()

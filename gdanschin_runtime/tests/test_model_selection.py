@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from gdanschin_runtime import _bootstrap  # noqa: F401,E402  (puts llm_monkeys on the path)
 from gdanschin_runtime.adapters.factory import gateway_name  # noqa: E402
-from gdanschin_runtime.models import BASE_MODELS, JUDGE_MODELS  # noqa: E402
+from gdanschin_runtime.models import BASE_MODELS, JUDGE_MODELS, difficult_run  # noqa: E402
 from gdanschin_runtime.run_step1 import build_config, create_parser  # noqa: E402
 
 from config import resolve_model_name  # noqa: E402
@@ -37,7 +37,7 @@ def test_base_picks_the_model_and_the_directory(base):
     entry = BASE_MODELS[base]
 
     assert gateway_name(config.resolved_model_name) == entry.gateway_model
-    assert config.resolved_run_name == base
+    assert config.resolved_run_name == difficult_run(base)
     assert config.max_tokens == entry.max_tokens
 
 

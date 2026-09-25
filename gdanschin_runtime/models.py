@@ -97,6 +97,28 @@ BASE_MODELS: dict[str, BaseModel] = {
         gateway_model="deepseek-v4-flash",
         max_tokens=4096,
     ),
+    "deepseek-v4-flash-think-high": BaseModel(
+        name="deepseek-v4-flash-think-high",
+        gateway_model="deepseek-v4-flash-think-high",
+        max_tokens=16384,
+        note="thinking on at reasoning_effort=high; the gateway serves it "
+             "without thinking by default, which is deepseek-v4-flash. At 8192, "
+             "4.4% of MedBullets answers stopped at the ceiling mid-reasoning "
+             "and were right 41% of the time against 86% for the rest, so the "
+             "whole step 1 was redone at 16384; the longest answer seen was "
+             "15627 tokens.",
+    ),
+    "glm5.3-flash": BaseModel(
+        name="glm5.3-flash",
+        gateway_model="glm5.3-flash",
+        max_tokens=32768,
+        note="320B total, 18B active; the largest open-weight model the "
+             "internal gateway serves, and from none of our candidates' families. "
+             "It thinks by default there, with a long tail: at 16384, 5 of 308 "
+             "MedBullets answers hit the ceiling mid-reasoning and returned no "
+             "FINAL ANSWER, which the parser then guessed from the fragment. "
+             "The gateway caps its reasoning by max_tokens, as it does DeepSeek's.",
+    ),
     "qwen3.6-27b-nr": BaseModel(
         name="qwen3.6-27b-nr",
         gateway_model="qwen3.6-27b-noreasoning",
@@ -136,6 +158,81 @@ BASE_MODELS: dict[str, BaseModel] = {
              "too but has no run here, so the comparison that matters is "
              "against 3.8 rather than against the gateway.",
         extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+    ),
+    # The same three models the sweep measured with thinking off, measured
+    # again with it on. The top of the agreement table is held by models that
+    # think by default - GLM and DeepSeek - while every Qwen in it was run
+    # with enable_thinking false, so the comparison has a confound worth
+    # removing. Budgets are doubled to 8192: thinking is charged to the same
+    # allowance as the answer, and a reply that runs out before its FINAL
+    # ANSWER line scores as wrong however good the reasoning above it was.
+    "qwen3.6-35b-a3b-local": served_locally(
+        "qwen3.6-35b-a3b-local", "Qwen/Qwen3.6-35B-A3B-FP8", max_tokens=8192,
+        note="qwen3.6-35b-a3b-nr-local with thinking on. Its template takes "
+             "enable_thinking and nothing finer, so this is as far as its "
+             "reasoning goes.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": True}},
+    ),
+    "qwen3.6-27b-local": served_locally(
+        "qwen3.6-27b-local", "Qwen/Qwen3.6-27B-FP8", max_tokens=8192,
+        note="qwen3.6-27b-nr-local with thinking on; enable_thinking is the "
+             "only knob this generation exposes.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": True}},
+    ),
+    "qwen3.8-27b-local": served_locally(
+        "qwen3.8-27b-local", "Qwen/Qwen3.8-27B-FP8", max_tokens=8192,
+        note="qwen3.8-27b-nr-local with thinking on and the effort dial at its "
+             "maximum. 3.8 is the only one of the three whose template reads "
+             "reasoning_effort, which it accepts as low, medium or xhigh and "
+             "defaults to xhigh once thinking is enabled - so this is explicit "
+             "rather than different, and says what was measured.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": True,
+                                             "reasoning_effort": "xhigh"}},
+    ),
+    # The same two, with the top_k their model card asks for. Everything
+    # else is held fixed - thinking on, temperature 0.8 - so the pair differs
+    # in one knob and the difference is readable. top_p is left alone on
+    # purpose: the card recommends 0.95 as well, and changing both at once
+    # would make a win unattributable.
+    "qwen3.6-35b-a3b-topk-local": served_locally(
+        "qwen3.6-35b-a3b-topk-local", "Qwen/Qwen3.6-35B-A3B-FP8", max_tokens=8192,
+        note="qwen3.6-35b-a3b-local plus top_k=20, the value Qwen's card gives "
+             "for thinking mode. Our runs set no top_k at all, which leaves "
+             "the tail unclipped.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": True},
+                    "top_k": 20},
+    ),
+    "qwen3.6-27b-topk-local": served_locally(
+        "qwen3.6-27b-topk-local", "Qwen/Qwen3.6-27B-FP8", max_tokens=8192,
+        note="qwen3.6-27b-local plus top_k=20, the card's value for thinking "
+             "mode.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": True},
+                    "top_k": 20},
+    ),
+    "glm-5.3-flash-local": served_locally(
+        "glm-5.3-flash-local", "zai-org/GLM-5.3-Flash", max_tokens=16384,
+        note="306 GB, so tp4 and a single replica on all four cards - the "
+             "slowest topology we can serve, which is fine for step 1 and "
+             "disqualifying for a judge. Here to answer whether the top of "
+             "the agreement table is Qwen because Qwen knows medicine or "
+             "because our judge and our candidates share a family.",
+    ),
+    "qwen3.5-122b-a10b-local": served_locally(
+        "qwen3.5-122b-a10b-local", "Qwen/Qwen3.5-122B-A10B-FP8", max_tokens=4096,
+        note="the most knowledge that fits on our four cards: 122B total, 10B "
+             "active. Served tp2 over two cards with two replicas, so it "
+             "answers at roughly half the parallelism of the tp1 models - "
+             "fine for step 1, which is 308 or 1273 questions, not 48000 "
+             "candidates.",
+        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+    ),
+    "minimax-m2.5-local": served_locally(
+        "minimax-m2.5-local", "MiniMaxAI/MiniMax-M2.5", max_tokens=4096,
+        note="the only large non-Qwen candidate that runs on this SGLang, "
+             "which is the whole reason to spend cards on it: every model "
+             "above it in the agreement table is a Qwen, and a Qwen judging "
+             "Qwen candidates cannot tell us whether that agreement is "
+             "shared knowledge or shared family.",
     ),
     "qwen3.6-35b-a3b-nr-local": served_locally(
         "qwen3.6-35b-a3b-nr-local", "Qwen/Qwen3.6-35B-A3B-FP8", max_tokens=4096,
@@ -199,7 +296,28 @@ JUDGE_MODELS: dict[str, JudgeModel] = {
         temperature=1.0,
         note="the reference default; note temperature 1.0 makes verdicts non-deterministic",
     ),
+    "deepseek-v4-flash-think-high": JudgeModel(
+        name="deepseek-v4-flash-think-high",
+        gateway_model="deepseek-v4-flash-think-high",
+        max_tokens=16384,
+        temperature=1.0,
+        note="open weights on the internal gateway, thinking at reasoning_effort="
+             "high; on step 1 it matched gemini-3.8-flash. Temperature follows "
+             "gemini's so the two judges' verdicts compare. The budget matches "
+             "the step 1 entry's: the gateway does cap its reasoning there, and "
+             "a verdict cut off mid-thought is no verdict.",
+    ),
 }
+
+
+def difficult_run(base: str) -> str:
+    """Where step 1 over only the difficult list is stored, for a model.
+
+    Step 1 proper covers the whole split and is stored under the model's own
+    name. A run over just the difficult questions is the same model at another
+    coverage, and one name for both would leave a directory nothing describes.
+    """
+    return f"{base}-difficult"
 
 
 def describe() -> None:
@@ -223,4 +341,5 @@ if __name__ == "__main__":
     describe()
 
 
-__all__ = ["BaseModel", "JudgeModel", "BASE_MODELS", "JUDGE_MODELS", "describe"]
+__all__ = ["BaseModel", "JudgeModel", "BASE_MODELS", "JUDGE_MODELS",
+           "difficult_run", "describe"]

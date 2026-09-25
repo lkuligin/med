@@ -58,3 +58,13 @@ def test_the_temperature_override_reaches_the_command(monkeypatch):
     monkeypatch.setattr(run_plan, "JUDGE_TEMPERATURE", "0.0")
     carried = flags(run_plan.Step("stage", "verdicts", "gemma-4-26b", "verdicts").command())
     assert carried["--temperature"] == "0.0"
+
+
+def test_step_1_over_the_split_takes_the_model_name_and_the_list_run_does_not():
+    """The split is step 1 proper; the difficult-list run is the aside."""
+    full = run_plan.Step("stage", "single-step full", "gemma-4-26b", "one-shot-full")
+    listed = run_plan.Step("stage", "single-step", "gemma-4-26b", "one-shot")
+
+    assert full.run_name == "gemma-4-26b"
+    assert listed.run_name == "gemma-4-26b-difficult"
+    assert flags(full.command())["--run-name"] == "gemma-4-26b"

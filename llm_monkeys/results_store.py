@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 from pathlib import Path
 from typing import Any, Iterator
@@ -207,7 +208,8 @@ def per_record(config: Any) -> Any:
 # the configuration rather than passed in, so a caller cannot forget it.
 SAMPLING_FIELDS = ("resolved_model_name", "temperature", "max_tokens",
                    "n_attempts", "n_candidates", "concurrency",
-                   "dataset_name", "dataset_split")
+                   "dataset_name", "dataset_split", "fact_prompt",
+                   "answer_prompt", "judge_prompt")
 
 
 def sampling_of(config: Any) -> dict[str, Any]:
@@ -419,9 +421,15 @@ class OneShotResults(_Results):
         records = {}
         for number, path in _numbered(self.directory, "question"):
             record = self._read_record(path)
-            if record is not None:
-                records[str(number)] = record
-                self._stored[str(number)] = record
+            if record is None:
+                continue
+            # Key by the id the record carries, not by the number parsed out of
+            # the file name: int("001") is 1, and that turned medbullets
+            # question 001 into "1" here while every other store, the
+            # difficult list and the dataset itself all say "001".
+            key = str(record.get("question_id", number))
+            records[key] = record
+            self._stored[key] = record
         return records
 
     def load(self) -> dict[str, Any] | None:

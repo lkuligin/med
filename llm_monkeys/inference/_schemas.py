@@ -95,6 +95,9 @@ class CandidateResult:
     timestamp: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
+    # 0-based indices into facts that the answer says it relies on; None when
+    # the answer prompt does not ask for them or the answer did not say.
+    cited_facts: list[int] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert CandidateResult to dictionary."""
@@ -109,6 +112,7 @@ class CandidateResult:
         fact_tokens_data = data.get("fact_tokens") or {}
         answer_tokens_data = data.get("answer_tokens") or {}
         return cls(
+            cited_facts=data.get("cited_facts"),
             candidate_index=int(data.get("candidate_index", 0)),
             facts=list(data.get("facts") or []),
             facts_raw_response=str(data.get("facts_raw_response", "")),

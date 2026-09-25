@@ -52,3 +52,22 @@ def test_create_runner():
     runner = create_runner(agent)
     assert isinstance(runner, Runner)
     assert runner.agent == agent
+
+
+def test_fact_agent_uses_reference_instruction_by_default():
+    from inference._prompts import DEFAULT_FACT_SYSTEM_INSTRUCTION
+
+    agent = create_fact_generation_agent(CandidateInferenceConfig())
+    assert agent.instruction == DEFAULT_FACT_SYSTEM_INSTRUCTION
+
+
+def test_fact_agent_uses_the_chosen_prompt():
+    from inference._prompts import FACT_PROMPTS
+
+    agent = create_fact_generation_agent(CandidateInferenceConfig(fact_prompt="background"))
+    assert agent.instruction == FACT_PROMPTS["background"].system_instruction
+
+
+def test_explicit_fact_instruction_overrides_the_prompt():
+    config = CandidateInferenceConfig(fact_prompt="background", fact_system_instruction="custom")
+    assert create_fact_generation_agent(config).instruction == "custom"

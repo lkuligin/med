@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Callable
 
 from gdanschin_runtime import _bootstrap
-from gdanschin_runtime.models import BASE_MODELS, JUDGE_MODELS
+from gdanschin_runtime.models import BASE_MODELS, JUDGE_MODELS, difficult_run
 
 from results_store import (
     CandidateResults,
@@ -127,9 +127,10 @@ class Step:
 
         A run over a whole split is kept apart from a run over the questions
         the pipeline works on: same model, different coverage, and blending
-        them would leave a directory nothing could describe.
+        them would leave a directory nothing could describe. The split is
+        step 1 proper and takes the model's name; the list run is the aside.
         """
-        return f"{self.base}-full" if self.kind == "one-shot-full" else self.base
+        return difficult_run(self.base) if self.kind == "one-shot" else self.base
 
     @property
     def max_tokens(self) -> int:

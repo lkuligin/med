@@ -28,7 +28,9 @@ from collections import Counter
 from pathlib import Path
 from typing import Any, NamedTuple
 
-from gdanschin_runtime import _bootstrap  # noqa: F401
+from gdanschin_runtime import _bootstrap
+from gdanschin_runtime.question_ids import resolve  # noqa: F401
+from gdanschin_runtime.models import difficult_run
 
 from results_store import (
     FACTS_PIPELINE,
@@ -196,8 +198,9 @@ def _questions_on_list(store, dataset: str | None = None) -> list[str]:
     listed = _difficult_ids(dataset)
     if listed is None:
         return store.questions()
-    ids = {_norm_id(q) for q in listed}
-    return [q for q in store.questions() if _norm_id(q) in ids]
+    stored = store.questions()
+    ids = resolve(listed, stored)
+    return [q for q in stored if str(q) in ids]
 
 
 def _on_list(results: list[dict[str, Any]],
@@ -216,8 +219,8 @@ def _on_list(results: list[dict[str, Any]],
     listed = _difficult_ids(dataset)
     if listed is None:
         return results
-    ids = {_norm_id(q) for q in listed}
-    return [q for q in results if _norm_id(q["question_id"]) in ids]
+    ids = resolve(listed, (q["question_id"] for q in results))
+    return [q for q in results if str(q["question_id"]) in ids]
 
 
 def load_step1(base: str | None = None,
@@ -469,20 +472,6 @@ def _baselines(results: list[dict]) -> dict[str, float]:
     }
 
 
-def _norm_id(qid: Any) -> str:
-    """A question id in one form, whatever store or list it came from.
-
-    The one-shot store keys a question by the id the dataset hands it, while
-    the per-candidate store and the difficult-questions list carry the id
-    medbullets writes, which is padded to three digits. Compared as strings,
-    '1' and '001' are different questions, so every medbullets question below
-    100 - two thirds of the list - dropped out of the one-shot baseline, and
-    what was left still read as a plausible number.
-    """
-    text = str(qid)
-    return (text.lstrip("0") or "0") if text.isdigit() else text
-
-
 class OneShot(NamedTuple):
     """Step 1 measured two ways, because the two answer different questions.
 
@@ -505,8 +494,10 @@ def _one_shot(base: str | None, qids, dataset: str | None = None) -> OneShot | N
     if not base:
         return None
     records = OneShotResults(RESULTS_DIR, base, _ds(dataset)).read()
-    by_id = {_norm_id(k): v for k, v in records.items()}
-    picked = [by_id[_norm_id(q)] for q in qids if _norm_id(q) in by_id]
+    by_id = {str(k): v for k, v in records.items()}
+    # The ids come from a list, which is the one place a spelling may differ
+    # from the store's, so they are matched the way the reference matches them.
+    picked = [by_id[q] for q in resolve(qids, by_id)]
     if not picked:
         return None
     averaged = statistics.mean(
@@ -567,24 +558,24 @@ def _step1_run(base: str | None, dataset: str | None = None,
                prefer_full: bool = False) -> str | None:
     """The run that holds step 1 for a model, or None if none does.
 
-    A run over the whole split is stored apart from a run over the difficult
-    questions, under <name>-full, because the same model at two coverages
-    under one name would leave a directory nothing could describe. The cost is
-    that a step 2 run named for the model has no step 1 of its own, and the
-    baseline it should be compared against sits next door.
+    A run over the difficult questions is stored apart from the run over the
+    whole split, under <name>-difficult, because the same model at two
+    coverages under one name would leave a directory nothing could describe.
+    The whole split is step 1 proper and keeps the model's name; the list run
+    a pipeline baseline wants sits next door.
     """
     if not base:
         return None
     # Two callers want different runs, so the caller says which.
     #
     # A baseline for the pipeline wants the run of the same coverage: the
-    # difficult-list run under the model's own name, which answers exactly
-    # the questions steps 2 and 3 worked on.
+    # difficult-list run, which answers exactly the questions steps 2 and 3
+    # worked on. The split holds those questions too, so it is the fallback.
     #
     # The WHOLE SPLIT block wants the split. Reading the difficult-list run
     # there printed "WHOLE SPLIT, 483 questions" for a split of 1273 - the
     # block's own heading contradicting its number.
-    order = (f"{base}-full", base) if prefer_full else (base, f"{base}-full")
+    order = (base, difficult_run(base)) if prefer_full else (difficult_run(base), base)
     for name in order:
         if OneShotResults(RESULTS_DIR, name, _ds(dataset)).read():
             return name
@@ -666,7 +657,7 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
               " Pass base='<run>'.\n")
     elif not whole_run:
         print(f"  WHOLE SPLIT not shown: no step 1 run stored as {base!r} or "
-              f"{base + '-full'!r} in {dataset}.\n    one_shot_runs"
+              f"{difficult_run(base)!r} in {dataset}.\n    one_shot_runs"
               f"('{dataset}') lists the ones there are.\n")
     else:
         records = OneShotResults(RESULTS_DIR, whole_run, dataset).read()
@@ -691,8 +682,8 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     if isinstance(verified, (str, Path)):
         verified = load(path=verified)
 
-    judged = {_norm_id(q["question_id"]): q for q in verified}
-    both = [q for q in results if _norm_id(q["question_id"]) in judged]
+    judged = {str(q["question_id"]): q for q in verified}
+    both = [q for q in results if str(q["question_id"]) in judged]
     if not both:
         print("\n  no questions have been through both steps yet")
         return
@@ -709,7 +700,7 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     first_valid_right = found = hybrid_right = 0
     fell_back = fallback_right = 0
     for q in both:
-        cv = judged[_norm_id(q["question_id"])].get("candidate_verifications", [])
+        cv = judged[str(q["question_id"])].get("candidate_verifications", [])
         passing = next((c for c in cv if c.get("all_facts_correct")), None)
         if passing is not None:
             found += 1
@@ -747,7 +738,7 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     # worse than it is.
     open_questions = 0
     for q in both:
-        cv = judged[_norm_id(q["question_id"])].get("candidate_verifications", [])
+        cv = judged[str(q["question_id"])].get("candidate_verifications", [])
         if any(c.get("all_facts_correct") for c in cv):
             continue
         if len(cv) < len(q.get("candidates") or []):
@@ -1032,12 +1023,12 @@ def _one_shot_stored(base: str, dataset: str | None = None) -> int:
     dataset = _ds(dataset)
 
     # The whole-split run first, because this row is measured against the
-    # split. A model can have both: "<base>" from a run over the difficult
-    # list and "<base>-full" over everything. Reading the list run here
+    # split. A model can have both: "<base>" over everything and
+    # "<base>-difficult" from a run over the difficult list. Reading the list run here
     # reports its 483 answers against the split's 1273 - the one-against-the
     # -other mistake the comment further down warns about - while the split
     # run answers all 1273 and is what the row is asking about.
-    for name in (f"{base}-full", base):
+    for name in (base, difficult_run(base)):
         directory = OneShotResults(RESULTS_DIR, name, dataset).directory
         if directory.is_dir():
             return sum(1 for _ in directory.glob("question_*.json"))
@@ -1063,8 +1054,8 @@ def _progress_numbers(base: str | None, judge: str | None,
     answered = _one_shot_stored(base, dataset)
     # Same order as the count above, so the attempt count describes the run
     # the row is reporting rather than the other one.
-    summary = (OneShotResults(RESULTS_DIR, f"{base}-full", dataset).read_summary()
-               or OneShotResults(RESULTS_DIR, base, dataset).read_summary()
+    summary = (OneShotResults(RESULTS_DIR, base, dataset).read_summary()
+               or OneShotResults(RESULTS_DIR, difficult_run(base), dataset).read_summary()
                or {})
     attempts = summary.get("n_attempts") or 1
     candidates = CandidateResults(RESULTS_DIR, base, dataset)

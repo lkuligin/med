@@ -156,3 +156,9 @@ def test_main():
         mock_async_main.return_value = 0
         main(["--run-name", "test-run"])
         mock_exit.assert_called_once_with(0)
+
+
+def test_difficult_questions_reaches_the_config():
+    config = build_config(parse_args(["--difficult-questions", "difficult_questions_mb.csv"]))
+    assert config.difficult_questions == "difficult_questions_mb.csv"
+    assert build_config(parse_args([])).difficult_questions is None

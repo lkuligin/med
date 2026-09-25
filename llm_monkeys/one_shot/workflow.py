@@ -566,8 +566,15 @@ class OneShotInferenceWorkflow:
         semaphore: asyncio.Semaphore,
         n_attempts: int | None = None,
         max_parse_retries: int | None = None,
+        existing: InferenceItemResult | None = None,
     ) -> InferenceItemResult:
-        """Execute one-shot inference across n_attempts for a single question."""
+        """Execute one-shot inference across n_attempts for a single question.
+
+        Attempts already stored in ``existing`` without an error are kept, and
+        only the missing ones are run. Raising --n-attempts between runs then
+        adds attempts instead of repeating them, so a split can be answered
+        once everywhere before it is answered a second and a third time.
+        """
         if n_attempts is None:
             n_attempts = getattr(self.config, "n_attempts", 3)
         if max_parse_retries is None:
@@ -576,6 +583,16 @@ class OneShotInferenceWorkflow:
         prompt_text = format_one_shot_prompt(question)
         start_time = time.perf_counter()
 
+        # A question-level error that no attempt accounts for says the record
+        # itself is suspect, so none of its attempts is trusted.
+        trusted = existing is not None and (
+            existing.error is None or any(a.error for a in existing.attempts)
+        )
+        kept = {
+            a.attempt_index: a
+            for a in (existing.attempts if trusted else [])
+            if a.error is None and a.attempt_index < n_attempts
+        }
         attempt_tasks = [
             self.run_single_attempt(
                 question=question,
@@ -585,10 +602,18 @@ class OneShotInferenceWorkflow:
                 max_parse_retries=max_parse_retries,
             )
             for attempt_idx in range(n_attempts)
+            if attempt_idx not in kept
         ]
-        attempts: list[AttemptResult] = list(await asyncio.gather(*attempt_tasks))
+        attempts: list[AttemptResult] = sorted(
+            [*kept.values(), *await asyncio.gather(*attempt_tasks)],
+            key=lambda a: a.attempt_index,
+        )
 
-        total_latency = round(time.perf_counter() - start_time, 4)
+        total_latency = round(
+            (existing.latency_seconds if kept else 0.0)
+            + time.perf_counter() - start_time,
+            4,
+        )
         has_usage = any(a.prompt_tokens is not None for a in attempts)
         prompt_tokens = (
             sum(a.prompt_tokens or 0 for a in attempts) if has_usage else None
@@ -791,10 +816,15 @@ class OneShotInferenceWorkflow:
                 )
             else:
                 if qid in existing_results_map:
+                    stored = existing_results_map[qid]
                     logger.info(
-                        "Re-processing question_id=%s (previously failed with error: %s)",
+                        "Re-processing question_id=%s (%d/%d attempts stored without "
+                        "error; error: %s)",
                         qid,
-                        existing_results_map[qid].error or "attempt error",
+                        sum(1 for a in stored.attempts if a.error is None),
+                        self.config.n_attempts,
+                        stored.error or next(
+                            (a.error for a in stored.attempts if a.error), None),
                     )
                 res = await self.run_single_question(
                     question=q,
@@ -802,6 +832,7 @@ class OneShotInferenceWorkflow:
                     semaphore=semaphore,
                     n_attempts=self.config.n_attempts,
                     max_parse_retries=self.config.max_parse_retries,
+                    existing=existing_results_map.get(qid),
                 )
 
             in_progress_results[qid] = res

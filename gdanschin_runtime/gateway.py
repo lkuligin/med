@@ -9,8 +9,8 @@
 
 Open-weight models are reachable too, under short aliases:
 
-    ask("gemma-4-26b", "...")         # google/gemma-4-26B-A4B-it, via sglang
-    list_models("sglang")             # everything that provider serves
+    ask("gemma-4-26b", "...")         # Gemma 4 26B A4B, internal gateway
+    catalogue()                       # every internal provider and its model
 
 gemma-4-26b matters in particular: it is llm_monkeys' DEFAULT_MODEL, so step 2
 can run the original experiment's model through the gateway, with no SGLang to
@@ -70,16 +70,15 @@ def _internal(provider: str) -> tuple[str, str, str]:
     return ("openai", f"/proxy/{provider}/v1", "internal")
 
 # Short names for models whose real id is awkward. Two reasons they are needed
-# rather than nice to have: the sglang ids contain a slash, which would other-
-# wise be read as a provider prefix and route "google/gemma-..." to the Gemini
-# proxy; and "gemma-4-26b" is the same alias llm_monkeys already uses for this
-# model, so one name works in both places.
+# rather than nice to have: the model ids contain a slash, which would other-
+# wise be read as a provider prefix; and "gemma-4-26b" is the same alias
+# llm_monkeys already uses for this model, so one name works in both places.
+# A bare gemma name that is not listed here raises rather than guessing a
+# gateway, since the gemma the external sglang serves is on the other quota.
 ALIASES: dict[str, str] = {
-    # External gateway, via the sglang provider.
-    "gemma-4-26b": "sglang/google/gemma-4-26B-A4B-it",
-    "gemma-4-26b-a4b-it": "sglang/google/gemma-4-26B-A4B-it",
+    # External gateway, via the sglang provider. Only for what the internal
+    # gateway does not serve: open-weight models belong on the internal one.
     "minimax-m2.7": "sglang/MiniMaxAI/MiniMax-M2.7",
-    "qwen3-reranker-4b": "sglang/Qwen/Qwen3-Reranker-4B",
     # Internal gateway. Every id here was read from the provider itself rather
     # than copied from a list, since the wiki's tables have already gone stale
     # once. The gemma provider there reports its model as "unknown" and accepts
@@ -89,9 +88,13 @@ ALIASES: dict[str, str] = {
     "gpt-oss-120b": "gpt-oss-120b/openai/gpt-oss-120b",
     "qwen3.6-27b": "qwen36-27b-fp8/Qwen/Qwen3.6-27B-FP8",
     "qwen3.8-27b": "qwen38-27b-fp8/Qwen/Qwen3.8-27B-FP8",
+    "gemma-4-26b": "gemma-4-26b-a4b-it/unknown",
+    "gemma-4-26b-a4b-it": "gemma-4-26b-a4b-it/unknown",
     "gemma-4-26b-internal": "gemma-4-26b-a4b-it/unknown",
+    "qwen3-reranker-4b": "qwen3-reranker-4b/Qwen/Qwen3-Reranker-4B",
     "qwen3.6-27b-noreasoning": "qwen36-27b-fp8/Qwen/Qwen3.6-27B-FP8",
     "qwen3.8-27b-noreasoning": "qwen38-27b-fp8/Qwen/Qwen3.8-27B-FP8",
+    "deepseek-v4-flash-think-high": "deepseek-v4-flash-0731/deepseek-ai/DeepSeek-V4-Flash-0731",
 }
 
 # Extra request options some aliases carry. Qwen3 thinks by default and will
@@ -107,7 +110,14 @@ ALIASES: dict[str, str] = {
 # It is not a free speedup: without thinking the model produces about half as
 # many facts, so -noreasoning is a different configuration rather than a faster
 # version of the same one.
+#
+# DeepSeek-V4-Flash is the opposite case: served as-is it does not think at
+# all (no reasoning tokens in 720 answers), and the same switch turns it on,
+# under the key its own template reads.
 MODEL_EXTRAS: dict[str, dict] = {
+    "deepseek-v4-flash-think-high": {
+        "extra_body": {"chat_template_kwargs": {"thinking": True,
+                                                "reasoning_effort": "high"}}},
     "qwen3.6-27b-noreasoning": {
         "extra_body": {"chat_template_kwargs": {"enable_thinking": False}}},
     "qwen3.8-27b-noreasoning": {
@@ -125,9 +135,6 @@ _MODEL_LIST_PATHS = {
 _INFER = [
     (r"^(gpt|o\d|chatgpt|text-embedding|dall-e|whisper|tts|sora|codex|babbage|davinci)", "openai"),
     (r"^claude", "anthropic"),
-    # Before the gemini rule: "gemma" and "gemini" share a prefix to the eye but
-    # live on different providers, and gemma is not served by the Google proxy.
-    (r"^gemma", "sglang"),
     (r"^gemini", "google"),
     (r"^deepseek", "deepseek"),
     (r"^grok", "xai"),
