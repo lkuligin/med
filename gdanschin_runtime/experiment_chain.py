@@ -8,6 +8,9 @@ Steps, in order, all on our own cards:
 1-2. gemma-4-26b generates the experiment on med_qa and medbullets (k=50),
      then GLM judges both with the fact-only prompt.
 3.   experiment_report decides whether the experiment succeeded.
+3a.  The step 1-2 candidates are copied, without verdicts, into
+     grounded-unframed-facts-cited-answer-author-judge and judged by GLM with
+     the author's prompt (question and options), then reported.
 3b.  general-facts-question-unaware-judge gets its medbullets run: gemma-4-26b
      with the background fact prompt and the reference answer prompt (k=50),
      judged fact-only by GLM, then reported.
@@ -49,6 +52,12 @@ from gdanschin_runtime.run_sweep import (  # noqa: E402
 EXPERIMENT = "grounded-unframed-facts-cited-answer"
 EXP_DIR = f"results/experiments/{EXPERIMENT}"
 REANSWER_DIR = "results/experiments/reference-facts-cited-answer"
+# Step 3a: the same grounded-unframed candidates judged with the author's
+# prompt, which sees the question and options. Separates what the facts give
+# from what seeing the question gives the judge.
+AUTHOR_JUDGE_EXPERIMENT = "grounded-unframed-facts-cited-answer-author-judge"
+AUTHOR_JUDGE_DIR = f"results/experiments/{AUTHOR_JUDGE_EXPERIMENT}"
+AUTHOR_JUDGE_NAME = "glm-5.3-flash-local"
 # The general-facts experiment's own run; step 3b adds medbullets to it.
 GENERAL_FACTS_DIR = "results/experiments/general-facts-question-unaware-judge"
 GENERAL_FACTS_RUN = "gemma-4-26b-local-background-2"
@@ -59,6 +68,11 @@ DATASET_DIR = {MEDQA: "med_qa", MEDBULLETS: "medbullets"}
 DIFFICULT = {MEDQA: "difficult_questions.csv", MEDBULLETS: "difficult_questions_mb.csv"}
 K = 50
 SHARDS = 4
+# Requests the GLM judge serves at once, summed over all running judges.
+# Measured on its single tp4 replica: 16 -> 706 tokens/s, 32 -> 1355, 64 ->
+# 1824. Not higher: at 128 a request decodes at ~17 tokens/s, and the longest
+# verdicts (16384 tokens) would outrun the 900 s request timeout.
+JUDGE_CONCURRENCY = 64
 STATE = MONKEYS / EXP_DIR / "chain_state.json"
 ENV = {**os.environ, "PYTHONPATH": str(REPO)}
 
@@ -103,9 +117,29 @@ def stored(results_dir: str, run: str, dataset: str) -> int:
     return sum(1 for _ in root.glob("question_*/iteration_*.json"))
 
 
-def judged(results_dir: str, run: str, dataset: str) -> int:
+def judged(results_dir: str, run: str, dataset: str, judge_name: str = JUDGE_NAME) -> int:
     root = MONKEYS / results_dir / DATASET_DIR[dataset] / "facts-pipeline" / run
-    return sum(1 for _ in root.glob(f"question_*/{JUDGE_NAME}/result.json"))
+    return sum(1 for _ in root.glob(f"question_*/{judge_name}/result.json"))
+
+
+def copy_candidates(src_dir: str, dst_dir: str, run: str) -> None:
+    """Copy a run's candidates, without any judge's verdicts, into another
+    experiment, so that it can be judged differently. Files already there are
+    left alone."""
+    for dataset in DATASETS:
+        src = MONKEYS / src_dir / DATASET_DIR[dataset] / "facts-pipeline" / run
+        dst = MONKEYS / dst_dir / DATASET_DIR[dataset] / "facts-pipeline" / run
+        copied = 0
+        for f in src.glob("question_*/iteration_*.json"):
+            target = dst / f.parent.name / f.name
+            if not target.exists():
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(f, target)
+                copied += 1
+        if (src / "summary.json").is_file() and not (dst / "summary.json").exists():
+            shutil.copy2(src / "summary.json", dst / "summary.json")
+        log(f"  {run} on {DATASET_DIR[dataset]}: copied {copied}, "
+            f"{stored(dst_dir, run, dataset)} in {dst_dir}")
 
 
 # --- experiment: generate and judge -------------------------------------------
@@ -160,37 +194,38 @@ def wait_for_judges(exp_dir: str, run: str) -> None:
 
 
 def judge_experiment(bases: list[str], *, exp_dir: str = EXP_DIR,
-                     datasets: tuple[str, ...] = DATASETS) -> None:
+                     datasets: tuple[str, ...] = DATASETS,
+                     judge_prompt: str = "fact-only",
+                     judge_name: str = JUDGE_NAME) -> None:
     for base in bases:
         wait_for_judges(exp_dir, base)
     if not serve(GLM.base, GLM.serve):
         log("  could not serve glm-5.3-flash; judging skipped")
         return
     for base in bases:
-        procs = []
-        for dataset in datasets:
-            if not stored(exp_dir, base, dataset):
-                continue
-            log(f"  judging {base} on {DATASET_DIR[dataset]}")
-            procs.append(call(
+        # One dataset at a time, each with the whole of JUDGE_CONCURRENCY:
+        # a single GLM replica serves every judge, so running them side by
+        # side would only split the same throughput.
+        for dataset in [d for d in datasets if stored(exp_dir, base, d)]:
+            log(f"  judging {base} on {DATASET_DIR[dataset]} at concurrency {JUDGE_CONCURRENCY}")
+            call(
                 [PYTHON, "-m", "verifier.cli", "--results-dir", exp_dir, "--run-name", base,
-                 "--judge-name", JUDGE_NAME, "--judge-prompt", "fact-only",
+                 "--judge-name", judge_name, "--judge-prompt", judge_prompt,
                  "--model", "zai-org/GLM-5.3-Flash", "--temperature", "1.0",
                  "--max-tokens", "16384", "--request-timeout", "900", "--dataset", dataset,
-                 "--difficult-questions", DIFFICULT[dataset], "--concurrency", "64"],
-                REPO / "logs" / f"chain_step3_{base}_{DATASET_DIR[dataset]}.log"))
-        for p in procs:
-            p.wait()
+                 "--difficult-questions", DIFFICULT[dataset],
+                 "--concurrency", str(JUDGE_CONCURRENCY)],
+                REPO / "logs" / f"chain_step3_{base}_{DATASET_DIR[dataset]}.log").wait()
         for dataset in datasets:
             log(f"  {base} on {DATASET_DIR[dataset]}: judged "
-                f"{judged(exp_dir, base, dataset)}/{len(questions(dataset))}")
+                f"{judged(exp_dir, base, dataset, judge_name)}/{len(questions(dataset))}")
 
 
-def report(base: str, experiment: str = EXPERIMENT) -> bool:
+def report(base: str, experiment: str = EXPERIMENT, judge_name: str = JUDGE_NAME) -> bool:
     out = MONKEYS / "results" / "experiments" / experiment / f"report_{base}"
     result = subprocess.run(
         through_env([PYTHON, "-m", "gdanschin_runtime.experiment_report",
-                     "--experiment", experiment, "--run", base, "--judge", JUDGE_NAME,
+                     "--experiment", experiment, "--run", base, "--judge", judge_name,
                      "--out", str(out)]),
         cwd=REPO, env=ENV, capture_output=True, text=True)
     for line in (result.stdout or result.stderr).splitlines():
@@ -297,6 +332,12 @@ def main() -> int:
     success = step("step 3: report", report, "gemma-4-26b-local")
     mark("success", bool(success))
     log(f"  experiment {'succeeded' if success else 'did not succeed'}")
+    step("step 3a: copy grounded-unframed candidates for the author's judge", copy_candidates,
+         EXP_DIR, AUTHOR_JUDGE_DIR, "gemma-4-26b-local")
+    step("step 3a: GLM judges them with the author's prompt", judge_experiment,
+         ["gemma-4-26b-local"], exp_dir=AUTHOR_JUDGE_DIR, judge_prompt="reference",
+         judge_name=AUTHOR_JUDGE_NAME)
+    step("step 3a: report", report, "gemma-4-26b-local", AUTHOR_JUDGE_EXPERIMENT, AUTHOR_JUDGE_NAME)
     step("step 3b: general-facts on medbullets, gemma-4-26b generates", generate_experiment,
          "gemma-4-26b-local", "gemma-4-26b", False,
          exp_dir=GENERAL_FACTS_DIR, run=GENERAL_FACTS_RUN, fact_prompt="background",
