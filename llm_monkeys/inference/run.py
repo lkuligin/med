@@ -20,6 +20,12 @@ from config import (
     resolve_dataset_name,
     resolve_model_name,
 )
+from inference._prompts import (
+    ANSWER_PROMPTS,
+    DEFAULT_ANSWER_PROMPT,
+    DEFAULT_FACT_PROMPT,
+    FACT_PROMPTS,
+)
 from inference._schemas import CandidateWorkflowSummary
 from inference.workflow import CandidateInferenceWorkflow
 
@@ -52,6 +58,32 @@ def create_parser() -> argparse.ArgumentParser:
         help=(
             "Path to CSV containing difficult question IDs "
             "(default: difficult_questions.csv, or difficult_questions_mb.csv for MedBullets)"
+        ),
+    )
+    parser.add_argument(
+        "--free-form-facts",
+        action="store_true",
+        help="Ask the fact step for prose instead of a JSON schema. For a "
+        "model that satisfies the schema emptily: gpt-oss-20b returned "
+        "{\"facts\": []} for a third of its candidates. The parser reads "
+        "bulleted prose through its fallback.",
+    )
+    parser.add_argument(
+        "--fact-prompt",
+        choices=sorted(FACT_PROMPTS),
+        default=DEFAULT_FACT_PROMPT,
+        help=(
+            "Which fact-generation prompt to use (default: reference, the authors' "
+            "wording). Give an experimental prompt its own --run-name."
+        ),
+    )
+    parser.add_argument(
+        "--answer-prompt",
+        choices=sorted(ANSWER_PROMPTS),
+        default=DEFAULT_ANSWER_PROMPT,
+        help=(
+            "Which answer prompt to use (default: reference, the authors' wording). "
+            "Give an experimental prompt its own --run-name."
         ),
     )
     parser.add_argument(
@@ -157,6 +189,8 @@ def build_config(args: argparse.Namespace) -> CandidateInferenceConfig:
         "dataset_split": dataset_split,
         "difficult_questions_path": difficult_questions_path,
         "n_candidates": getattr(args, "n_candidates", 1000),
+        "fact_prompt": getattr(args, "fact_prompt", DEFAULT_FACT_PROMPT),
+        "answer_prompt": getattr(args, "answer_prompt", DEFAULT_ANSWER_PROMPT),
         "concurrency": args.concurrency,
         "limit": args.limit,
         "offset": args.offset,
@@ -169,6 +203,7 @@ def build_config(args: argparse.Namespace) -> CandidateInferenceConfig:
         "save_every_n_questions": getattr(args, "save_every_n_questions", 1),
         "max_retries": args.max_retries,
         "rate_limit_max_retries": args.rate_limit_max_retries,
+        "structured_facts": not getattr(args, "free_form_facts", False),
     }
     if getattr(args, "project", None):
         kwargs["project_id"] = args.project

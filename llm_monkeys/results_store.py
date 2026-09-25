@@ -208,7 +208,8 @@ def per_record(config: Any) -> Any:
 # the configuration rather than passed in, so a caller cannot forget it.
 SAMPLING_FIELDS = ("resolved_model_name", "temperature", "max_tokens",
                    "n_attempts", "n_candidates", "concurrency",
-                   "dataset_name", "dataset_split")
+                   "dataset_name", "dataset_split", "fact_prompt",
+                   "answer_prompt", "judge_prompt")
 
 
 def sampling_of(config: Any) -> dict[str, Any]:

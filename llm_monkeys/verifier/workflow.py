@@ -23,7 +23,7 @@ from inference._schemas import StepTokenUsage
 from inference.parser import evaluate_prediction
 from inference.workflow import _calculate_backoff, is_rate_limit_error
 from verifier._dataset import Step2CandidateData, Step2QuestionData, load_step2_results
-from verifier._prompts import format_fact_verification_prompt
+from verifier._prompts import JUDGE_PROMPTS
 from verifier._schemas import (
     CandidateVerificationResult,
     FactVerificationResult,
@@ -209,7 +209,7 @@ class VerifierWorkflow:
         semaphore: asyncio.Semaphore,
     ) -> FactVerificationResult:
         """Verify a single atomic medical fact with the verifier LLM-as-a-judge under semaphore."""
-        prompt = format_fact_verification_prompt(question_text, options, fact)
+        prompt = JUDGE_PROMPTS[self.config.judge_prompt].format(question_text, options, fact)
         t0 = time.perf_counter()
         raw_text = ""
         usage_meta = None

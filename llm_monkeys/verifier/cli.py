@@ -9,6 +9,7 @@ import sys
 from cli_utils import add_common_arguments, setup_logging
 from results_store import DEFAULT_CANDIDATES_FILE, DEFAULT_VERIFIED_FILE
 from config import DEFAULT_VERIFIER_MODEL, VerifierConfig
+from verifier._prompts import JUDGE_PROMPTS
 from verifier._schemas import VerifierWorkflowSummary
 from verifier.workflow import VerifierWorkflow
 
@@ -48,6 +49,15 @@ def create_parser() -> argparse.ArgumentParser:
         help="Name this judge's verdicts are stored under, inside the run being "
         "verified (default: the model name). Naming it keeps two settings of "
         "one judge apart.",
+    )
+    parser.add_argument(
+        "--judge-prompt",
+        choices=sorted(JUDGE_PROMPTS),
+        default=None,
+        help=(
+            "Which judge prompt to use (default: reference, the authors' prompt). "
+            "Give an experimental prompt its own --judge-name."
+        ),
     )
     parser.add_argument(
         "--max-candidates-per-question",

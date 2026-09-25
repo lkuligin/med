@@ -18,10 +18,18 @@ from results_store import (
 )
 
 from inference._prompts import (
+    ANSWER_PROMPTS,
+    DEFAULT_ANSWER_PROMPT,
     DEFAULT_ANSWER_SYSTEM_INSTRUCTION,
+    DEFAULT_FACT_PROMPT,
     DEFAULT_FACT_SYSTEM_INSTRUCTION,
+    FACT_PROMPTS,
 )
-from verifier._prompts import DEFAULT_VERIFIER_SYSTEM_INSTRUCTION
+from verifier._prompts import (
+    DEFAULT_JUDGE_PROMPT,
+    DEFAULT_VERIFIER_SYSTEM_INSTRUCTION,
+    JUDGE_PROMPTS,
+)
 
 DEFAULT_MODEL = "vertex_ai/google/gemma-4-26b-a4b-it-maas"
 DEFAULT_VERIFIER_MODEL = "gemini-3.8-flash"
@@ -356,20 +364,56 @@ InferenceConfig = OneShotInferenceConfig
 class CandidateInferenceConfig(BaseInferenceConfig):
     """Configuration for running candidate-based multi-step MedQA inference (Step 2)."""
 
+    # Ask the fact step for a JSON schema, which is how every stored run was
+    # generated. Turn it off for a model that answers the schema by satisfying
+    # it emptily: gpt-oss-20b returned {"facts": []} for a third of its
+    # candidates - complete, valid, and useless - spending 98% of its output
+    # on reasoning first. Unconstrained it writes the facts as prose, which
+    # parse_medical_facts already reads through its bulleted fallback.
+    structured_facts: bool = True
+
     concurrency: int = 4
     output_filepath: str = DEFAULT_CANDIDATES_FILE
 
-    fact_system_instruction: str = DEFAULT_FACT_SYSTEM_INSTRUCTION
-    answer_system_instruction: str = DEFAULT_ANSWER_SYSTEM_INSTRUCTION
+    # Which entry of FACT_PROMPTS asks for the facts. "reference" is the
+    # authors' wording; anything else is an experiment and wants its own
+    # run name, since the store does not tell prompts apart on resume.
+    fact_prompt: str = DEFAULT_FACT_PROMPT
+    # None takes the system instruction of fact_prompt; a string overrides it.
+    fact_system_instruction: str | None = None
+    # Which entry of ANSWER_PROMPTS asks for the answer; same rules as fact_prompt.
+    answer_prompt: str = DEFAULT_ANSWER_PROMPT
+    # None takes the system instruction of answer_prompt; a string overrides it.
+    answer_system_instruction: str | None = None
     difficult_questions_path: str = "difficult_questions.csv"
 
     n_candidates: int = 1000
     save_every_n_candidates: int = 25
     save_every_n_questions: int = 1
 
+    @property
+    def resolved_fact_system_instruction(self) -> str:
+        """The fact generator's system instruction, after any override."""
+        return (self.fact_system_instruction
+                or FACT_PROMPTS[self.fact_prompt].system_instruction)
+
+    @property
+    def resolved_answer_system_instruction(self) -> str:
+        """The answer step's system instruction, after any override."""
+        return (self.answer_system_instruction
+                or ANSWER_PROMPTS[self.answer_prompt].system_instruction)
+
     def validate(self) -> None:
         """Validate candidate-specific parameters."""
         super().validate()
+        if self.answer_prompt not in ANSWER_PROMPTS:
+            raise ValueError(
+                f"answer_prompt must be one of {sorted(ANSWER_PROMPTS)}, got {self.answer_prompt!r}"
+            )
+        if self.fact_prompt not in FACT_PROMPTS:
+            raise ValueError(
+                f"fact_prompt must be one of {sorted(FACT_PROMPTS)}, got {self.fact_prompt!r}"
+            )
         if self.n_candidates < 1:
             raise ValueError(f"n_candidates must be >= 1, got {self.n_candidates}")
         if self.save_every_n_candidates < 1:
@@ -393,7 +437,12 @@ class VerifierConfig(BaseInferenceConfig):
     input_filepath: str = DEFAULT_CANDIDATES_FILE
     output_filepath: str = DEFAULT_VERIFIED_FILE
     judge_name: str | None = None
-    system_instruction: str = DEFAULT_VERIFIER_SYSTEM_INSTRUCTION
+    # Which entry of JUDGE_PROMPTS asks for the verdicts. "reference" is the
+    # authors' prompt; anything else is an experiment and wants its own
+    # judge name, since the store does not tell prompts apart on resume.
+    judge_prompt: str = DEFAULT_JUDGE_PROMPT
+    # None takes the system instruction of judge_prompt; a string overrides it.
+    system_instruction: str | None = None
     save_every_n_questions: int = 1
     max_candidates_per_question: int | None = None
     early_stop_facts: bool = False
@@ -428,9 +477,18 @@ class VerifierConfig(BaseInferenceConfig):
         """
         return self.judge_name or run_name_for(self.resolved_model_name)
 
+    @property
+    def resolved_system_instruction(self) -> str:
+        """The judge's system instruction, after any override."""
+        return self.system_instruction or JUDGE_PROMPTS[self.judge_prompt].system_instruction
+
     def validate(self) -> None:
         """Validate verifier-specific parameters."""
         super().validate()
+        if self.judge_prompt not in JUDGE_PROMPTS:
+            raise ValueError(
+                f"judge_prompt must be one of {sorted(JUDGE_PROMPTS)}, got {self.judge_prompt!r}"
+            )
         if self.save_every_n_questions < 1:
             raise ValueError(
                 f"save_every_n_questions must be >= 1, got {self.save_every_n_questions}"
