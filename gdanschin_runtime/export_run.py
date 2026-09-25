@@ -8,6 +8,12 @@ Exports are gzipped: a step 1 file is a record per question with the raw model
 response in it, and these are handed over by upload, where the size is the cost.
 Gzip is written directly, so the uncompressed file never exists on disk.
 
+Steps 2 and 3 export the difficult questions only, with their summaries
+recomputed over those questions. A run can hold more - some were started on the
+whole split before the list existed - and those extra questions are the easy
+ones, which the pipeline is not about. Step 1 covers the whole split, as it
+always has.
+
 Our runs are kept as a directory per run, one file per record, which is what
 makes them resumable and safe to read while they are still going. Everything
 outside this runtime - the reference's own analyzers included - expects one
@@ -122,22 +128,37 @@ def _on_list(results: list[dict[str, Any]], dataset: str) -> list[dict[str, Any]
     return [q for q in results if bare(q["question_id"]) in wanted]
 
 
-def export_candidates(run: str, out: Path, dataset: str,
-                      difficult_only: bool = False) -> Path | None:
-    """Step 2, with the aggregates the single-file layout carries per question."""
-    from inference._schemas import CandidateQuestionResult
+def _difficult(results: list[dict[str, Any]], dataset: str) -> list[dict[str, Any]]:
+    """The questions on the difficult list, saying so when others are dropped."""
+    kept = _on_list(results, dataset)
+    if len(kept) != len(results):
+        print(f"  {len(kept)} of {len(results)} questions are on the "
+              f"difficult list; the rest are left out")
+    return kept
+
+
+def _resummarised(stored: dict[str, Any] | None, fresh: Any) -> dict[str, Any]:
+    """A summary recomputed over the exported questions only.
+
+    The stored summary describes every question the run holds, so a file that
+    carried it over the difficult list alone would state totals for questions
+    it does not contain. Keys the recomputation does not produce (the sampling
+    settings, the creation time) are kept from the stored one.
+    """
+    stored = stored or {}
+    return {**stored, **fresh.to_dict(), "created_at": stored.get("created_at")}
+
+
+def export_candidates(run: str, out: Path, dataset: str) -> Path | None:
+    """Step 2, difficult questions only, with the aggregates the single-file
+    layout carries per question."""
+    from inference._schemas import CandidateQuestionResult, CandidateWorkflowSummary
 
     stored = CandidateResults(RESULTS, run, dataset).load()
     if stored is None:
         return None
 
-    results = stored["results"]
-    if difficult_only:
-        kept = _on_list(results, dataset)
-        if len(kept) != len(results):
-            print(f"  {len(kept)} of {len(results)} questions are on the "
-                  f"difficult list; the rest are left out")
-        results = kept
+    results = _difficult(stored["results"], dataset)
     incomplete = [q["question_id"] for q in results if not q.get("ground_truth_answer")]
     from_dataset = _dataset_fields(incomplete, stored.get("summary")) if incomplete else {}
     if incomplete and not from_dataset:
@@ -151,9 +172,20 @@ def export_candidates(run: str, out: Path, dataset: str,
         # from_dict recomputes total_candidates, accuracy, the token totals and
         # the rest, which are per-question sums the directory layout does not
         # store because they are always derivable from the candidates.
-        assembled.append(CandidateQuestionResult.from_dict(question).to_dict())
+        assembled.append(CandidateQuestionResult.from_dict(question))
 
-    return _write(out, {"summary": stored.get("summary"), "results": assembled})
+    summary = stored.get("summary") or {}
+    fresh = CandidateWorkflowSummary.from_results(
+        assembled,
+        model=summary.get("model", ""),
+        dataset=summary.get("dataset", ""),
+        config=summary.get("config"),
+        split=summary.get("split", "test"),
+        n_candidates=summary.get("n_candidates") or 0,
+        total_time_seconds=summary.get("total_time_seconds") or 0.0,
+    )
+    return _write(out, {"summary": _resummarised(summary, fresh),
+                        "results": [q.to_dict() for q in assembled]})
 
 
 def export_one_shot(run: str, out: Path, dataset: str) -> Path | None:
@@ -162,15 +194,24 @@ def export_one_shot(run: str, out: Path, dataset: str) -> Path | None:
     return None if stored is None else _write(out, stored)
 
 
-def export_verdicts(run: str, judge: str, out: Path, dataset: str,
-                    difficult_only: bool = False) -> Path | None:
-    """Step 3, likewise stored whole, one file per judge."""
+def export_verdicts(run: str, judge: str, out: Path, dataset: str) -> Path | None:
+    """Step 3, difficult questions only, one file per judge."""
+    from verifier._schemas import QuestionVerificationResult, VerifierWorkflowSummary
+
     stored = VerificationResults(RESULTS, run, judge, dataset).load()
     if stored is None:
         return None
-    if difficult_only:
-        stored = {**stored, "results": _on_list(stored["results"], dataset)}
-    return _write(out, stored)
+    results = _difficult(stored["results"], dataset)
+    summary = stored.get("summary") or {}
+    fresh = VerifierWorkflowSummary.from_results(
+        [QuestionVerificationResult.from_dict(q) for q in results],
+        model=summary.get("model", ""),
+        run_name=summary.get("run_name", run),
+        judge_name=summary.get("judge_name", judge),
+        total_time_seconds=summary.get("total_time_seconds") or 0.0,
+        temperature=summary.get("temperature"),
+    )
+    return _write(out, {"summary": _resummarised(summary, fresh), "results": results})
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -183,9 +224,6 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out-dir", default="exports",
                         help="where the files go; each step lands in its own "
                              "subdirectory of it (default: exports/)")
-    parser.add_argument("--difficult-only", action="store_true",
-                        help="export only the questions the difficult-questions "
-                             "list names, leaving out any others the run holds")
     parser.add_argument("--steps", nargs="+", default=["one-shot", "candidates", "verdicts"],
                         choices=["one-shot", "candidates", "verdicts"],
                         help="which steps to export (default: all of them)")
@@ -212,7 +250,6 @@ def main(argv: list[str] | None = None) -> int:
             run,
             out_dir / STEP_DIR["candidates"] / f"results_step2_{run}_candidates{mark}.json",
             dataset,
-            difficult_only=args.difficult_only,
         )
         if candidates:
             written.append(candidates)
@@ -224,7 +261,6 @@ def main(argv: list[str] | None = None) -> int:
                 run, judge,
                 out_dir / STEP_DIR["verdicts"] / f"results_step3_{run}_{judge}{mark}.json",
                 dataset,
-                difficult_only=args.difficult_only,
             )
             if path:
                 written.append(path)
