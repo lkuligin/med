@@ -28,7 +28,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Any, NamedTuple
 
-from gdanschin_runtime import _bootstrap  # noqa: F401
+from gdanschin_runtime import _bootstrap
+from gdanschin_runtime.question_ids import resolve  # noqa: F401
 from gdanschin_runtime.models import difficult_run
 
 from results_store import (
@@ -197,8 +198,9 @@ def _questions_on_list(store, dataset: str | None = None) -> list[str]:
     listed = _difficult_ids(dataset)
     if listed is None:
         return store.questions()
-    ids = {_norm_id(q) for q in listed}
-    return [q for q in store.questions() if _norm_id(q) in ids]
+    stored = store.questions()
+    ids = resolve(listed, stored)
+    return [q for q in stored if str(q) in ids]
 
 
 def _on_list(results: list[dict[str, Any]],
@@ -217,8 +219,8 @@ def _on_list(results: list[dict[str, Any]],
     listed = _difficult_ids(dataset)
     if listed is None:
         return results
-    ids = {_norm_id(q) for q in listed}
-    return [q for q in results if _norm_id(q["question_id"]) in ids]
+    ids = resolve(listed, (q["question_id"] for q in results))
+    return [q for q in results if str(q["question_id"]) in ids]
 
 
 def load_step1(base: str | None = None,
@@ -470,20 +472,6 @@ def _baselines(results: list[dict]) -> dict[str, float]:
     }
 
 
-def _norm_id(qid: Any) -> str:
-    """A question id in one form, whatever store or list it came from.
-
-    The one-shot store keys a question by the id the dataset hands it, while
-    the per-candidate store and the difficult-questions list carry the id
-    medbullets writes, which is padded to three digits. Compared as strings,
-    '1' and '001' are different questions, so every medbullets question below
-    100 - two thirds of the list - dropped out of the one-shot baseline, and
-    what was left still read as a plausible number.
-    """
-    text = str(qid)
-    return (text.lstrip("0") or "0") if text.isdigit() else text
-
-
 class OneShot(NamedTuple):
     """Step 1 measured two ways, because the two answer different questions.
 
@@ -506,8 +494,10 @@ def _one_shot(base: str | None, qids, dataset: str | None = None) -> OneShot | N
     if not base:
         return None
     records = OneShotResults(RESULTS_DIR, base, _ds(dataset)).read()
-    by_id = {_norm_id(k): v for k, v in records.items()}
-    picked = [by_id[_norm_id(q)] for q in qids if _norm_id(q) in by_id]
+    by_id = {str(k): v for k, v in records.items()}
+    # The ids come from a list, which is the one place a spelling may differ
+    # from the store's, so they are matched the way the reference matches them.
+    picked = [by_id[q] for q in resolve(qids, by_id)]
     if not picked:
         return None
     averaged = statistics.mean(
@@ -692,8 +682,8 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     if isinstance(verified, (str, Path)):
         verified = load(path=verified)
 
-    judged = {_norm_id(q["question_id"]): q for q in verified}
-    both = [q for q in results if _norm_id(q["question_id"]) in judged]
+    judged = {str(q["question_id"]): q for q in verified}
+    both = [q for q in results if str(q["question_id"]) in judged]
     if not both:
         print("\n  no questions have been through both steps yet")
         return
@@ -710,7 +700,7 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     first_valid_right = found = hybrid_right = 0
     fell_back = fallback_right = 0
     for q in both:
-        cv = judged[_norm_id(q["question_id"])].get("candidate_verifications", [])
+        cv = judged[str(q["question_id"])].get("candidate_verifications", [])
         passing = next((c for c in cv if c.get("all_facts_correct")), None)
         if passing is not None:
             found += 1
@@ -748,7 +738,7 @@ def accuracy(results: list[dict], verified: list[dict] | str | Path | None = Non
     # worse than it is.
     open_questions = 0
     for q in both:
-        cv = judged[_norm_id(q["question_id"])].get("candidate_verifications", [])
+        cv = judged[str(q["question_id"])].get("candidate_verifications", [])
         if any(c.get("all_facts_correct") for c in cv):
             continue
         if len(cv) < len(q.get("candidates") or []):

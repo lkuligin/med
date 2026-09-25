@@ -39,23 +39,20 @@ from math import comb
 from pathlib import Path
 
 MARGIN = 0.04
+from gdanschin_runtime.question_ids import resolve
+
 ROOT = Path(__file__).resolve().parents[1] / "llm_monkeys"
 DATASETS = {"med_qa": "difficult_questions.csv", "medbullets": "difficult_questions_mb.csv"}
-
-
-def bare(qid) -> str:
-    text = str(qid).strip()
-    return (text.lstrip("0") or "0") if text.isdigit() else text
 
 
 def difficult(dataset: str) -> list[str]:
     with open(ROOT / DATASETS[dataset], encoding="utf-8-sig") as handle:
         rows = [r[0].strip() for r in csv.reader(handle) if r and r[0].strip()]
-    return [bare(r) for r in rows if r.lower() not in ("question_id", "id", "qid")]
+    return [r for r in rows if r.lower() not in ("question_id", "id", "qid")]
 
 
 def question_dirs(run_dir: Path) -> dict[str, Path]:
-    return {bare(p.name.split("_", 1)[1]): p for p in run_dir.glob("question_*") if p.is_dir()}
+    return {p.name.split("_", 1)[1]: p for p in run_dir.glob("question_*") if p.is_dir()}
 
 
 def numbered(directory: Path) -> list[Path]:
@@ -106,7 +103,7 @@ def one_pass(dataset: str, run: str, qids: list[str]) -> float | None:
     from one_shot.parser import rescore_results
     records = [json.loads(p.read_text())
                for p in (ROOT / "results" / dataset / "single-step" / run).glob("question_*.json")]
-    by_id = {bare(r["question_id"]): r for r in rescore_results(records)}
+    by_id = {str(r["question_id"]): r for r in rescore_results(records)}
     got = [by_id[q] for q in qids if q in by_id]
     if not got:
         return None
@@ -120,7 +117,7 @@ def figure_labels(dataset: str) -> dict[str, str]:
     if not path.is_file():
         return {}
     with open(path, encoding="utf-8") as handle:
-        return {bare(r["question_id"]): r["label"] for r in csv.DictReader(handle)}
+        return {str(r["question_id"]): r["label"] for r in csv.DictReader(handle)}
 
 
 FIGURE_GROUPS = {
@@ -136,7 +133,11 @@ def evaluate(experiment: str, run: str, judge: str, reference_run: str,
         exp_dirs = question_dirs(ROOT / "results" / "experiments" / experiment / dataset
                                  / "facts-pipeline" / run)
         ref_dirs = question_dirs(ROOT / "results" / dataset / "facts-pipeline" / reference_run)
-        qids = [q for q in difficult(dataset)
+        # The list is the one thing that may spell an id differently from the
+        # stores, so it is matched the way the reference matches it, and
+        # everything downstream uses the stores' own spelling.
+        listed = resolve(difficult(dataset), set(exp_dirs) | set(ref_dirs))
+        qids = [q for q in listed
                 if q in exp_dirs and os.path.isfile(exp_dirs[q] / judge / "result.json")
                 and q in ref_dirs and os.path.isfile(ref_dirs[q] / reference_judge / "result.json")]
         if not qids:

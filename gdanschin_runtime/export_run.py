@@ -38,6 +38,7 @@ from pathlib import Path
 from typing import Any
 
 from gdanschin_runtime import _bootstrap
+from gdanschin_runtime.question_ids import resolve
 
 from results_store import (
     CandidateResults,
@@ -120,12 +121,9 @@ def _on_list(results: list[dict[str, Any]], dataset: str) -> list[dict[str, Any]
               f"exporting every question the run holds")
         return results
 
-    def bare(qid: Any) -> str:
-        text = str(qid)
-        return (text.lstrip("0") or "0") if text.isdigit() else text
-
-    wanted = {bare(q) for q in load_difficult_question_ids(path)}
-    return [q for q in results if bare(q["question_id"]) in wanted]
+    wanted = resolve(load_difficult_question_ids(path),
+                     (q["question_id"] for q in results))
+    return [q for q in results if str(q["question_id"]) in wanted]
 
 
 def _difficult(results: list[dict[str, Any]], dataset: str) -> list[dict[str, Any]]:

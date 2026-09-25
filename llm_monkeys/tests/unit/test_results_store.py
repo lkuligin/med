@@ -391,3 +391,36 @@ def test_a_bare_list_is_still_readable():
     assert stored_results(None) == []
     assert stored_results({"summary": {}}) == []
     assert stored_results([{"question_id": "1"}, "junk"]) == [{"question_id": "1"}]
+
+
+def test_one_shot_records_keep_the_id_the_dataset_spelled(tmp_path):
+    """A padded id survives being read back.
+
+    The key used to be parsed out of the file name with int(), so medbullets
+    question 001 came back as "1" while the record inside, the candidate store,
+    the difficult list and the dataset all said "001". Every join between them
+    then missed, and silently: the questions below 100 simply were not counted.
+    """
+    store = OneShotResults(tmp_path, "run", "medbullets")
+    store.save({
+        "summary": None,
+        "results": [
+            {"question_id": "001", "is_correct": True},
+            {"question_id": "010", "is_correct": False},
+            {"question_id": "100", "is_correct": True},
+        ],
+    })
+
+    assert store.question_path("001").is_file(), "the file is named as the id is"
+    assert sorted(store.read()) == ["001", "010", "100"]
+    assert store.read("001")["is_correct"] is True
+    assert [r["question_id"] for r in store.load()["results"]] == ["001", "010", "100"]
+
+
+def test_one_shot_keeps_medqa_ids_unpadded(tmp_path):
+    """The other spelling is left alone: MedQA says 7, not 007."""
+    store = OneShotResults(tmp_path, "run", "med_qa")
+    store.save({"summary": None,
+                "results": [{"question_id": "7"}, {"question_id": "0"}]})
+
+    assert sorted(store.read()) == ["0", "7"]
