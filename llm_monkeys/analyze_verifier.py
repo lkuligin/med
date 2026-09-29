@@ -21,17 +21,15 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Sequence
 
+# Set headless matplotlib backend before importing pyplot
+import matplotlib
 from one_shot.parser import rescore_results
 from results_store import OneShotResults, VerificationResults, split_run_path
 
-# Set headless matplotlib backend before importing pyplot
-import matplotlib
-
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib.ticker import FuncFormatter, MaxNLocator  # noqa: E402
-
 from analyze_results import get_pricing_for_model  # noqa: E402
+from matplotlib.ticker import FuncFormatter, MaxNLocator  # noqa: E402
 from verifier._schemas import CandidateVerificationResult  # noqa: E402
 from verifier._schemas import QuestionVerificationResult
 
@@ -113,6 +111,13 @@ class Step1ComparisonResult:
     both_correct_question_ids: list[str] = field(default_factory=list)
     both_incorrect_question_ids: list[str] = field(default_factory=list)
     missing_in_step1_ids: list[str] = field(default_factory=list)
+    # Statistical Significance (McNemar's Paired Test)
+    z_score: float = 0.0
+    p_value: float = 1.0
+    z_test_verdict: str = "FAIL TO REJECT NULL HYPOTHESIS"
+    reject_null: bool = False
+    alpha: float = 0.05
+    z_test_type: str = "mcnemar_paired"
 
     def to_dict(self) -> dict[str, Any]:
         """Convert comparison result to a dictionary."""
@@ -147,6 +152,7 @@ def _verification_store(
 def load_verifier_results(
     file_path: str | Path,
     judge_name: str | None = None,
+    difficult_questions_csv: str | Path | None = None,
 ) -> tuple[dict[str, Any] | None, list[QuestionVerificationResult]]:
     """Load verifier output: a stored run directory, or a JSON file.
 
@@ -154,6 +160,8 @@ def load_verifier_results(
     from it; when the run holds exactly one judge, naming it is unnecessary.
 
     Supports both `{ "summary": ..., "results": [ ... ] }` structure and a bare list `[ ... ]`.
+    If `difficult_questions_csv` is provided, filters results to only include
+    questions matching IDs or text in the CSV.
     Returns a tuple of (summary_dict_or_None, list_of_question_verification_results).
     """
     path = Path(file_path)
@@ -245,7 +253,137 @@ def load_verifier_results(
                     )
                 )
 
+    if difficult_questions_csv:
+        results = filter_verifier_results_by_difficult_questions(
+            results, difficult_questions_csv
+        )
+        summary = None
+
     return summary, results
+
+
+def load_difficult_question_ids(csv_path: str | Path) -> set[str]:
+    """Read difficult question IDs from CSV file as a set of strings."""
+    path = Path(csv_path)
+    if not path.is_file():
+        raise FileNotFoundError(f"Difficult questions CSV file not found: {path}")
+
+    ids: set[str] = set()
+    with path.open(mode="r", encoding="utf-8-sig") as f:
+        reader = csv.reader(f)
+        rows = [row for row in reader if any(cell.strip() for cell in row)]
+
+    if not rows:
+        return ids
+
+    def norm_id(val: Any) -> str:
+        s = str(val).strip()
+        stripped = s.lstrip("0")
+        return stripped if stripped else "0"
+
+    first_row = [cell.strip().lower() for cell in rows[0]]
+    has_header = False
+    id_col_idx = 0
+    for idx, col in enumerate(first_row):
+        if col in ("question_id", "id", "qid"):
+            has_header = True
+            id_col_idx = idx
+            break
+
+    data_rows = rows[1:] if has_header else rows
+    for row in data_rows:
+        if id_col_idx < len(row):
+            val = row[id_col_idx].strip()
+            if val:
+                ids.add(val)
+                ids.add(norm_id(val))
+
+    return ids
+
+
+def filter_verifier_results_by_difficult_questions(
+    results: list[QuestionVerificationResult],
+    csv_path: str | Path,
+) -> list[QuestionVerificationResult]:
+    """Filter verifier results to only include questions matching the difficult CSV.
+
+    Matches by question ID (normalized for zero-padding) or question text.
+    """
+    path = Path(csv_path)
+    if not path.is_file():
+        raise FileNotFoundError(f"Difficult questions CSV file not found: {path}")
+
+    ids: set[str] = set()
+    texts: set[str] = set()
+
+    with path.open(mode="r", encoding="utf-8-sig") as f:
+        reader = csv.reader(f)
+        rows = [row for row in reader if any(cell.strip() for cell in row)]
+
+    if not rows:
+        logger.warning("Difficult questions CSV %s is empty; 0 questions kept.", path)
+        return []
+
+    def norm_id(val: Any) -> str:
+        s = str(val).strip()
+        stripped = s.lstrip("0")
+        return stripped if stripped else "0"
+
+    def norm_text(val: Any) -> str:
+        return " ".join(str(val).strip().split()).lower()
+
+    first_row = [cell.strip().lower() for cell in rows[0]]
+    has_header = False
+    id_cols = []
+    text_cols = []
+    for idx, col in enumerate(first_row):
+        if col in ("question_id", "id", "qid"):
+            has_header = True
+            id_cols.append(idx)
+        elif col == "question":
+            has_header = True
+            text_cols.append(idx)
+
+    data_rows = rows[1:] if has_header else rows
+    if not id_cols and not text_cols:
+        id_cols = [0]
+
+    for row in data_rows:
+        for idx in id_cols:
+            if idx < len(row):
+                val = row[idx].strip()
+                if val:
+                    ids.add(val)
+                    ids.add(norm_id(val))
+        for idx in text_cols:
+            if idx < len(row):
+                val = row[idx].strip()
+                if val:
+                    texts.add(norm_text(val))
+        if not text_cols and len(row) == 1:
+            val = row[0].strip()
+            if " " in val or len(val) > 20:
+                texts.add(norm_text(val))
+
+    filtered: list[QuestionVerificationResult] = []
+    for r in results:
+        qid = str(r.question_id).strip()
+        if qid in ids or norm_id(qid) in ids:
+            filtered.append(r)
+            continue
+        if r.question:
+            nt = norm_text(r.question)
+            if nt and (nt in texts or nt in ids):
+                filtered.append(r)
+                continue
+
+    logger.info(
+        "Filtered verifier results by difficult questions CSV (%s): kept %d of %d questions",
+        path,
+        len(filtered),
+        len(results),
+    )
+    return filtered
 
 
 def _get_candidate_attempt_number(
@@ -771,6 +909,10 @@ def format_evaluation_summary(
     ]
     if input_path:
         lines.append(f"Input File                    : {input_path}")
+    if eval_summary.get("difficult_questions_csv"):
+        lines.append(
+            f"Difficult Questions Filter    : {eval_summary['difficult_questions_csv']}"
+        )
     lines.extend(
         [
             f"Total Examples Evaluated      : {eval_summary['total_examples_evaluated']:,}",
@@ -1028,6 +1170,238 @@ def compute_single_shot_accuracy(
     return round(acc, 2), correct, total
 
 
+def compute_mcnemar_test(
+    improved_count: int,
+    degraded_count: int,
+    alpha: float = 0.05,
+    continuity_correction: bool = False,
+    alternative: str = "greater",
+) -> tuple[float, float, bool, str]:
+    """Compute paired-sample McNemar test for matched binary outcomes.
+
+    For matched pairs of questions evaluated by Step 1 Baseline and Step 3 Verifier:
+    b = improved_count (Step 1 Incorrect, Verifier Correct)
+    c = degraded_count (Step 1 Correct, Verifier Incorrect)
+
+    Under H0 (p_verifier <= p_baseline, or b <= c):
+    Z = (b - c) / sqrt(b + c)
+    With continuity correction:
+    Z_cc = ((b - c) - sign(b - c)) / sqrt(b + c) if |b - c| >= 1 else 0.0
+
+    Args:
+        improved_count: Number of questions where Baseline was wrong and Verifier was correct (b).
+        degraded_count: Number of questions where Baseline was correct and Verifier was wrong (c).
+        alpha: Significance level (default: 0.05, must be in (0, 1)).
+        continuity_correction: Whether to apply Edwards' continuity correction.
+        alternative: "greater" for one-sided test (Verifier > Baseline), "two-sided" for difference.
+
+    Returns:
+        tuple of (z_score, p_value, reject_null, verdict)
+    """
+    if alpha <= 0.0 or alpha >= 1.0:
+        raise ValueError(f"alpha must be in (0, 1), got {alpha}")
+
+    b = int(improved_count)
+    c = int(degraded_count)
+    if b < 0 or c < 0:
+        raise ValueError(
+            f"Discordant counts must be non-negative, got improved={b}, degraded={c}"
+        )
+
+    n_discordant = b + c
+    if n_discordant == 0:
+        return 0.0, 1.0, False, "FAIL TO REJECT NULL HYPOTHESIS"
+
+    diff = b - c
+    if diff == 0:
+        return 0.0, 1.0, False, "FAIL TO REJECT NULL HYPOTHESIS"
+
+    if continuity_correction:
+        sign = 1.0 if diff > 0 else (-1.0 if diff < 0 else 0.0)
+        numerator = diff - sign if abs(diff) >= 1.0 else 0.0
+        z_score = numerator / math.sqrt(n_discordant)
+    else:
+        z_score = diff / math.sqrt(n_discordant)
+
+    if alternative == "greater":
+        # One-sided upper-tail p-value: P(Z >= z) = 0.5 * erfc(z / sqrt(2))
+        p_value = 0.5 * float(math.erfc(z_score / math.sqrt(2.0)))
+        reject_null = bool(p_value < alpha and z_score > 0)
+    elif alternative == "two-sided":
+        # Two-sided p-value: P(|Z| >= |z|) = erfc(|z| / sqrt(2))
+        p_value = float(math.erfc(abs(z_score) / math.sqrt(2.0)))
+        reject_null = bool(p_value < alpha)
+    else:
+        raise ValueError(
+            f"Unsupported alternative: {alternative!r}, expected 'greater' or 'two-sided'"
+        )
+
+    verdict = (
+        "REJECT NULL HYPOTHESIS" if reject_null else "FAIL TO REJECT NULL HYPOTHESIS"
+    )
+    return z_score, p_value, reject_null, verdict
+
+
+def compute_paired_z_test(
+    improved_count: int,
+    degraded_count: int,
+    alpha: float = 0.05,
+    continuity_correction: bool = False,
+    alternative: str = "two-sided",
+) -> tuple[float, float, bool, str]:
+    """Compute paired-sample z-test (McNemar matched-pairs test) for paired binary outcomes."""
+    return compute_mcnemar_test(
+        improved_count=improved_count,
+        degraded_count=degraded_count,
+        alpha=alpha,
+        continuity_correction=continuity_correction,
+        alternative=alternative,
+    )
+
+
+def compute_one_sided_proportion_z_test(
+    count_baseline: int,
+    nobs_baseline: int,
+    count_verifier: int,
+    nobs_verifier: int,
+    alpha: float = 0.05,
+) -> tuple[float, float, bool, str]:
+    """Compute one-sided proportion z-test (H1: p_verifier > p_baseline) for independent samples.
+
+    Under H0: p_verifier <= p_baseline (Verifier accuracy is not greater than Step 1 baseline)
+    Under H1: p_verifier > p_baseline (Verifier accuracy is greater than Step 1 baseline, one-sided)
+
+    Returns:
+        tuple of (z_score, p_value, reject_null, verdict)
+    """
+    if alpha <= 0.0 or alpha >= 1.0:
+        raise ValueError(f"alpha must be in (0, 1), got {alpha}")
+
+    if nobs_baseline <= 0 or nobs_verifier <= 0:
+        return 0.0, 1.0, False, "FAIL TO REJECT NULL HYPOTHESIS"
+
+    if count_baseline < 0 or count_verifier < 0:
+        raise ValueError(
+            f"Counts must be non-negative, got baseline={count_baseline}, verifier={count_verifier}"
+        )
+    if count_baseline > nobs_baseline or count_verifier > nobs_verifier:
+        raise ValueError("Counts cannot exceed number of observations")
+
+    p1 = count_baseline / nobs_baseline
+    p2 = count_verifier / nobs_verifier
+
+    if p1 == p2:
+        return 0.0, 0.5, False, "FAIL TO REJECT NULL HYPOTHESIS"
+
+    p_pool = (count_baseline + count_verifier) / (nobs_baseline + nobs_verifier)
+    if p_pool <= 0.0 or p_pool >= 1.0:
+        return 0.0, 1.0, False, "FAIL TO REJECT NULL HYPOTHESIS"
+
+    se = math.sqrt(
+        p_pool * (1.0 - p_pool) * (1.0 / nobs_baseline + 1.0 / nobs_verifier)
+    )
+    if se == 0.0:
+        return 0.0, 1.0, False, "FAIL TO REJECT NULL HYPOTHESIS"
+
+    z_score = (p2 - p1) / se
+    # One-sided upper-tail p-value: P(Z >= z) = 0.5 * erfc(z / sqrt(2))
+    p_value = 0.5 * float(math.erfc(z_score / math.sqrt(2.0)))
+    reject_null = bool(p_value < alpha and z_score > 0)
+    verdict = (
+        "REJECT NULL HYPOTHESIS" if reject_null else "FAIL TO REJECT NULL HYPOTHESIS"
+    )
+    return z_score, p_value, reject_null, verdict
+
+
+compute_proportion_z_test = compute_one_sided_proportion_z_test
+
+
+def compute_two_sample_z_test(
+    count1: int,
+    nobs1: int,
+    count2: int,
+    nobs2: int,
+    alpha: float = 0.05,
+) -> tuple[float, float, bool, str]:
+    """Compute two-sample pooled proportion z-test (one-sided: count2 > count1)."""
+    return compute_one_sided_proportion_z_test(
+        count_baseline=count1,
+        nobs_baseline=nobs1,
+        count_verifier=count2,
+        nobs_verifier=nobs2,
+        alpha=alpha,
+    )
+
+
+def compute_z_test(
+    improved_count: int = 0,
+    degraded_count: int = 0,
+    step1_correct_count: int = 0,
+    verifier_correct_count: int = 0,
+    total_compared: int = 0,
+    alpha: float = 0.05,
+    continuity_correction: bool = False,
+    count_baseline: int | None = None,
+    nobs_baseline: int | None = None,
+    count_verifier: int | None = None,
+    nobs_verifier: int | None = None,
+    alternative: str = "greater",
+    **kwargs: Any,
+) -> dict[str, Any]:
+    """Run statistical significance test (McNemar's test for paired data or proportion z-test).
+
+    When comparing paired benchmark questions evaluated by both models, McNemar's test is used.
+    If only independent cohort counts are provided (count_baseline/count_verifier without
+    discordant pair counts), the independent proportion z-test is used as a fallback.
+    """
+    has_discordant = improved_count > 0 or degraded_count > 0
+    has_independent = count_baseline is not None and count_verifier is not None
+
+    if has_independent and not has_discordant:
+        c_base = count_baseline
+        n_base = nobs_baseline if nobs_baseline is not None else total_compared
+        c_ver = count_verifier
+        n_ver = nobs_verifier if nobs_verifier is not None else total_compared
+
+        z_score, p_value, reject_null, verdict = compute_one_sided_proportion_z_test(
+            count_baseline=c_base,
+            nobs_baseline=n_base,
+            count_verifier=c_ver,
+            nobs_verifier=n_ver,
+            alpha=alpha,
+        )
+        test_type = "one_sided_proportion"
+        alt_str = "greater (p_verifier > p_baseline)"
+    else:
+        # Paired evaluation: McNemar's test
+        z_score, p_value, reject_null, verdict = compute_mcnemar_test(
+            improved_count=improved_count,
+            degraded_count=degraded_count,
+            alpha=alpha,
+            continuity_correction=continuity_correction,
+            alternative=alternative,
+        )
+        test_type = "mcnemar_paired"
+        alt_str = (
+            "greater (p_verifier > p_baseline)"
+            if alternative == "greater"
+            else alternative
+        )
+
+    return {
+        "z_score": round(z_score, 4),
+        "p_value": round(p_value, 5) if p_value >= 1e-5 else p_value,
+        "reject_null": reject_null,
+        "verdict": verdict,
+        "alpha": alpha,
+        "test_type": test_type,
+        "alternative": alt_str,
+        "continuity_correction": continuity_correction,
+        "improved_count": improved_count,
+        "degraded_count": degraded_count,
+    }
+
+
 SingleShotComparisonResult = Step1ComparisonResult
 
 
@@ -1036,10 +1410,13 @@ def compare_verifier_to_step1(
     step1_path: str | Path,
     curve_data: VerifierCurveData | None = None,
     max_k: int | None = None,
+    alpha: float = 0.05,
+    **kwargs: Any,
 ) -> Step1ComparisonResult:
     """Compare Step 3 verification performance (first valid candidate) with Step 1 single-shot first candidate.
 
-    Determines whether the verification schema yields better, lower, or equal performance on the evaluated questions.
+    Determines whether the verification schema yields better, lower, or equal performance on the evaluated questions,
+    and runs a statistical z-test to check whether the difference is statistically significant.
     """
     step1_map = load_step1_single_shot_results(step1_path)
 
@@ -1113,6 +1490,17 @@ def compare_verifier_to_step1(
         is_better = False
         is_tied = True
 
+    continuity_correction = bool(kwargs.get("continuity_correction", False))
+    z_stats = compute_z_test(
+        improved_count=len(improved),
+        degraded_count=len(degraded),
+        step1_correct_count=s1_correct_count,
+        verifier_correct_count=verifier_correct_count,
+        total_compared=compared_count,
+        alpha=alpha,
+        continuity_correction=continuity_correction,
+    )
+
     return Step1ComparisonResult(
         step1_file=str(Path(step1_path).name),
         total_evaluated_questions=len(verifier_results),
@@ -1130,6 +1518,12 @@ def compare_verifier_to_step1(
         both_correct_question_ids=both_correct,
         both_incorrect_question_ids=both_incorrect,
         missing_in_step1_ids=missing_in_step1,
+        z_score=z_stats["z_score"],
+        p_value=z_stats["p_value"],
+        z_test_verdict=z_stats["verdict"],
+        reject_null=z_stats["reject_null"],
+        alpha=alpha,
+        z_test_type=z_stats.get("test_type", "mcnemar_paired"),
     )
 
 
@@ -1167,6 +1561,53 @@ def format_step1_comparison_summary(comparison: Step1ComparisonResult) -> str:
 
     lines.append(f"Performance Check Verdict    : {verdict_str}")
     lines.append(note)
+    lines.append("")
+
+    is_mcnemar = "mcnemar" in comparison.z_test_type
+    test_title = (
+        "McNemar's Paired Test" if is_mcnemar else "One-Sided Proportion Z-Test"
+    )
+    lines.append(f"Statistical Significance ({test_title}):")
+    lines.append(
+        "  • Null Hypothesis (H0)       : Verifier accuracy <= Step 1 Baseline accuracy (p_verifier <= p_baseline)"
+    )
+    lines.append(
+        "  • Alternative Hypothesis (H1): Verifier accuracy > Step 1 Baseline accuracy (p_verifier > p_baseline, one-sided)"
+    )
+    lines.append(f"  • Significance Level (Alpha) : {comparison.alpha}")
+    if is_mcnemar:
+        b_count = len(comparison.improved_question_ids)
+        c_count = len(comparison.degraded_question_ids)
+        lines.append(
+            f"  • Discordant Pairs           : improved (b) = {b_count}, degraded (c) = {c_count}"
+        )
+
+    p_val = comparison.p_value
+    p_display = f"{p_val:.5f}" if p_val >= 0.00001 else f"{p_val:.2e}"
+    test_name_label = "McNemar Paired Test" if is_mcnemar else "Proportion Z-Test   "
+    lines.append(
+        f"  • {test_name_label}          : z = {comparison.z_score:+.4f}, p-value = {p_display}"
+    )
+
+    if comparison.reject_null:
+        hypo_verdict_str = (
+            f"REJECT NULL HYPOTHESIS (p = {p_display} < {comparison.alpha})"
+        )
+        hypo_note = (
+            f"==> STATISTICAL VERDICT: Null hypothesis CAN be rejected at alpha={comparison.alpha}.\n"
+            f"    Step 3 Verifier is STATISTICALLY SIGNIFICANTLY BETTER than Step 1 Baseline (p = {p_display})."
+        )
+    else:
+        hypo_verdict_str = (
+            f"FAIL TO REJECT NULL HYPOTHESIS (p = {p_display} >= {comparison.alpha})"
+        )
+        hypo_note = (
+            f"==> STATISTICAL VERDICT: Null hypothesis CANNOT be rejected at alpha={comparison.alpha}.\n"
+            f"    The improvement of Step 3 Verifier over Step 1 Baseline IS NOT STATISTICALLY SIGNIFICANT (p = {p_display})."
+        )
+
+    lines.append(f"  • Hypothesis Test Verdict    : {hypo_verdict_str}")
+    lines.append(hypo_note)
     lines.append("")
     lines.append("Question Transitions:")
 
@@ -1259,6 +1700,15 @@ def build_parser() -> argparse.ArgumentParser:
         type=str,
         default="verifier_accuracy_curve.png",
         help="Path to save the output accuracy curve plot image (PNG/PDF/SVG).",
+    )
+    parser.add_argument(
+        "--difficult-questions-csv",
+        "--difficult-csv",
+        "--difficult-questions",
+        dest="difficult_questions_csv",
+        type=str,
+        default=None,
+        help="Optional path to difficult questions CSV file to filter results.",
     )
 
     # Plotting & Analysis Strategy
@@ -1358,6 +1808,18 @@ def build_parser() -> argparse.ArgumentParser:
         default=False,
         help="Disable Step 1 / single-shot comparison check.",
     )
+    parser.add_argument(
+        "--alpha",
+        type=float,
+        default=0.05,
+        help="Significance level (alpha) for McNemar's paired test (default: 0.05).",
+    )
+    parser.add_argument(
+        "--continuity-correction",
+        action="store_true",
+        default=False,
+        help="Enable Edwards' continuity correction for McNemar's paired test.",
+    )
 
     # Pricing & model configuration
     parser.add_argument(
@@ -1382,6 +1844,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
+    if not (0.0 < args.alpha < 1.0):
+        parser.error(f"--alpha must be between 0 and 1, got {args.alpha}")
+
     logging.basicConfig(
         level=getattr(logging, args.log_level.upper(), logging.INFO),
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -1391,9 +1856,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     input_path = args.positional_input or args.input_file
     logger.info("Loading verifier results from %s", input_path)
 
+    diff_csv = getattr(args, "difficult_questions_csv", None)
     try:
         summary_meta, results = load_verifier_results(
-            input_path, getattr(args, "judge_name", None)
+            input_path,
+            getattr(args, "judge_name", None),
+            difficult_questions_csv=diff_csv,
         )
     except Exception as e:
         logger.error("Failed to load %s: %s", input_path, e)
@@ -1401,6 +1869,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     total_q = len(results)
     eval_summary = compute_evaluation_summary(results, summary_meta)
+    if diff_csv:
+        eval_summary["difficult_questions_csv"] = str(diff_csv)
 
     # Prominently print evaluation summary banner
     print()
@@ -1468,6 +1938,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 step1_path=resolved_single_shot,
                 curve_data=curve_data,
                 max_k=args.max_candidates,
+                alpha=getattr(args, "alpha", 0.05),
+                continuity_correction=getattr(args, "continuity_correction", False),
             )
             print("\n" + format_step1_comparison_summary(step1_comparison))
         except Exception as e:
@@ -1518,6 +1990,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 if resolved_single_shot
                 else None,
                 "input_file": str(input_path),
+                "difficult_questions_csv": str(diff_csv) if diff_csv else None,
             },
         )
         print(f"JSON metrics exported to: {Path(args.export_json).resolve()}")
