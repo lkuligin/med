@@ -18,3 +18,13 @@ notebook
 # imports matplotlib at module scope, so the reference's own analysis script
 # cannot run without it, yet requirements.txt does not list it.
 matplotlib
+
+# Significance tests when comparing judges and pipelines (exact McNemar,
+# paired t-test): the box's venv had no statistics library, and hand-rolled
+# p-values are one more thing to get wrong.
+scipy
+
+# Building the findings report as a PDF (reportlab) and checking the result
+# (pypdf); matplotlib, above, draws its figures.
+reportlab
+pypdf
