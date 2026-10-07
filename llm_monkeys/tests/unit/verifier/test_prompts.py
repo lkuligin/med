@@ -93,3 +93,16 @@ def test_question_as_reference_prompt_puts_the_statement_first_without_options()
     )
     assert prompt.index('"Fact X."') < prompt.index("A 9-month-old boy")
     assert "SECRET" not in prompt
+
+
+def test_clear_errors_only_prompt_carries_the_fact_alone_and_asks_for_clear_errors():
+    from verifier._prompts import CLEAR_ERRORS_ONLY_VERIFIER_SYSTEM_INSTRUCTION, JUDGE_PROMPTS
+
+    spec = JUDGE_PROMPTS["clear-errors-only"]
+    prompt = spec.format("SECRET QUESTION", {"A": "SECRET OPTION"}, "Aspirin inhibits COX-1.")
+    assert '"Aspirin inhibits COX-1."' in prompt
+    assert "SECRET" not in prompt
+    assert "take those findings as given" in prompt
+    assert "Mark it 0 only if it contains a clear medical error" in prompt
+    assert "is_correct" in prompt and "rationale" in prompt
+    assert spec.system_instruction == CLEAR_ERRORS_ONLY_VERIFIER_SYSTEM_INSTRUCTION

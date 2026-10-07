@@ -447,6 +447,13 @@ class VerifierConfig(BaseInferenceConfig):
     max_candidates_per_question: int | None = None
     early_stop_facts: bool = False
     early_stop_candidates: bool = True
+    # When the candidate search stops, with early_stop_candidates: once this
+    # many candidates have every fact approved and that many have every fact
+    # they cite approved. The defaults are the authors' rule, stop at the first
+    # valid candidate. More than one leaves verdicts to vote among; a
+    # candidate without citations counts as citing all of its facts.
+    stop_after_all_valid: int = 1
+    stop_after_cited_valid: int = 0
     # Fill the slots a run's last questions leave idle by judging further
     # candidates of them side by side. Off by default, and deliberately not
     # inferred from anything: the extra candidates are extra requests, which
@@ -466,6 +473,11 @@ class VerifierConfig(BaseInferenceConfig):
     # generations is what request_timeout starts cancelling. Four suited a
     # single-replica judge; a faster one tolerates more.
     speculate_width: int = 4
+    # How many more times to ask when a verdict comes back unreadable or cut
+    # off at max_tokens. Under the YES/NO schema GLM-5.3 sometimes fills
+    # '"is_correct":' with whitespace up to the limit (1.1% of checks); storing
+    # that as a 0 rejects a candidate for a failure of decoding, not of fact.
+    malformed_retries: int = 2
     difficult_questions: str | None = None
 
     @property

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
@@ -57,6 +58,72 @@ async def test_workflow_verify_single_fact_success():
     assert "clinically accurate" in fv.rationale
     assert fv.tokens.total_tokens == 155
     assert fv.error is None
+
+
+def scripted_runner(answers: list[tuple[str, int]]) -> tuple[MagicMock, list[str]]:
+    """A runner that gives the answers in turn, each with its output token count."""
+    runner, sessions = MagicMock(), []
+
+    async def mock_run(**kwargs):
+        text, out_tokens = answers[min(len(sessions), len(answers) - 1)]
+        sessions.append(kwargs["session_id"])
+        yield make_mock_event(text, MagicMock(
+            prompt_token_count=100, candidates_token_count=out_tokens,
+            total_token_count=100 + out_tokens, cached_content_token_count=0,
+            thoughts_token_count=0))
+
+    runner.run_async = mock_run
+    return runner, sessions
+
+
+async def verify_with(runner: MagicMock, **config) -> Any:
+    workflow = VerifierWorkflow(config=VerifierConfig(**config), verifier_runner=runner)
+    return await workflow.verify_single_fact(
+        question_text="Q", options={"A": "A"}, fact="A fact.",
+        session_id="s", user_id="u", semaphore=asyncio.Semaphore(1))
+
+
+WHITESPACE_LOOP = '{\n  "is_correct":  ' + "\t\t\t  " * 50
+
+
+@pytest.mark.asyncio
+async def test_a_verdict_lost_to_a_whitespace_loop_is_asked_again():
+    runner, sessions = scripted_runner([
+        (WHITESPACE_LOOP, 1024),
+        ('{"is_correct": "YES", "rationale": "Right."}', 40),
+    ])
+    fv = await verify_with(runner)
+    assert fv.verdict == 1
+    assert len(sessions) == 2
+    assert len(set(sessions)) == 2  # the retry does not see the loop as history
+
+
+@pytest.mark.asyncio
+async def test_an_answer_cut_off_at_max_tokens_is_asked_again():
+    # Leaked reasoning still yields a "verdict" from the loose parsers.
+    runner, sessions = scripted_runner([
+        ("The scenario: 32-year-old woman, 4 months of amenorrhea", 1024),
+        ('{"is_correct": "NO", "rationale": "Wrong."}', 40),
+    ])
+    fv = await verify_with(runner, max_tokens=1024)
+    assert fv.verdict == 0
+    assert fv.rationale == "Wrong."
+    assert len(sessions) == 2
+
+
+@pytest.mark.asyncio
+async def test_malformed_verdicts_are_asked_again_only_so_many_times():
+    runner, sessions = scripted_runner([(WHITESPACE_LOOP, 1024)])
+    fv = await verify_with(runner, malformed_retries=2)
+    assert fv.verdict == 0
+    assert len(sessions) == 3
+
+
+@pytest.mark.asyncio
+async def test_a_readable_verdict_is_asked_once():
+    runner, sessions = scripted_runner([('{"is_correct": "NO", "rationale": "x"}', 40)])
+    await verify_with(runner)
+    assert len(sessions) == 1
 
 
 @pytest.mark.asyncio
@@ -680,3 +747,73 @@ async def test_the_tail_is_not_speculated_on_unless_asked(tmp_path: Path):
     await VerifierWorkflow(config=config, verifier_runner=runner).run(
         questions=[question])
     assert peak == 8, "asked for, so the idle slots are filled"
+
+
+def _verdicts_by_fact(verdicts: dict[str, int]):
+    """A runner answering each fact with the verdict listed for it."""
+    runner, calls = MagicMock(), []
+
+    async def mock_run(**kwargs):
+        text = kwargs["new_message"].parts[0].text
+        fact = re.search(r'"((?:good|bad)[^"]*)"', text).group(1)
+        calls.append(fact)
+        verdict = next(v for k, v in verdicts.items() if fact.startswith(k))
+        yield make_mock_event(f'{{"is_correct": {verdict}, "rationale": "r"}}')
+
+    runner.run_async = mock_run
+    return runner, calls
+
+
+def _question(candidates):
+    return Step2QuestionData(question_id="Q1", question="Q", options={"A": "A"},
+                             ground_truth="A", candidates=candidates)
+
+
+@pytest.mark.asyncio
+async def test_the_search_goes_on_until_enough_candidates_pass_on_cited_facts(tmp_path):
+    # Candidate 0 passes on every fact; 1 and 2 fail a fact they do not cite;
+    # 3 fails a fact it cites; 4 passes on every fact.
+    runner, calls = _verdicts_by_fact({"good": 1, "bad": 0})
+    cands = [Step2CandidateData(0, ["good a", "good b"], "A", True, cited_facts=[0, 1]),
+             Step2CandidateData(1, ["good c", "bad d"], "A", True, cited_facts=[0]),
+             Step2CandidateData(2, ["good e", "bad f"], "A", True, cited_facts=[0]),
+             Step2CandidateData(3, ["bad g", "good h"], "A", True, cited_facts=[0]),
+             Step2CandidateData(4, ["good i", "good j"], "A", True, cited_facts=None),
+             Step2CandidateData(5, ["good k", "good l"], "A", True, cited_facts=None)]
+    config = VerifierConfig(results_dir=str(tmp_path), run_name="r", judge_name="j",
+                            stop_after_all_valid=1, stop_after_cited_valid=4)
+    _, results = await VerifierWorkflow(config=config, verifier_runner=runner).run(
+        questions=[_question(cands)])
+    # 0, 1, 2 and 4 pass on cited facts; the search stops after 4.
+    assert [cv.candidate_index for cv in results[0].candidate_verifications] == [0, 1, 2, 3, 4]
+    assert results[0].selected_candidate_index == 0
+
+
+@pytest.mark.asyncio
+async def test_a_stricter_rule_resumes_after_the_verdicts_already_stored(tmp_path):
+    runner, calls = _verdicts_by_fact({"good": 1, "bad": 0})
+    cands = [Step2CandidateData(i, [f"good {i}"], "A", True, cited_facts=[0]) for i in range(4)]
+    base = dict(results_dir=str(tmp_path), run_name="r", judge_name="j")
+    await VerifierWorkflow(config=VerifierConfig(**base), verifier_runner=runner).run(
+        questions=[_question(cands)])
+    assert calls == ["good 0"]
+    _, results = await VerifierWorkflow(
+        config=VerifierConfig(**base, stop_after_cited_valid=3), verifier_runner=runner
+    ).run(questions=[_question(cands)])
+    # Candidate 0 is not judged again; 1 and 2 are added and the search stops.
+    assert calls == ["good 0", "good 1", "good 2"]
+    assert [cv.candidate_index for cv in results[0].candidate_verifications] == [0, 1, 2]
+
+
+def test_a_candidate_without_citations_is_read_as_citing_every_fact():
+    from verifier.workflow import cited_valid
+    from verifier._schemas import CandidateVerificationResult, FactVerificationResult
+    def v(verdicts):
+        return CandidateVerificationResult(
+            candidate_index=0, attempt_number=1, facts=[], ground_truth="A", is_correct=True,
+            predicted_option="A", all_facts_correct=all(verdicts), total_latency_seconds=0,
+            total_tokens=0, total_prompt_tokens=0, total_candidate_tokens=0,
+            fact_verifications=[FactVerificationResult(fact="f", verdict=x, is_correct=bool(x)) for x in verdicts])
+    assert cited_valid(v([1, 0]), [0]) is True
+    assert cited_valid(v([1, 0]), None) is False
+    assert cited_valid(v([]), None) is False

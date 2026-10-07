@@ -275,7 +275,11 @@ def _write_json(path: Path, payload: Any) -> Path:
     # Written to a neighbour and renamed, so a reader that arrives mid-write
     # sees either the old file or the new one, never half of either.
     temp_path = path.with_suffix(".json.tmp")
-    temp_path.write_text(json.dumps(payload, indent=1, ensure_ascii=False), encoding="utf-8")
+    # A model now and then emits half of a surrogate pair, which UTF-8 cannot
+    # hold; it is stored as U+FFFD rather than ending the run (gpt-oss-120b
+    # stopped a judge at question 293 of 483 that way).
+    text = re.sub("[\ud800-\udfff]", "\ufffd", json.dumps(payload, indent=1, ensure_ascii=False))
+    temp_path.write_text(text, encoding="utf-8")
     temp_path.replace(path)
     return path
 

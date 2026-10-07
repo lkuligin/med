@@ -101,6 +101,19 @@ def create_parser() -> argparse.ArgumentParser:
         help="Stop evaluating candidates immediately once a candidate has all facts correct (default: True)",
     )
     parser.add_argument(
+        "--stop-after-all-valid",
+        type=int,
+        default=None,
+        help="With early stopping, judge until this many candidates have every "
+        "fact approved (default: 1, the authors' rule)",
+    )
+    parser.add_argument(
+        "--stop-after-cited-valid",
+        type=int,
+        default=None,
+        help="...and until this many have every cited fact approved (default: 0)",
+    )
+    parser.add_argument(
         "--difficult-questions",
         default=None,
         help="CSV of question ids to judge; the rest of the run's questions are "

@@ -259,10 +259,12 @@ BASE_MODELS: dict[str, BaseModel] = {
         extra_body={"chat_template_kwargs": {"enable_thinking": False}},
     ),
     "gpt-oss-20b-local": served_locally(
-        "gpt-oss-20b-local", "openai/gpt-oss-20b", max_tokens=4096,
+        "gpt-oss-20b-local", "openai/gpt-oss-20b", max_tokens=16384,
         note="the smaller GPT-OSS; there is no third size. No gateway "
              "counterpart, so it is compared against the other local models "
-             "and gemini. Same reasoning parser as the 120B.",
+             "and gemini. Same reasoning parser as the 120B. 4096 was not "
+             "enough: it reasons for up to ~3800 tokens before writing facts, "
+             "and 2.5% of its fact lists were cut off.",
     ),
     "gemma-4-e2b-local": served_locally(
         "gemma-4-e2b-local", "google/gemma-4-E2B-it", max_tokens=4096,

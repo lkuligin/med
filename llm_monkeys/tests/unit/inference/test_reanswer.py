@@ -59,3 +59,20 @@ def test_reanswer_keeps_facts_replaces_answer_and_resumes(tmp_path):
     assert src["results"][0]["candidates"][0]["predicted_option"] == "A"
     # A second run finds everything done.
     assert asyncio.run(ReanswerWorkflow(config).reanswer(str(tmp_path / "src"))) == 0
+
+
+def test_reanswer_answers_only_the_first_candidates_when_asked(tmp_path):
+    _store_source(tmp_path / "src")
+    config = CandidateInferenceConfig(
+        results_dir=str(tmp_path / "dst"), run_name="run", answer_prompt="cited-facts",
+        dataset_name="bigbio/med_qa",
+    )
+    workflow = ReanswerWorkflow(config)
+
+    async def fake_step(runner, prompt, session_id, user_id):
+        return "FACTS USED: 1\nFINAL ANSWER: B", StepTokenUsage(prompt_tokens=1, candidate_tokens=1, total_tokens=2), 0.1, None
+
+    workflow._invoke_step = fake_step
+    assert asyncio.run(workflow.reanswer(str(tmp_path / "src"), max_candidates=1)) == 1
+    out = CandidateResults(str(tmp_path / "dst"), "run", "med_qa").load()
+    assert [c["candidate_index"] for c in out["results"][0]["candidates"]] == [0]
