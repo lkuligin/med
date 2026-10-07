@@ -31,7 +31,7 @@ from verifier._schemas import (
     VerifierWorkflowSummary,
 )
 from verifier.agent import create_fact_verifier_agent, create_runner
-from verifier.parser import parse_fact_verification
+from verifier.parser import extract_fact_verification, parse_fact_verification
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +52,40 @@ def keep_listed(
     logger.info("Kept %d of %d questions on the list", len(kept), len(questions))
     return kept
 
+
+def cited_valid(verdict: CandidateVerificationResult, cited: list[int] | None) -> bool:
+    """Whether every fact the candidate cites was approved.
+
+    A candidate that names no facts is read as citing all of them, as the
+    reports read it; one with no verdicts at all is never valid.
+    """
+    if not verdict.fact_verifications:
+        return False
+    if cited is None:
+        return verdict.all_facts_correct
+    facts = verdict.fact_verifications
+    return all(facts[i].verdict == 1 for i in cited if 0 <= i < len(facts))
+
+
+def stop_reached(verdicts: list[CandidateVerificationResult],
+                 cited_by_index: dict[int, list[int] | None],
+                 all_valid: int, cited_valid_needed: int) -> bool:
+    """Whether the candidate search has what it needs to stop."""
+    n_all = sum(1 for v in verdicts if v.all_facts_correct)
+    n_cited = sum(1 for v in verdicts if cited_valid(v, cited_by_index.get(v.candidate_index)))
+    return n_all >= all_valid and n_cited >= cited_valid_needed
+
+
+def _malformed(raw_text: str, usage_meta: Any, max_tokens: int) -> bool:
+    """Whether a judge answer carries no verdict or was cut off at max_tokens.
+
+    A cut-off answer can still yield a verdict: the loose parsers pick the
+    first 0/1/yes/no out of reasoning that leaked into the answer. Neither is
+    a judgement of the fact, so both are asked again.
+    """
+    if extract_fact_verification(raw_text) is None:
+        return True
+    return StepTokenUsage.from_usage_metadata(usage_meta).candidate_tokens >= max_tokens
 
 class _Spread:
     """How many candidates one question may judge at once.
@@ -215,17 +249,26 @@ class VerifierWorkflow:
         usage_meta = None
         error = None
 
-        async with semaphore:
-            try:
-                raw_text, usage_meta = await self._run_agent_with_retry(
-                    runner=self.verifier_runner,
-                    prompt_text=prompt,
-                    session_id=session_id,
-                    user_id=user_id,
-                )
-            except Exception as exc:
-                error = str(exc)
-                logger.error("Error verifying fact: %s - %s", fact[:60], exc)
+        for attempt in range(self.config.malformed_retries + 1):
+            async with semaphore:
+                try:
+                    raw_text, usage_meta = await self._run_agent_with_retry(
+                        runner=self.verifier_runner,
+                        prompt_text=prompt,
+                        # A fresh session, so a retry does not see the
+                        # malformed answer as history.
+                        session_id=session_id if attempt == 0 else f"{session_id}_r{attempt}",
+                        user_id=user_id,
+                    )
+                except Exception as exc:
+                    error = str(exc)
+                    logger.error("Error verifying fact: %s - %s", fact[:60], exc)
+            if error or not _malformed(raw_text, usage_meta, self.config.max_tokens):
+                break
+            logger.warning(
+                "Malformed verdict for fact %r (attempt %d of %d), asking again.",
+                fact[:60], attempt + 1, self.config.malformed_retries + 1,
+            )
 
         latency = round(time.perf_counter() - t0, 4)
         tokens = StepTokenUsage.from_usage_metadata(usage_meta)
@@ -453,10 +496,17 @@ class VerifierWorkflow:
             return cand_res
 
         candidate_verifications: list[CandidateVerificationResult] = list(prior)
+        cited_by_index = {c.candidate_index: c.cited_facts for c in (question.candidates or [])}
         if getattr(self.config, "early_stop_candidates", True):
             position = 0
-            found = False
-            while position < len(candidates) and not found:
+            found = any(cv.all_facts_correct for cv in prior)
+
+            def enough() -> bool:
+                return stop_reached(candidate_verifications, cited_by_index,
+                                    self.config.stop_after_all_valid,
+                                    self.config.stop_after_cited_valid)
+
+            while position < len(candidates) and not enough():
                 # One candidate at a time while questions still fill the
                 # slots; several once they do not, so the tail of a run does
                 # not leave most of the concurrency idle. See _Spread.
@@ -721,9 +771,17 @@ class VerifierWorkflow:
                     c for c in (question.candidates or [])
                     if c.candidate_index not in judged
                 ]
-                # Nothing to add when a valid candidate was already found: the
-                # run stops at it, so later candidates would never be reached.
-                if previous.found_valid_candidate or not unjudged:
+                # Nothing to add once the stopping rule is met: the run stops
+                # there, so later candidates would never be reached. Under the
+                # default rule that is the first valid candidate.
+                cited_by_index = {c.candidate_index: c.cited_facts
+                                  for c in (question.candidates or [])}
+                default_rule = (self.config.stop_after_all_valid <= 1
+                                and self.config.stop_after_cited_valid <= 0)
+                if not unjudged or (default_rule and previous.found_valid_candidate) or stop_reached(
+                        previous.candidate_verifications, cited_by_index,
+                        self.config.stop_after_all_valid,
+                        self.config.stop_after_cited_valid):
                     logger.info(
                         "Question %s already verified in previous run, skipping.",
                         question.question_id,

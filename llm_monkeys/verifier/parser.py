@@ -102,6 +102,21 @@ def _extract_standalone(text: str) -> tuple[int, str] | None:
     return None
 
 
+def extract_fact_verification(raw_response: str) -> tuple[int, str] | None:
+    """Verdict and rationale from a judge response, or None if it has none."""
+    if not raw_response or not raw_response.strip():
+        return None
+    cleaned = raw_response.strip()
+    search_text = (
+        re.sub(r"<think>.*?</think>", "", cleaned, flags=re.DOTALL).strip() or cleaned
+    )
+    return (
+        _extract_json(search_text)
+        or _extract_key_value(search_text)
+        or _extract_standalone(search_text)
+    )
+
+
 def parse_fact_verification(raw_response: str) -> tuple[int, str]:
     """Parse raw LLM-as-a-judge response into binary verdict (0 or 1) and rationale.
 
@@ -115,19 +130,11 @@ def parse_fact_verification(raw_response: str) -> tuple[int, str]:
         logger.warning("Empty response received for fact verification.")
         return 0, "Empty response from verifier."
 
-    cleaned = raw_response.strip()
-    search_text = (
-        re.sub(r"<think>.*?</think>", "", cleaned, flags=re.DOTALL).strip() or cleaned
-    )
-
-    result = (
-        _extract_json(search_text)
-        or _extract_key_value(search_text)
-        or _extract_standalone(search_text)
-    )
+    result = extract_fact_verification(raw_response)
     if result is not None:
         return result
 
+    cleaned = raw_response.strip()
     logger.warning(
         "Could not extract binary verdict from verifier response: %r. Defaulting to 0.",
         cleaned[:100],
@@ -136,5 +143,6 @@ def parse_fact_verification(raw_response: str) -> tuple[int, str]:
 
 
 __all__ = [
+    "extract_fact_verification",
     "parse_fact_verification",
 ]

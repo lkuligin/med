@@ -42,6 +42,8 @@ def test_fact_verification_pydantic_schema():
     # JSON Schema enforcement
     schema = FactVerification.model_json_schema()
     assert schema["$defs"]["FactTruthfulness"]["enum"] == ["YES", "NO"]
+    # 1/0 is admitted too, so a grammar never forbids what the prompt asks for.
+    assert {"enum": [0, 1], "type": "integer"} in schema["properties"]["is_correct"]["anyOf"]
 
     # Rejection of invalid values
     with pytest.raises(Exception):

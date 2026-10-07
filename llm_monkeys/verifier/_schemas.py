@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import StrEnum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -22,7 +22,11 @@ class FactTruthfulness(StrEnum):
 class FactVerification(BaseModel):
     """Structured output for binary fact verification by LLM-as-a-judge."""
 
-    is_correct: FactTruthfulness = Field(
+    # The schema admits 1/0 beside YES/NO: the prompts ask for either, and a
+    # model that means to write 1 where the grammar allows only a string fills
+    # the field with whitespace up to max_tokens (1.1% of GLM-5.3 checks under
+    # the reference prompt). The validator turns 1/0 into YES/NO.
+    is_correct: FactTruthfulness | Literal[0, 1] = Field(
         description="Binary classification: YES if the medical fact is clinically correct, NO if incorrect.",
     )
     rationale: str = Field(

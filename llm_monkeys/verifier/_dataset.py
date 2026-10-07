@@ -32,6 +32,8 @@ class Step2CandidateData(_DictSerializable):
     total_latency_seconds: float = 0.0
     total_tokens: int = 0
     error: str | None = None
+    # 0-based indices of the facts the answer says it used; None if it named none.
+    cited_facts: list[int] | None = None
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Step2CandidateData:
@@ -46,6 +48,8 @@ class Step2CandidateData(_DictSerializable):
             total_latency_seconds=float(data.get("total_latency_seconds", 0.0)),
             total_tokens=int(data.get("total_tokens", 0)),
             error=data.get("error"),
+            cited_facts=(None if data.get("cited_facts") is None
+                         else [int(i) for i in data["cited_facts"]]),
         )
 
 
