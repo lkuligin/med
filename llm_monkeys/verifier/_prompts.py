@@ -161,6 +161,48 @@ def format_question_as_reference_verification_prompt(
     )
 
 
+# Experiment clear-errors-only: fact-only, but the judge rejects only a clear
+# medical error that could lead reasoning to a wrong answer. The fact-only
+# judge rejected a statement for any imprecision and for citing a patient it
+# was not shown; those rejections barely tracked whether the candidate's
+# answer was right, and they sent the search deep into the candidates.
+CLEAR_ERRORS_ONLY_VERIFIER_SYSTEM_INSTRUCTION = (
+    "You are an expert physician and medical fact checker. "
+    "You are given a single medical statement and nothing else. "
+    "Your task is to judge whether it is clearly wrong in a way that could lead clinical "
+    "reasoning to a wrong answer. "
+    "Provide a binary classification: 1 if the statement is medically sound, or 0 if it is "
+    "clearly wrong."
+)
+
+
+def format_clear_errors_only_verification_prompt(
+    question: str,
+    options: dict[str, str],
+    fact: str,
+) -> str:
+    """Format a verification prompt that carries the fact alone and asks only
+    for clear errors.
+
+    Takes the question and options only to share a signature with the
+    reference prompt; neither reaches the judge.
+    """
+    return (
+        f"Medical Statement to Verify:\n"
+        f'"{fact}"\n\n'
+        f"Task:\n"
+        f"Determine whether the statement above is medically sound (1) or clearly wrong (0).\n"
+        f"If the statement reports clinical findings about a patient (ages, symptoms, lab "
+        f"values, test results), take those findings as given and judge only the medical "
+        f"claims made about them.\n"
+        f"Mark it 0 only if it contains a clear medical error that could lead someone "
+        f"reasoning from it to a wrong diagnosis, mechanism, treatment or answer.\n\n"
+        f"Respond with:\n"
+        f"- is_correct: 1 if the statement is medically sound, 0 if it is clearly wrong\n"
+        f"- rationale: A brief 1-2 sentence medical explanation for your judgment\n"
+    )
+
+
 @dataclass(frozen=True)
 class JudgePrompt:
     """How the judge is asked: its system instruction and its user message."""
@@ -179,6 +221,8 @@ JUDGE_PROMPTS: dict[str, JudgePrompt] = {
                                        format_question_aware_verification_prompt),
     "question-as-reference": JudgePrompt(QUESTION_AS_REFERENCE_VERIFIER_SYSTEM_INSTRUCTION,
                                          format_question_as_reference_verification_prompt),
+    "clear-errors-only": JudgePrompt(CLEAR_ERRORS_ONLY_VERIFIER_SYSTEM_INSTRUCTION,
+                                     format_clear_errors_only_verification_prompt),
 }
 DEFAULT_JUDGE_PROMPT = "reference"
 
@@ -192,6 +236,8 @@ __all__ = [
     "format_question_aware_verification_prompt",
     "QUESTION_AS_REFERENCE_VERIFIER_SYSTEM_INSTRUCTION",
     "format_question_as_reference_verification_prompt",
+    "CLEAR_ERRORS_ONLY_VERIFIER_SYSTEM_INSTRUCTION",
+    "format_clear_errors_only_verification_prompt",
     "JudgePrompt",
     "JUDGE_PROMPTS",
     "DEFAULT_JUDGE_PROMPT",
