@@ -78,3 +78,29 @@ def test_fact_string_that_is_itself_json_is_unwrapped():
 def test_a_sentence_that_merely_starts_with_a_brace_survives():
     text = '{"facts": ["{not json} is how the note was written."]}'
     assert parse_medical_facts(text) == ["{not json} is how the note was written."]
+
+
+def test_facts_survive_a_list_left_without_its_closing_bracket():
+    # gpt-oss-20b, free-form: '..."}' where '..."]}' belongs.
+    text = '{"facts":["Migraine is often unilateral.", "SAH presents with a thunderclap headache."}'
+    assert parse_medical_facts(text) == ["Migraine is often unilateral.",
+                                         "SAH presents with a thunderclap headache."]
+
+
+def test_facts_survive_a_last_fact_closed_with_a_typographic_quote():
+    text = '{"facts":["Migraine is often unilateral.","Papilledema signals raised pressure.\u201d}'
+    assert parse_medical_facts(text) == ["Migraine is often unilateral.",
+                                         "Papilledema signals raised pressure."]
+
+
+def test_a_list_cut_off_mid_fact_keeps_the_facts_before_the_cut():
+    assert parse_medical_facts('{"facts":["SAH is sudden.","Migraine is often unilat') == [
+        "SAH is sudden."]
+    assert parse_medical_facts('{"facts":["Migraine is often unilat') == []
+
+
+def test_facts_survive_a_stray_escape_before_the_separator():
+    # gpt-oss-20b: 'life.\\",' - the quote that should close the fact is escaped.
+    text = '{"facts":["SAH is the \\"worst headache of life.\\","Migraine is unilateral."]}'
+    assert parse_medical_facts(text) == ['SAH is the "worst headache of life."',
+                                         "Migraine is unilateral."]

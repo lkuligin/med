@@ -112,7 +112,41 @@ def _extract_json_facts(text: str) -> list[str]:
             except Exception:
                 continue
 
-    return []
+    return _repair_facts_list(text)
+
+
+def _repair_facts_list(text: str) -> list[str]:
+    """Facts from a '"facts": [' list whose closing bracket went missing.
+
+    gpt-oss-20b, writing JSON without a grammar, ends 8% of its lists with
+    '..."}' instead of '..."]}'. The facts are all there; only the bracket is
+    not, and without it every one of them was lost.
+    """
+    match = re.search(r'"facts"\s*:\s*\[', text)
+    if not match:
+        return []
+    body = text[match.end():].rstrip().removesuffix("```").rstrip()
+    body = body.removesuffix("}").rstrip().removesuffix("]").rstrip()
+    # It also closes the last fact with a typographic quote now and then.
+    if body.endswith(("”", "“")):
+        body = body[:-1] + '"'
+    try:
+        return _extract_facts_from_obj(json.loads(f"[{body}]"))
+    except Exception:
+        pass
+    # Past repair as JSON: a stray escape ('life.\\",') or a list cut off at
+    # max_tokens. Split on the '","' between facts and keep every one that was
+    # closed; a fact cut off mid-sentence is dropped, not guessed at.
+    closed = body.endswith('"')
+    pieces = re.split(r'"\s*,\s*"', body.strip().removeprefix('"'))
+    if closed:
+        pieces[-1] = pieces[-1].removesuffix('"')
+    else:
+        pieces = pieces[:-1]
+    # A piece left ending in '\' lost the quote it escaped to the split: that
+    # quote closed a quotation inside the fact, and the fact's own was missing.
+    pieces = [p + '"' if p.endswith("\\") else p for p in pieces]
+    return [f for f in (_fact_text(p.replace('\\"', '"')) for p in pieces) if f]
 
 
 def _extract_bullet_facts(text: str) -> list[str]:
