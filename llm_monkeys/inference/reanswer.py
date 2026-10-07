@@ -75,8 +75,9 @@ class ReanswerWorkflow(CandidateInferenceWorkflow):
             error=f"Answer generation error: {error}" if error else source.error,
         )
 
-    async def reanswer(self, source_results_dir: str) -> int:
-        """Re-answer every stored candidate of the run; returns how many were done."""
+    async def reanswer(self, source_results_dir: str, max_candidates: int | None = None) -> int:
+        """Re-answer the run's stored candidates, the first max_candidates of each
+        question if given; returns how many were done."""
         dataset = dataset_dir_for(self.config.dataset_name)
         source = CandidateResults(source_results_dir, self.config.run_name, dataset)
         stored = source.load()
@@ -97,6 +98,7 @@ class ReanswerWorkflow(CandidateInferenceWorkflow):
             )
             todo = [c for c in qres.candidates
                     if not c.error
+                    and (max_candidates is None or c.candidate_index < max_candidates)
                     and not destination.candidate_path(qres.question_id, c.candidate_index).exists()]
 
             async def guarded(c: CandidateResult) -> CandidateResult:
@@ -141,6 +143,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-tokens", type=int, default=4096)
     parser.add_argument("--temperature", type=float, default=0.8)
     parser.add_argument("--concurrency", type=int, default=128)
+    parser.add_argument("--max-candidates", type=int, default=None,
+                        help="Answer only the first N candidates of each question "
+                        "(a run of 100 answered as one of 50)")
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
@@ -151,7 +156,7 @@ def main(argv: list[str] | None = None) -> int:
         temperature=args.temperature, concurrency=args.concurrency,
     )
     config.validate()
-    done = asyncio.run(ReanswerWorkflow(config).reanswer(args.source_results_dir))
+    done = asyncio.run(ReanswerWorkflow(config).reanswer(args.source_results_dir, args.max_candidates))
     logger.info("re-answered %d candidates into %s", done, args.results_dir)
     return 0
 
