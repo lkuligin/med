@@ -194,6 +194,10 @@ llm_monkeys/results_*.json
 # Runs assembled back into the single-file layout, for reading elsewhere.
 exports/
 
+# Write-ups and figures made for the paper; the code that recomputes their
+# numbers is llm_monkeys/paper.
+llm_monkeys/reports/
+
 # gpu_serving machine-local settings (cards, paths, venv)
 gpu_serving/configs/serving.conf
 gpu_serving/run/
