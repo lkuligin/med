@@ -83,6 +83,13 @@ def build(config: Any):
     run = (getattr(config, "judge_name", None) if judging
            else getattr(config, "run_name", None))
     local = (BASE_MODELS.get(run) if run else None)
+    if local is None and run and judging:
+        # A judge named for its prompt as well ("qwen3.6-35b-a3b-local-fact-only")
+        # is still that model's entry: the longest entry the name extends.
+        # Falling through to the served name would pick thinking on or off at
+        # random for a model that has both.
+        owners = [k for k in BASE_MODELS if run.startswith(k + "-")]
+        local = BASE_MODELS[max(owners, key=len)] if owners else None
     if local is not None and not local.base_url:
         local = None
     if local is None:
