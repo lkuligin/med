@@ -1,9 +1,11 @@
 """The rules behind the paper's numbers, on cases whose answers are known."""
 
+import json
+
 import pytest
 
-from paper.tables import (first_valid_position, mcnemar, paired_fact_verdicts, pass_at_k,
-                          resolve, vote)
+from paper.tables import (coverage, first_valid_position, markdown, mcnemar, paired_fact_verdicts,
+                          pass_at_k, resolve, vote)
 
 
 def test_a_tied_vote_goes_to_the_option_sampled_first():
@@ -68,3 +70,46 @@ def test_ids_resolve_as_the_reference_does():
     assert resolve(["1", "2"], {"001", "002"}) == ["001", "002"]
     assert resolve(["0"], {"0"}) == ["0"]
     assert resolve(["999"], {"1"}) == []
+
+
+def test_leos_picks_are_read_in_our_spelling_of_the_ids(tmp_path):
+    from paper.tables import leo_picks
+    records = [{"question_id": "7", "is_correct": True}, {"question_id": "12", "is_correct": None}]
+    (tmp_path / "run_mb.json").write_text(json.dumps({"summary": {}, "results": records}))
+    assert leo_picks("run", "medbullets", ["007", "012"], leo=tmp_path) == {"007": 1, "012": 0}
+
+
+def test_a_question_missing_from_leos_run_is_an_error(tmp_path):
+    from paper.tables import leo_picks
+    (tmp_path / "run.json").write_text(json.dumps({"results": [{"question_id": "1", "is_correct": True}]}))
+    with pytest.raises(ValueError):
+        leo_picks("run", "med_qa", ["1", "2"], leo=tmp_path)
+
+
+def test_table_1_prints_p_beside_each_result_and_bolds_it_below_005():
+    result = {"accuracy": 0.6, "p": 0.01, "direction": "better"}
+    report = {"questions": {"med_qa": 459}, "reference": {"med_qa": 0.874},
+              "table1": {"med_qa": {"Gemma 4 26B": {"k": 50, "one_shot": 0.5,
+                                                    "v1": {**result, "p": 0.2, "none_accepted": 8},
+                                                    "v2": {**result, "none_accepted": 5}}}},
+              "table2": {"med_qa": {}}, "table3": {"med_qa": {}}}
+    text = markdown(report)
+    assert "| ***MedQA dataset (459)*** |" in text
+    assert "| Gemma 4 26B | 50 | 50.0% | 60.0% (0.200) | 8 | 60.0% (**0.010**) | 5 |" in text
+    assert "MedQA 87.4%" in text
+
+
+def test_coverage_pools_whatever_each_question_drew():
+    # one question right on 1 of 2 candidates, the other on both: pass@1 is
+    # the mean of 1/2 and 1, pass@2 is 1 for both
+    assert coverage([[True, False], [True, True]]) == [pytest.approx(0.75), 1.0]
+    # k stops at the fewest candidates any question has
+    assert len(coverage([[True] * 3, [False] * 5])) == 3
+
+
+def test_leos_outcomes_say_whether_any_candidate_passed(tmp_path):
+    from paper.tables import leo_outcomes
+    records = [{"question_id": "1", "found_valid_candidate": True, "is_correct": False},
+               {"question_id": "2", "found_valid_candidate": False, "is_correct": None}]
+    (tmp_path / "run.json").write_text(json.dumps({"results": records}))
+    assert leo_outcomes("run", "med_qa", ["1", "2"], leo=tmp_path) == {"1": (True, 0), "2": (False, 0)}

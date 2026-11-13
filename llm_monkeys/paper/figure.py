@@ -2,8 +2,9 @@
 
     python -m paper.figure results/paper_tables.json --out figure_pass_at_k
 
-Draws the "coverage" part of paper.tables' output and writes a PDF and a PNG.
-The dashed line is Gemini-3.8-Flash's one-shot accuracy as the paper quotes it.
+Draws the "coverage" part of paper.tables' output - the difficult questions
+that do not require a figure, as every table - and writes a PDF and a PNG. The
+dashed line is Gemini-3.8-Flash's one-shot accuracy on the same questions.
 """
 
 from __future__ import annotations
@@ -20,9 +21,6 @@ from matplotlib import font_manager  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
 
 TITLES = {"med_qa": "MedQA", "medbullets": "Medbullets"}
-# The values the paper's text quotes: the author's run on MedQA, ours on
-# Medbullets, where the author has none.
-REFERENCE = {"med_qa": 87.0, "medbullets": 75.8}
 # The paper's model order, in the first six categorical colours of the palette.
 COLORS = {"Gemma 4 26B": "#2a78d6", "GPT-oss 120B": "#eb6834", "GPT-oss 20B": "#1baf7a",
           "Qwen 3.6 27B": "#eda100", "Qwen 3.5 9B": "#e87ba4", "Qwen 3.5 4B": "#008300"}
@@ -30,7 +28,8 @@ INK, INK2, GRID, AXIS = "#0b0b0b", "#52514e", "#e4e3de", "#8f8e88"
 ARIAL = Path("/System/Library/Fonts/Supplemental/Arial.ttf")
 
 
-def draw(coverage: dict[str, dict[str, list[float]]], out: Path) -> list[Path]:
+def draw(coverage: dict[str, dict[str, list[float]]], reference: dict[str, float],
+         out: Path) -> list[Path]:
     if ARIAL.is_file():
         font_manager.fontManager.addfont(str(ARIAL))
         plt.rcParams["font.family"] = "Arial"
@@ -46,8 +45,8 @@ def draw(coverage: dict[str, dict[str, list[float]]], out: Path) -> list[Path]:
             curve = coverage.get(dataset, {}).get(label)
             if curve:
                 ax.plot(range(1, len(curve) + 1), [v * 100 for v in curve], color=color, lw=1.8)
-        ax.axhline(REFERENCE[dataset], color=INK2, lw=1.0, ls=(0, (4, 3)))
-        ax.text(95, REFERENCE[dataset] - 1.0, "Gemini-3.8-Flash, one shot", fontsize=7, color=INK2,
+        ax.axhline(reference[dataset], color=INK2, lw=1.0, ls=(0, (4, 3)))
+        ax.text(95, reference[dataset] - 1.0, "Gemini-3.8-Flash, one shot", fontsize=7, color=INK2,
                 va="top", ha="right")
         ticks = [1, 2, 5, 10, 20, 50, 100]
         ax.set_xscale("log")
@@ -76,7 +75,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=Path("figure_pass_at_k"),
                         help="output path without extension")
     args = parser.parse_args(argv)
-    for path in draw(json.loads(args.tables.read_text())["coverage"], args.out):
+    report = json.loads(args.tables.read_text())
+    reference = {d: v * 100 for d, v in report["reference"].items()}
+    for path in draw(report["coverage"], reference, args.out):
         print(path)
     return 0
 

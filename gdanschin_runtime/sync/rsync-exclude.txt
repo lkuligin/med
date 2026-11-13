@@ -24,6 +24,8 @@ data/
 # experiment outputs: json, csv, plots
 results/
 exports/
+# runs Leo hands over, copied to the box by hand
+imports/
 # model and dataset caches (point HF_HOME here)
 cache/
 # run logs

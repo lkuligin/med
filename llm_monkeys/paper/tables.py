@@ -3,32 +3,36 @@
     python -m paper.tables --markdown          (from llm_monkeys/, where results/ lives)
 
 Reads only; writes one JSON (results/paper_tables.json by default) and, with
---markdown, prints the tables.
+--markdown, prints the tables as the paper lays them out.
 
-Every number comes from our own runs. Where the paper quotes the author's runs
-instead (one shot and V1 of five models in Table 1), these are the values it
-shows in parentheses when the two differ by 3 points or more.
-
-Questions are the difficult lists, all of them ("all") or those that
-label_figures.py did not label requires_figure ("no figure"). The rules, as in
-the paper:
+Every table and the figure stand on the difficult questions that do not
+require a figure: the difficult lists less the questions label_figures.py
+labelled requires_figure, 459 for MedQA and 112 for Medbullets. The rules, as
+in the paper:
 
 - one shot: the first of a model's three step 1 attempts, re-parsed with the
-  current parser;
-- V1, V2: the pipeline's own pick (result.json) with Gemini-3.8-Flash or
-  GLM-5.3-Flash and the authors' judge prompt, i.e. the first candidate whose
-  facts all pass; a question where none passes counts as wrong. Where GLM has
-  not judged the run Gemini judged, V2 comes from our regenerated candidates
-  (authors' prompts, answers citing their facts) and is marked so;
-- majority vote: plurality over the candidates V2 picks from (V1's where there
-  is no V2), a tie going to the option sampled first;
+  current parser. Leo's step 1 runs are these same runs;
+- V1: Gemini-3.8-Flash with the authors' judge prompt picks the first
+  candidate whose facts all pass; a question where none passes counts as
+  wrong. Leo's runs on our candidates (imports/) for the three Qwen and
+  GPT-oss 20B, ours for Gemma and GPT-oss 120B;
+- V2: GLM-5.3-Flash by the same prompt and rule, on the same candidates;
+- none accepted: questions where a verifier passed no candidate in full, so
+  the pick counts as wrong;
+- majority vote: plurality over those candidates, a tie going to the option
+  sampled first;
 - general facts prompt: candidates written with the background fact prompt and
   answered citing their facts; their V2 is GLM with the fact-only judge prompt;
 - p: the paper's one-sided McNemar test against one shot;
-- avg_k, max_k: candidates a verifier checks before the first that passes, all
-  k when none does;
-- agreement, kappa: the two verifiers' verdicts on every fact both checked, on
-  the same candidates (paper.irr).
+- pass@k: over every candidate drawn for a question, 100 for each SLM; the
+  models whose runs drew 50 have 50 more in PASS_AT_100, drawn the same way
+  and pooled for this only;
+- Table 3, avg_k and max_k: candidates a verifier checks up to the first that
+  passes, all k when none does; agreement and kappa: the two verifiers'
+  verdicts on every fact both judged, on the same candidates (paper.irr). It
+  reads our own Gemini runs, which judged every fact; Leo's stop at a
+  candidate's first wrong fact, which leaves too biased a set of facts to
+  compare. So it covers the models with both runs of ours.
 """
 
 from __future__ import annotations
@@ -50,8 +54,9 @@ from paper.irr import agreement
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
-REGENERATED = RESULTS / "experiments" / "authors-facts-cited-answer"
 GENERAL_FACTS = RESULTS / "experiments" / "general-facts-cited-answer"
+PASS_AT_100 = RESULTS / "experiments" / "pass-at-100"
+LEO = ROOT / "imports"            # Leo's runs, in the single-file layout
 # store directory -> (dataset name for label_figures, difficult list)
 DATASETS = {"med_qa": ("bigbio/med_qa", "difficult_questions.csv"),
             "medbullets": ("mkieffer/Medbullets", "difficult_questions_mb.csv")}
@@ -60,22 +65,31 @@ GLM = "glm-5.3-flash-local"
 GLM_FACT_ONLY = "glm-5.3-flash-local-fact-only"
 
 
+TITLES = {"med_qa": "MedQA", "medbullets": "Medbullets"}
+MARK = {"med_qa": "", "medbullets": "_mb"}   # how Leo's file names tell the datasets apart
+
+
 @dataclass(frozen=True)
 class Slm:
     label: str
-    run: str                  # the authors' workflow run, and the step 1 run of the same name
-    k: int                    # candidates per question in it
-    regenerated: str | None   # our regenerated run, where GLM judged it instead of `run`
-    general: str              # the general facts prompt run
+    run: str                    # the authors' workflow run, and the step 1 run of the same name
+    k: int                      # candidates per question in it
+    general: str                # the general facts prompt run
+    leo_v1: str | None = None   # Leo's Gemini run on `run`'s candidates: LEO/<leo_v1><MARK>.json
+    more: str | None = None     # 50 more candidates in PASS_AT_100, pooled for pass@k only
 
 
 SLMS = (
-    Slm("Gemma 4 26B", "gemma-4-26b", 50, None, "gemma-4-26b-local-background-2"),
-    Slm("GPT-oss 120B", "gpt-oss-120b", 50, "gpt-oss-120b-local", "gpt-oss-120b-local"),
-    Slm("GPT-oss 20B", "gpt-oss-20b-local", 100, "gpt-oss-20b-local", "gpt-oss-20b-local"),
-    Slm("Qwen 3.6 27B", "qwen3.6-27b-nr-local", 50, "qwen3.6-27b-nr-local", "qwen3.6-27b-nr-local"),
-    Slm("Qwen 3.5 9B", "qwen3.5-9b-nr-local", 100, "qwen3.5-9b-nr-local", "qwen3.5-9b-nr-local"),
-    Slm("Qwen 3.5 4B", "qwen3.5-4b-nr-local", 100, None, "qwen3.5-4b-nr-local"),
+    Slm("Gemma 4 26B", "gemma-4-26b", 50, "gemma-4-26b-local-background-2", more="gemma-4-26b-local"),
+    Slm("GPT-oss 120B", "gpt-oss-120b", 50, "gpt-oss-120b-local", more="gpt-oss-120b-local"),
+    Slm("GPT-oss 20B", "gpt-oss-20b-local", 100, "gpt-oss-20b-local",
+        leo_v1="results_step3_gpt_oss-20b-local_verified"),
+    Slm("Qwen 3.6 27B", "qwen3.6-27b-nr-local", 50, "qwen3.6-27b-nr-local",
+        leo_v1="results_step3_qwen3.6-27b_verified", more="qwen3.6-27b-nr-local"),
+    Slm("Qwen 3.5 9B", "qwen3.5-9b-nr-local", 100, "qwen3.5-9b-nr-local",
+        leo_v1="results_step3_qwen3.5-9b-nr-local_gemini-3.8-flash"),
+    Slm("Qwen 3.5 4B", "qwen3.5-4b-nr-local", 100, "qwen3.5-4b-nr-local",
+        leo_v1="results_step3_qwen3.5-4b_verified"),
 )
 
 
@@ -95,6 +109,13 @@ def pass_at_k(n: int, c: int, k: int) -> float:
     if n - c < k:
         return 1.0
     return 1.0 - math.comb(n - c, k) / math.comb(n, k)
+
+
+def coverage(correct: Sequence[Sequence[bool]]) -> list[float]:
+    """Mean pass@k over questions, each question's candidates given as right
+    or wrong, for k up to the fewest any question has."""
+    return [_mean([pass_at_k(len(c), sum(c), k) for c in correct])
+            for k in range(1, min(len(c) for c in correct) + 1)]
 
 
 def mcnemar(a: Sequence[int], b: Sequence[int]) -> dict[str, Any]:
@@ -155,13 +176,13 @@ def resolve(listed: Sequence[str], known: set[str]) -> list[str]:
     return out
 
 
-def question_sets(dataset: str) -> dict[str, list[str]]:
-    """The difficult questions of a dataset, all and without a required figure."""
+def questions(dataset: str) -> list[str]:
+    """The difficult questions of a dataset that do not require a figure."""
     name, listing = DATASETS[dataset]
     known = {p.stem.split("_", 1)[1] for p in (RESULTS / dataset / "single-step" / GEMINI).glob("question_*.json")}
     ids = resolve(load_difficult_question_ids(ROOT / listing), known)
     labels = read_labels(default_output(name))
-    return {"all": ids, "no figure": [q for q in ids if labels.get(q, ("",))[0] != "requires_figure"]}
+    return [q for q in ids if labels.get(q, ("",))[0] != "requires_figure"]
 
 
 def first_attempts(dataset: str, run: str) -> dict[str, int]:
@@ -206,15 +227,42 @@ def read_pools(executor: Executor, run_dir: Path, ids: list[str], k: int) -> dic
     return pools if all(len(p.options) == k for p in pools.values()) else None
 
 
-def picks(run_dir: Path, judge: str, ids: list[str]) -> dict[str, int] | None:
-    """Whether the pipeline's own pick is right; None unless every question is judged."""
+def outcomes(run_dir: Path, judge: str, ids: list[str]) -> dict[str, tuple[bool, int]] | None:
+    """Per question, whether some candidate passed in full and whether the
+    pipeline's own pick is right; None unless every question is judged."""
     out = {}
     for q in ids:
         path = run_dir / f"question_{q}" / judge / "result.json"
         if not path.is_file():
             return None
-        out[q] = int(json.loads(path.read_text()).get("is_correct") is True)
+        result = json.loads(path.read_text())
+        out[q] = (bool(result.get("found_valid_candidate")), int(result.get("is_correct") is True))
     return out
+
+
+def picks(run_dir: Path, judge: str, ids: list[str]) -> dict[str, int] | None:
+    """Whether the pipeline's own pick is right; None unless every question is judged."""
+    judged = outcomes(run_dir, judge, ids)
+    return None if judged is None else {q: right for q, (_, right) in judged.items()}
+
+
+def leo_outcomes(stem: str, dataset: str, ids: list[str], leo: Path = LEO) -> dict[str, tuple[bool, int]]:
+    """outcomes() of one of Leo's Gemini runs, from its single-file output;
+    every question must be there."""
+    data = json.loads((leo / f"{stem}{MARK[dataset]}.json").read_text())
+    known, out = set(ids), {}
+    for record in data["results"]:
+        for q in resolve([str(record["question_id"])], known):
+            out[q] = (bool(record.get("found_valid_candidate")), int(record.get("is_correct") is True))
+    missing = [q for q in ids if q not in out]
+    if missing:
+        raise ValueError(f"{stem}{MARK[dataset]}: no verdict on {len(missing)} questions, e.g. {missing[:3]}")
+    return out
+
+
+def leo_picks(stem: str, dataset: str, ids: list[str], leo: Path = LEO) -> dict[str, int]:
+    """Whether the pick of one of Leo's Gemini runs is right."""
+    return {q: right for q, (_, right) in leo_outcomes(stem, dataset, ids, leo).items()}
 
 
 def _read_verdicts(judge_dir: Path) -> dict[int, tuple[bool, tuple]]:
@@ -245,124 +293,130 @@ def _scored(selection: dict[str, int], one_shot: dict[str, int], ids: list[str])
     return {"accuracy": _mean(picked), **mcnemar([one_shot[q] for q in ids], picked)}
 
 
+def verifier_effort(executor: Executor, slm: Slm, run_dir: Path, pools: dict[str, Pool],
+                    ids: list[str]) -> dict[str, Any]:
+    """Table 3: output tokens per candidate, how far each verifier reads, and
+    how far the two agree - from our own Gemini run, which judged every fact."""
+    v1 = read_verdicts(executor, run_dir, GEMINI, ids)
+    v2 = read_verdicts(executor, run_dir, GLM, ids)
+    t3: dict[str, Any] = {"tokens_per_candidate": statistics.mean(
+        t for q in ids for t in pools[q].tokens if t)}
+    for key, verdicts in (("v1", v1), ("v2", v2)):
+        if verdicts is not None:
+            needed = [first_valid_position(verdicts[q], slm.k) for q in ids]
+            t3[key] = {"avg_k": _mean(needed), "max_k": max(needed),
+                       "none_passed": _mean([not any(ok for ok, _ in verdicts[q].values()) for q in ids])}
+    if v1 is not None and v2 is not None:
+        left, right = [], []
+        for q in ids:
+            a, b = paired_fact_verdicts(v1[q], v2[q])
+            left += a
+            right += b
+        irr = agreement(left, right)
+        t3["irr"] = {"facts": irr.n, "agreement": irr.observed, "kappa": irr.kappa}
+    return t3
+
+
 def compute(workers: int = 24) -> dict[str, Any]:
-    report: dict[str, Any] = {"table1": {}, "table2": {}, "table3": {}, "coverage": {}, "reference": {}}
+    report: dict[str, Any] = {"questions": {}, "reference": {}, "table1": {}, "table2": {},
+                              "table3": {}, "coverage": {}}
     with ProcessPoolExecutor(max_workers=workers) as executor:
         for dataset in DATASETS:
-            sets = question_sets(dataset)
-            ids = sets["all"]
+            ids = questions(dataset)
             gemini = first_attempts(dataset, GEMINI)
-            report["reference"][dataset] = {name: _mean([gemini[q] for q in qs]) for name, qs in sets.items()}
+            report["questions"][dataset] = len(ids)
+            report["reference"][dataset] = _mean([gemini[q] for q in ids])
             for slm in SLMS:
                 one = first_attempts(dataset, slm.run)
                 run_dir = RESULTS / dataset / "facts-pipeline" / slm.run
                 general_dir = GENERAL_FACTS / dataset / "facts-pipeline" / slm.general
-                v1 = picks(run_dir, GEMINI, ids)
-                v2, v2_dir = picks(run_dir, GLM, ids), run_dir
-                if v2 is None and slm.regenerated:
-                    regenerated_dir = REGENERATED / dataset / "facts-pipeline" / slm.regenerated
-                    v2, v2_dir = picks(regenerated_dir, GLM, ids), regenerated_dir
-                regenerated = v2 is not None and v2_dir != run_dir
                 pools = read_pools(executor, run_dir, ids, slm.k)
-                vote_pools = pools if v2 is None or not regenerated else read_pools(executor, v2_dir, ids, slm.k)
+                judged = {"v1": leo_outcomes(slm.leo_v1, dataset, ids) if slm.leo_v1
+                          else outcomes(run_dir, GEMINI, ids),
+                          "v2": outcomes(run_dir, GLM, ids)}
                 general = read_pools(executor, general_dir, ids, slm.k)
                 general_v2 = picks(general_dir, GLM_FACT_ONLY, ids)
 
-                for name, qs in sets.items():
-                    t1: dict[str, Any] = {"one_shot": _mean([one[q] for q in qs])}
-                    if v1:
-                        t1["v1"] = _scored(v1, one, qs)
-                    if v2:
-                        t1["v2"] = {**_scored(v2, one, qs), "regenerated": regenerated}
-                    report["table1"].setdefault(name, {}).setdefault(dataset, {})[slm.label] = t1
+                t1: dict[str, Any] = {"k": slm.k, "one_shot": _mean([one[q] for q in ids]),
+                                      "v1_from": "Leo" if slm.leo_v1 else "ours"}
+                for key, verdict in judged.items():
+                    if verdict is not None:
+                        t1[key] = {**_scored({q: right for q, (_, right) in verdict.items()}, one, ids),
+                                   "none_accepted": sum(not found for found, _ in verdict.values())}
+                report["table1"].setdefault(dataset, {})[slm.label] = t1
 
-                    t2: dict[str, Any] = {"one_shot": t1["one_shot"]}
-                    if vote_pools:
-                        votes = {q: vote(vote_pools[q].options, vote_pools[q].truth) for q in qs}
-                        t2["majority_vote"] = {**_scored(votes, one, qs),
-                                               "candidates": "regenerated" if regenerated else "run"}
-                    if general:
-                        t2["general_single"] = _mean([sum(general[q].correct) / slm.k for q in qs])
-                        t2["general_majority_vote"] = _scored(
-                            {q: vote(general[q].options, general[q].truth) for q in qs}, one, qs)
-                        if general_v2:
-                            t2["general_v2"] = _scored(general_v2, one, qs)
-                    report["table2"].setdefault(name, {}).setdefault(dataset, {})[slm.label] = t2
+                t2: dict[str, Any] = {"one_shot": t1["one_shot"]}
+                if pools:
+                    t2["majority_vote"] = _scored({q: vote(pools[q].options, pools[q].truth) for q in ids}, one, ids)
+                if general:
+                    t2["general_single"] = _mean([sum(general[q].correct) / slm.k for q in ids])
+                    t2["general_majority_vote"] = _scored(
+                        {q: vote(general[q].options, general[q].truth) for q in ids}, one, ids)
+                    if general_v2:
+                        t2["general_v2"] = _scored(general_v2, one, ids)
+                report["table2"].setdefault(dataset, {})[slm.label] = t2
 
                 if pools:
-                    report["coverage"].setdefault(dataset, {})[slm.label] = [
-                        _mean([pass_at_k(slm.k, sum(pools[q].correct), k) for q in ids]) for k in range(1, slm.k + 1)]
-                    t3: dict[str, Any] = {"tokens_per_candidate": statistics.mean(
-                        t for q in ids for t in pools[q].tokens if t), "v2_regenerated": regenerated}
-                    judged = {}
-                    for key, (where, judge) in {"v1": (run_dir, GEMINI), "v2": (v2_dir, GLM)}.items():
-                        verdicts = read_verdicts(executor, where, judge, ids)
-                        if verdicts is None:
-                            continue
-                        judged[key] = (where, verdicts)
-                        needed = [first_valid_position(verdicts[q], slm.k) for q in ids]
-                        t3[key] = {"avg_k": _mean(needed), "max_k": max(needed),
-                                   "none_passed": _mean([not any(ok for ok, _ in verdicts[q].values()) for q in ids])}
-                    if "v1" in judged and "v2" in judged and judged["v1"][0] == judged["v2"][0]:
-                        left, right = [], []
-                        for q in ids:
-                            a, b = paired_fact_verdicts(judged["v1"][1][q], judged["v2"][1][q])
-                            left += a
-                            right += b
-                        irr = agreement(left, right)
-                        t3["irr"] = {"facts": irr.n, "agreement": irr.observed, "kappa": irr.kappa}
-                    report["table3"].setdefault(dataset, {})[slm.label] = t3
+                    more = (read_pools(executor, PASS_AT_100 / dataset / "facts-pipeline" / slm.more, ids, 50)
+                            if slm.more else None)
+                    report["coverage"].setdefault(dataset, {})[slm.label] = coverage(
+                        [pools[q].correct + (more[q].correct if more else ()) for q in ids])
+                    report["table3"].setdefault(dataset, {})[slm.label] = verifier_effort(
+                        executor, slm, run_dir, pools, ids)
     return report
 
 
 # --- printing -----------------------------------------------------------------
 
-def _cell(result: dict[str, Any] | None, mark: str = "") -> str:
-    if not result:
-        return "—"
+def _p(result: dict[str, Any]) -> str:
     p = result["p"]
-    p_text = "<0.001" if p < 0.001 else f"{p:.3f}"
-    arrow = "↓" if result["direction"] == "worse" and p < 0.05 else ""
-    return f"{result['accuracy'] * 100:.1f}%{mark}{arrow} ({'**' + p_text + '**' if p < 0.05 else p_text})"
+    text = "<0.001" if p < 0.001 else f"{p:.3f}"
+    return f"**{text}**" if p < 0.05 else text
+
+
+def _accuracy(result: dict[str, Any]) -> str:
+    arrow = "↓" if result["direction"] == "worse" and result["p"] < 0.05 else ""
+    return f"{result['accuracy'] * 100:.1f}%{arrow}"
+
+
+def _cell(result: dict[str, Any] | None) -> str:
+    return f"{_accuracy(result)} ({_p(result)})" if result else "—"
 
 
 def markdown(report: dict[str, Any]) -> str:
-    """The tables as the paper lays them out, p in parentheses, bold below 0.05."""
-    out = []
-    for name, by_dataset in report["table1"].items():
-        out += [f"Table 1 ({name})", "| SLM | one shot | V1 | V2 |", "|---|---|---|---|"]
-        for dataset, rows in by_dataset.items():
-            out.append(f"| *{dataset}* | | | |")
-            for label, row in rows.items():
-                dagger = "†" if row.get("v2", {}).get("regenerated") else ""
-                out.append(f"| {label} | {row['one_shot'] * 100:.1f}% | {_cell(row.get('v1'))} | {_cell(row.get('v2'), dagger)} |")
-        out.append("")
-    for name, by_dataset in report["table2"].items():
-        out += [f"Table 2 ({name})", "| SLM | one shot | majority vote | general facts | general facts, majority vote | general facts, V2 |",
-                "|---|---|---|---|---|---|"]
-        for dataset, rows in by_dataset.items():
-            out.append(f"| *{dataset}* | | | | | |")
-            for label, row in rows.items():
-                single = f"{row['general_single'] * 100:.1f}%" if "general_single" in row else "—"
-                out.append(f"| {label} | {row['one_shot'] * 100:.1f}% | {_cell(row.get('majority_vote'))} | {single} | "
-                           f"{_cell(row.get('general_majority_vote'))} | {_cell(row.get('general_v2'))} |")
-        out.append("")
-    out += ["Table 3", "| SLM | tokens/cand | avg_k V1 | max_k V1 | avg_k V2 | max_k V2 | agreement | kappa |",
-            "|---|---|---|---|---|---|---|---|"]
-    for dataset, rows in report["table3"].items():
-        out.append(f"| *{dataset}* | | | | | | | |")
+    """The tables as the paper lays them out: p beside each result, bold below
+    0.05; Table 2 on MedQA only; Table 3 only where the verifiers' agreement
+    could be measured."""
+    out = ["Table 1", "| SLM | k | % correct one shot | % correct sampling (V1) (p-value) | none accepted (V1) | "
+           "% correct sampling (V2) (p-value) | none accepted (V2) |", "|---|---|---|---|---|---|---|"]
+    for dataset, rows in report["table1"].items():
+        out.append(f"| ***{TITLES[dataset]} dataset ({report['questions'][dataset]})*** | | | | | | |")
         for label, row in rows.items():
-            dagger = "†" if row.get("v2_regenerated") else ""
-            v1, v2, irr = row.get("v1"), row.get("v2"), row.get("irr")
-            cells = [f"{row['tokens_per_candidate']:,.0f}",
-                     f"{v1['avg_k']:.1f}" if v1 else "—", str(v1["max_k"]) if v1 else "—",
-                     f"{v2['avg_k']:.1f}{dagger}" if v2 else "—", f"{v2['max_k']}{dagger}" if v2 else "—",
-                     f"{irr['agreement'] * 100:.1f}%" if irr else "—",
-                     f"{irr['kappa']:.2f}" if irr and irr["kappa"] is not None else "—"]
-            out.append(f"| {label} | " + " | ".join(cells) + " |")
-    reference = ", ".join(f"{d}: {v['all'] * 100:.1f}% (no figure {v['no figure'] * 100:.1f}%)"
-                          for d, v in report["reference"].items())
-    out += ["", f"Gemini-3.8-Flash one shot: {reference}"]
+            v1, v2 = row.get("v1") or {}, row.get("v2") or {}
+            out.append(f"| {label} | {row['k']} | {row['one_shot'] * 100:.1f}% | {_cell(row.get('v1'))} | "
+                       f"{v1.get('none_accepted', '—')} | {_cell(row.get('v2'))} | {v2.get('none_accepted', '—')} |")
+    out += ["", f"Table 2 ({TITLES['med_qa']}, {report['questions']['med_qa']} questions)",
+            "| SLM | % correct one shot | % correct majority vote (p-value) | General facts prompt: % correct | "
+            "General facts prompt: % correct majority vote (p-value) | "
+            "General facts prompt: % correct sampling (V2) (p-value) |", "|---|---|---|---|---|---|"]
+    for label, row in report["table2"]["med_qa"].items():
+        single = f"{row['general_single'] * 100:.1f}%" if "general_single" in row else "—"
+        out.append(f"| {label} | {row['one_shot'] * 100:.1f}% | {_cell(row.get('majority_vote'))} | {single} | "
+                   f"{_cell(row.get('general_majority_vote'))} | {_cell(row.get('general_v2'))} |")
+    out += ["", "Table 3", "| SLM | k | avg tokens/cand | avg_k (V1) | avg_k (V2) | agreement V1–V2 | IRR (Cohen's κ) |",
+            "|---|---|---|---|---|---|---|"]
+    k = {slm.label: slm.k for slm in SLMS}
+    for dataset, rows in report["table3"].items():
+        out.append(f"| ***{TITLES[dataset]} dataset ({report['questions'][dataset]})*** | | | | | | |")
+        for label, row in rows.items():
+            irr = row.get("irr")
+            if not irr:
+                continue
+            kappa = f"{irr['kappa']:.2f}" if irr["kappa"] is not None else "—"
+            out.append(f"| {label} | {k[label]} | {row['tokens_per_candidate']:,.0f} | {row['v1']['avg_k']:.1f} | "
+                       f"{row['v2']['avg_k']:.1f} | {irr['agreement'] * 100:.1f}% | {kappa} |")
+    reference = ", ".join(f"{TITLES[d]} {v * 100:.1f}%" for d, v in report["reference"].items())
+    out += ["", f"Gemini-3.8-Flash one shot on the same questions: {reference}"]
     return "\n".join(out)
 
 

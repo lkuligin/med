@@ -24,6 +24,7 @@ REMOTE_OWNED = {
     "data/": "datasets and downloaded inputs",
     "results/": "experiment output, the point of the runs",
     "exports/": "exported results",
+    "imports/": "runs Leo hands over, copied to the box by hand",
     "cache/": "the Hugging Face cache the box reads datasets from",
     "logs/": "run logs",
     "scratch/": "ad-hoc scripts written on the box",

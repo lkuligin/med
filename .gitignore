@@ -194,6 +194,9 @@ llm_monkeys/results_*.json
 # Runs assembled back into the single-file layout, for reading elsewhere.
 exports/
 
+# Runs Leo hands over in the single-file layout; copied to the box by hand.
+imports/
+
 # Write-ups and figures made for the paper; the code that recomputes their
 # numbers is llm_monkeys/paper.
 llm_monkeys/reports/
