@@ -28,7 +28,6 @@ import json
 import re
 import resource
 import os
-import shutil
 import subprocess
 import sys
 import threading
@@ -43,6 +42,7 @@ from gdanschin_runtime.experiment_chain import (
     QWEN_JUDGE,
     REPO, BASE_MODELS, DATASET_DIR, MONKEYS, Judge, call, copy_candidates,
     generate_experiment, judge_experiment, judged, log, questions, serve, step, stored)
+from gdanschin_runtime.carry_verdicts import carry
 from gdanschin_runtime.question_ids import resolve
 
 sys.path.insert(0, str(MONKEYS))
@@ -266,37 +266,9 @@ def reanswer(base: str, source_dir: str, dest_dir: str, run: str, in_flight: int
 # --- judging ------------------------------------------------------------------
 
 def carry_verdicts(judge_name: str) -> None:
-    """gemma's fact-only verdicts on general-facts, onto its re-answered copy.
-
-    The facts are the same, and a fact-only judge never sees the answer, so
-    only what the verdicts say about the answer changes: it is read off the
-    re-answered candidates."""
-    src_run = MONKEYS / GENERAL_FACTS_DIR / "med_qa" / "facts-pipeline" / GENERAL_FACTS_RUN
-    dst_run = MONKEYS / GENERAL_FACTS_CITED_DIR / "med_qa" / "facts-pipeline" / GENERAL_FACTS_RUN
-    carried = 0
-    for src in sorted(src_run.glob(f"question_*/{judge_name}")):
-        dst = dst_run / src.parent.name / judge_name
-        if dst.exists():
-            continue
-        answers = {}
-        for f in (dst_run / src.parent.name).glob("iteration_*.json"):
-            cand = json.loads(f.read_text())["candidate"]
-            answers[cand["candidate_index"]] = (cand.get("predicted_option"), bool(cand.get("is_correct")))
-        tmp = dst.with_name(dst.name + ".incoming")
-        shutil.rmtree(tmp, ignore_errors=True)
-        tmp.mkdir(parents=True)
-        for f in src.glob("iteration_*.json"):
-            record = json.loads(f.read_text())
-            v = record["verification"]
-            v["predicted_option"], v["is_correct"] = answers[v["candidate_index"]]
-            (tmp / f.name).write_text(json.dumps(record, indent=2))
-        result = json.loads((src / "result.json").read_text())
-        chosen = result.get("selected_candidate_index")
-        if chosen is not None:
-            result["predicted_option"], result["is_correct"] = answers[chosen]
-        (tmp / "result.json").write_text(json.dumps(result, indent=2))
-        tmp.rename(dst)
-        carried += 1
+    """gemma's fact-only verdicts on general-facts, onto its re-answered copy."""
+    carried = carry(MONKEYS / GENERAL_FACTS_DIR, MONKEYS / GENERAL_FACTS_CITED_DIR,
+                    GENERAL_FACTS_RUN, judge_name)
     log(f"  {judge_name}: verdicts of {carried} questions carried onto the re-answered general-facts")
 
 

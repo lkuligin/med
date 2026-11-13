@@ -191,9 +191,10 @@ def generate_experiment(base: str, catalogue: str, free_form: bool, *,
                         fact_prompt: str = "grounded-unframed",
                         answer_prompt: str = "cited-facts",
                         datasets: tuple[str, ...] = DATASETS,
-                        shards: int | None = None, k: int = K) -> None:
+                        shards: int | None = None, k: int = K,
+                        max_tokens: int | None = None) -> None:
     """Generate an experiment's candidates; `run` names the stored run and
-    defaults to the model's own name."""
+    defaults to the model's own name, `max_tokens` to the model's budget."""
     run = run or base
     for dataset in datasets:
         want = len(questions(dataset)) * k
@@ -219,13 +220,33 @@ def generate_experiment(base: str, catalogue: str, free_form: bool, *,
                            "--fact-prompt", fact_prompt, "--answer-prompt", answer_prompt,
                            "--difficult-questions", str(shard), "--dataset", dataset,
                            "--n-candidates", str(k), "--concurrency", str(k),
-                           "--max-tokens", str(MAX_TOKENS_BY_BASE.get(base, 4096))]
+                           "--max-tokens", str(max_tokens or MAX_TOKENS_BY_BASE.get(base, 4096))]
                 if free_form:
                     command.append("--free-form-facts")
                 procs.append(call(command, REPO / "logs" / f"chain_step2_{run}_{DATASET_DIR[dataset]}.log"))
             for p in procs:
                 p.wait()
         log(f"  {run} on {DATASET_DIR[dataset]}: {stored(exp_dir, run, dataset)}/{want} after generation")
+
+
+def chain_running(module: str) -> bool:
+    """Whether a chain started as `python -m <module>` is still at work."""
+    pids = subprocess.run(["pgrep", "-f", module], capture_output=True, text=True).stdout.split()
+    for pid in pids:
+        # Its launching shell carries the same command line; only python counts.
+        try:
+            argv0 = Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0")[0].decode(errors="replace")
+        except OSError:
+            continue
+        if Path(argv0).name.startswith("python"):
+            return True
+    return False
+
+
+def wait_for_chain(module: str) -> None:
+    while chain_running(module):
+        time.sleep(60)
+    log(f"  {module} has finished")
 
 
 def wait_for_judges(exp_dir: str, run: str) -> None:
@@ -243,7 +264,7 @@ def judge_experiment(bases: list[str], *, exp_dir: str = EXP_DIR,
                      judge_name: str = JUDGE_NAME,
                      judge: Judge = GLM_JUDGE,
                      stop_all: int = 1, stop_cited: int = 0,
-                     concurrency: int | None = None) -> None:
+                     concurrency: int | None = None, early_stop_facts: bool = False) -> None:
     for base in bases:
         wait_for_judges(exp_dir, base)
     # A restarted chain passes every judging step again; swapping the cards
@@ -282,7 +303,8 @@ def judge_experiment(bases: list[str], *, exp_dir: str = EXP_DIR,
                  # GLM runs on our own cards, so the extra requests cost
                  # nothing. It helps only once the tail leaves slots idle;
                  # twenty questions of long-reasoning checks still fill 64.
-                 "--speculate-tail"],
+                 "--speculate-tail"]
+                + (["--early-stop-facts"] if early_stop_facts else []),
                 REPO / "logs" / f"chain_step3_{base}_{DATASET_DIR[dataset]}.log").wait()
         for dataset in datasets:
             log(f"  {base} on {DATASET_DIR[dataset]}: judged "

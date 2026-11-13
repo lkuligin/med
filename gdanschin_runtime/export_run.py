@@ -3,6 +3,9 @@
     python3 gdanschin_runtime/export_run.py --run gemma-4-26b
     python3 gdanschin_runtime/export_run.py --run gemma-4-26b --steps one-shot
     python3 gdanschin_runtime/export_run.py --run gemma-4-26b --judge gemini-3.8-flash
+    python3 gdanschin_runtime/export_run.py --run gpt-oss-120b-local \
+        --results-dir results/experiments/authors-facts-cited-answer \
+        --out-dir exports/authors-facts-cited-answer --steps candidates verdicts
 
 Exports are gzipped: a step 1 file is a record per question with the raw model
 response in it, and these are handed over by upload, where the size is the cost.
@@ -219,6 +222,10 @@ def main(argv: list[str] | None = None) -> int:
                         help="which judge's verdicts to export (default: every one)")
     parser.add_argument("--dataset", default=None,
                         help="which dataset's copy of the run (default: med_qa)")
+    parser.add_argument("--results-dir", default="results",
+                        help="the store to read, relative to llm_monkeys/ "
+                             "(default: results; an experiment is "
+                             "results/experiments/<name>)")
     parser.add_argument("--out-dir", default="exports",
                         help="where the files go; each step lands in its own "
                              "subdirectory of it (default: exports/)")
@@ -226,6 +233,12 @@ def main(argv: list[str] | None = None) -> int:
                         choices=["one-shot", "candidates", "verdicts"],
                         help="which steps to export (default: all of them)")
     args = parser.parse_args(argv)
+
+    # Every reader below takes the store from here.
+    global RESULTS
+    RESULTS = Path(args.results_dir)
+    if not RESULTS.is_absolute():
+        RESULTS = _bootstrap.LLM_MONKEYS_ROOT / RESULTS
 
     run = args.run
     dataset = dataset_dir_for(args.dataset)

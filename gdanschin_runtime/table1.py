@@ -72,13 +72,18 @@ def general_facts_medbullets() -> None:
                             datasets=(MEDBULLETS,), shards=max(1, round(1.3 * in_flight / k)), k=k)
 
 
-def glm_gaps() -> None:
+def glm_authors_prompt(dataset: str, run: str) -> None:
+    """GLM with the authors' prompt and their first-valid rule, on a run in results/."""
     concurrency = remembered(GLM_JUDGE.serve, "judge") or GLM_JUDGE.concurrency
+    judge_experiment([run], exp_dir="results", datasets=(dataset,), judge_prompt="reference",
+                     judge_name=GLM_JUDGE.name("reference"), judge=GLM_JUDGE,
+                     stop_all=FIRST[0], stop_cited=FIRST[1], concurrency=concurrency)
+
+
+def glm_gaps() -> None:
     for dataset, run in GLM_GAPS:
-        step(f"GLM with the authors' prompt judges {run} on {DATASET_DIR[dataset]}", judge_experiment,
-             [run], exp_dir="results", datasets=(dataset,), judge_prompt="reference",
-             judge_name=GLM_JUDGE.name("reference"), judge=GLM_JUDGE,
-             stop_all=FIRST[0], stop_cited=FIRST[1], concurrency=concurrency)
+        step(f"GLM with the authors' prompt judges {run} on {DATASET_DIR[dataset]}",
+             glm_authors_prompt, dataset, run)
 
 
 def resume_matrix() -> None:
