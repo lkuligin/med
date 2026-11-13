@@ -52,6 +52,10 @@ class FactVerificationResult:
     latency_seconds: float = 0.0
     tokens: StepTokenUsage = field(default_factory=StepTokenUsage)
     error: str | None = None
+    # Which of the candidate's facts this verdict is on. Set when facts are
+    # judged out of their order (early_stop_facts with cited facts first);
+    # None means the verdict's position in the list is the fact's.
+    fact_index: int | None = None
     timestamp: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
@@ -83,6 +87,7 @@ class FactVerificationResult:
             latency_seconds=float(data.get("latency_seconds", 0.0)),
             tokens=StepTokenUsage(**valid_token_fields),
             error=data.get("error"),
+            fact_index=data.get("fact_index"),
             timestamp=data.get("timestamp", datetime.now(timezone.utc).isoformat()),
         )
 

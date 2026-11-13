@@ -817,3 +817,55 @@ def test_a_candidate_without_citations_is_read_as_citing_every_fact():
     assert cited_valid(v([1, 0]), [0]) is True
     assert cited_valid(v([1, 0]), None) is False
     assert cited_valid(v([]), None) is False
+
+
+@pytest.mark.asyncio
+async def test_cited_facts_are_checked_first_when_checking_stops_at_a_wrong_fact(tmp_path):
+    # The wrong fact is not cited: checked after the cited ones, it fails the
+    # candidate on all facts and leaves it valid on its citations.
+    from verifier.workflow import cited_valid
+    runner, calls = _verdicts_by_fact({"good": 1, "bad": 0})
+    cands = [Step2CandidateData(0, ["bad a", "good b", "good c", "good d"], "A", True,
+                                cited_facts=[2, 1])]
+    config = VerifierConfig(results_dir=str(tmp_path), run_name="r", judge_name="j",
+                            early_stop_facts=True, stop_after_all_valid=1, stop_after_cited_valid=1)
+    _, results = await VerifierWorkflow(config=config, verifier_runner=runner).run(
+        questions=[_question(cands)])
+    cv = results[0].candidate_verifications[0]
+    assert calls == ["good c", "good b", "bad a"], "fact d cannot change either verdict"
+    assert [f.fact_index for f in cv.fact_verifications] == [2, 1, 0]
+    assert cv.all_facts_correct is False
+    assert cited_valid(cv, [2, 1]) is True
+
+
+@pytest.mark.asyncio
+async def test_a_wrong_cited_fact_ends_the_checking_at_once(tmp_path):
+    from verifier.workflow import cited_valid
+    runner, calls = _verdicts_by_fact({"good": 1, "bad": 0})
+    cands = [Step2CandidateData(0, ["good a", "bad b", "good c"], "A", True, cited_facts=[1])]
+    config = VerifierConfig(results_dir=str(tmp_path), run_name="r", judge_name="j",
+                            early_stop_facts=True)
+    _, results = await VerifierWorkflow(config=config, verifier_runner=runner).run(
+        questions=[_question(cands)])
+    cv = results[0].candidate_verifications[0]
+    assert calls == ["bad b"]
+    assert cited_valid(cv, [1]) is False and cv.all_facts_correct is False
+
+
+def test_a_cited_fact_left_unjudged_does_not_pass():
+    from verifier.workflow import cited_valid
+    from verifier._schemas import CandidateVerificationResult, FactVerificationResult
+    cv = CandidateVerificationResult(
+        candidate_index=0, attempt_number=1, facts=["a", "b", "c"], ground_truth="A", is_correct=True,
+        predicted_option="A", all_facts_correct=False, total_latency_seconds=0, total_tokens=0,
+        total_prompt_tokens=0, total_candidate_tokens=0,
+        fact_verifications=[FactVerificationResult(fact="a", verdict=1, is_correct=True, fact_index=0)])
+    assert cited_valid(cv, [0]) is True
+    assert cited_valid(cv, [0, 2]) is False
+
+
+def test_a_verdicts_fact_survives_storage():
+    from verifier._schemas import FactVerificationResult
+    fv = FactVerificationResult(fact="f", verdict=1, is_correct=True, fact_index=3)
+    assert FactVerificationResult.from_dict(fv.to_dict()).fact_index == 3
+    assert FactVerificationResult.from_dict({"fact": "f", "verdict": 1}).fact_index is None

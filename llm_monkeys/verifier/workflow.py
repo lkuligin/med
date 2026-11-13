@@ -64,6 +64,11 @@ def cited_valid(verdict: CandidateVerificationResult, cited: list[int] | None) -
     if cited is None:
         return verdict.all_facts_correct
     facts = verdict.fact_verifications
+    if any(f.fact_index is not None for f in facts):
+        # Judged out of order: each verdict names its fact, and a cited fact
+        # left unjudged cannot pass.
+        by_index = {f.fact_index: f.verdict for f in facts}
+        return all(by_index.get(i) == 1 for i in cited if 0 <= i < len(verdict.facts))
     return all(facts[i].verdict == 1 for i in cited if 0 <= i < len(facts))
 
 
@@ -343,8 +348,16 @@ class VerifierWorkflow:
 
         fact_verifications: list[FactVerificationResult] = []
         if getattr(self.config, "early_stop_facts", False):
-            for f_idx, fact in enumerate(facts):
-                fv = await _verify_fact(f_idx, fact)
+            # Cited facts first. A wrong one fails the candidate on both rules;
+            # once they all pass, the first wrong fact among the rest fails it
+            # on all facts and leaves it valid on the cited ones. Either way no
+            # later verdict can change anything, so the checking stops there.
+            cited = list(dict.fromkeys(
+                i for i in candidate.cited_facts or [] if 0 <= i < len(facts)))
+            order = cited + [i for i in range(len(facts)) if i not in set(cited)]
+            for f_idx in order:
+                fv = await _verify_fact(f_idx, facts[f_idx])
+                fv.fact_index = f_idx
                 fact_verifications.append(fv)
                 if not fv.is_correct:
                     break
