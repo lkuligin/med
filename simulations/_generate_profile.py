@@ -13,7 +13,7 @@ from _prompts import _PROMPT_STEP_1
 async def generate_single_profile(
     client: genai.Client,
     prompt_text: str,
-    model: str = "gemini-3.7-flash",
+    model: str = "gemini-3.8-flash",
     max_revisions: int = 2,
 ) -> str:
     """Generates a single psychological profile with revision steps using native Google GenAI SDK."""
