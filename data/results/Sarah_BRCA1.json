@@ -1,0 +1,541 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "sarah-levi-brca1",
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">Sarah Levi, 34 Female. Munich, DE. BRCA1+ (Ashkenazi Founder). TNBC Survivor.</div>"
+        },
+        "name": [
+          {
+            "use": "official",
+            "family": "Levi",
+            "given": [
+              "Sarah"
+            ]
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1991-05-14",
+        "address": [
+          {
+            "line": [
+              "Prinzregentenstraße 88"
+            ],
+            "city": "München",
+            "postalCode": "81675",
+            "country": "DE"
+          }
+        ],
+        "telecom": [
+          {
+            "system": "email",
+            "value": "s.levi.art@example.de"
+          }
+        ],
+        "maritalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus",
+              "code": "U",
+              "display": "unmarried"
+            }
+          ]
+        },
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/patient-ethnicity",
+            "valueCoding": {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-Ethnicity",
+              "code": "2135-2",
+              "display": "Jewish Ashkenazi"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Organization",
+        "id": "org-tum-mri",
+        "name": "Klinikum rechts der Isar der TU München",
+        "alias": [
+          "Interdisziplinäres Brustzentrum",
+          "Institut für Humangenetik TUM"
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Organization",
+        "id": "org-kinderwunsch",
+        "name": "Kinderwunsch Zentrum an der Oper",
+        "address": [
+          {
+            "city": "München"
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Coverage",
+        "id": "cov-tk",
+        "status": "active",
+        "payor": [
+          {
+            "display": "Techniker Krankenkasse (TK)"
+          }
+        ],
+        "beneficiary": {
+          "reference": "Patient/sarah-levi-brca1"
+        },
+        "type": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "PUBLICPOL",
+              "display": "public healthcare"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-brca1-pos",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "412734009",
+              "display": "BRCA1 gene mutation positive"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/sarah-levi-brca1"
+        },
+        "onsetDateTime": "2023-11-20",
+        "note": [
+          {
+            "text": "Confirmed Ashkenazi Founder Mutation (185delAG). Fast-tracked testing due to TNBC diagnosis at young age and ethnicity."
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-tnbc",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "remission"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "64859006",
+              "display": "Invasive Ductal Carcinoma"
+            }
+          ]
+        },
+        "bodySite": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "80248007",
+                "display": "Left breast structure"
+              }
+            ]
+          }
+        ],
+        "subject": {
+          "reference": "Patient/sarah-levi-brca1"
+        },
+        "onsetDateTime": "2023-10-15",
+        "note": [
+          {
+            "text": "Subtype: Triple Negative (TNBC). Staging: cT2 cN0 M0 (Stage IIA). Grade: G3. Ki-67: 80% (Highly aggressive)."
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "RiskAssessment",
+        "id": "risk-ovarian",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/sarah-levi-brca1"
+        },
+        "condition": {
+          "reference": "Condition/cond-brca1-pos"
+        },
+        "prediction": [
+          {
+            "outcome": {
+              "text": "Lifetime risk of Ovarian Cancer"
+            },
+            "probabilityDecimal": 0.6,
+            "qualitativeRisk": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/risk-probability",
+                  "code": "high"
+                }
+              ]
+            }
+          }
+        ],
+        "note": [
+          {
+            "text": "Estimated 40-60% lifetime risk. Drives recommendation for RRSO between ages 35-40."
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-social-job",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11341-5",
+              "display": "History of Occupation"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/sarah-levi-brca1"
+        },
+        "valueString": "Artist (Self-employed)",
+        "note": [
+          {
+            "text": "Patient holds Schwerbehindertenausweis (Disability Pass). Struggles with identity ('Invalid' vs 'Artist') and 'Body Dysmorphia' regarding scars."
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-psych-privacy",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "405085002",
+              "display": "Psychosocial status"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/sarah-levi-brca1"
+        },
+        "note": [
+          {
+            "text": "Deep mistrust of centralized health databases (eGK). Fears discrimination ('list of genetically defective Jews'). Inquired about 'Self-payer' status for privacy."
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "proc-fertility-preservation",
+        "status": "completed",
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "411456006",
+              "display": "Oocyte cryopreservation"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/sarah-levi-brca1"
+        },
+        "performedDateTime": "2023-10-30",
+        "location": {
+          "reference": "Organization/org-kinderwunsch",
+          "display": "Kinderwunsch Zentrum an der Oper"
+        },
+        "note": [
+          {
+            "text": "12 oocytes stored. Funded by TK after appeal. Patient faces legal trap: Surrogacy is illegal in Germany, creating a 'biological dead end' if she proceeds with RRSO."
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "proc-neoadjuvant",
+        "status": "completed",
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "367336001",
+              "display": "Chemotherapy and Immunotherapy"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/sarah-levi-brca1"
+        },
+        "performedPeriod": {
+          "start": "2023-11-01",
+          "end": "2024-04-01"
+        },
+        "note": [
+          {
+            "text": "KEYNOTE-522 Protocol: Pembrolizumab + Carboplatin/Paclitaxel followed by Anthracycline/Cyclophosphamide. Result: Pathological Complete Response (pCR)."
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "proc-surgery",
+        "status": "completed",
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "172043003",
+              "display": "Bilateral Mastectomy"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/sarah-levi-brca1"
+        },
+        "performedDateTime": "2024-05-15",
+        "location": {
+          "reference": "Organization/org-tum-mri",
+          "display": "TUM Clinical Department of Gynaecology"
+        },
+        "note": [
+          {
+            "text": "Left Therapeutic / Right Prophylactic (Patient choice to 'erase risk'). Immediate reconstruction with implants."
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-olaparib",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "1592759",
+              "display": "Lynparza (Olaparib) 300 mg"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/sarah-levi-brca1"
+        },
+        "effectivePeriod": {
+          "start": "2024-06-01"
+        },
+        "note": [
+          {
+            "text": "Adherence struggle. Patient expresses cynicism ('Big Pharma' vs QoL). Significant fatigue and 'brain fog' affecting artistic work."
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "req-rrso",
+        "status": "active",
+        "intent": "plan",
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "80152002",
+              "display": "Salpingo-oophorectomy"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/sarah-levi-brca1"
+        },
+        "note": [
+          {
+            "text": "Recommended age 35-40. Patient delaying due to fear of immediate surgical menopause and loss of fertility options."
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "proc-surveillance-gyn",
+        "status": "in-progress",
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "268445003",
+              "display": "Currently no ongoing surveillance"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/sarah-levi-brca1"
+        },
+        "location": {
+          "display": "Frauenklinik Rechts der Isar"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "FamilyMemberHistory",
+        "id": "fam-father",
+        "status": "completed",
+        "patient": {
+          "reference": "Patient/sarah-levi-brca1"
+        },
+        "relationship": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+              "code": "FTH",
+              "display": "father"
+            }
+          ]
+        },
+        "condition": [
+          {
+            "code": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "412734009",
+                  "display": "BRCA1 gene mutation positive"
+                }
+              ]
+            },
+            "note": [
+              {
+                "text": "Healthy carrier. Suffers from intense 'Survivor's Guilt' regarding passing the gene to his daughter."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "FamilyMemberHistory",
+        "id": "fam-grandmother",
+        "status": "completed",
+        "patient": {
+          "reference": "Patient/sarah-levi-brca1"
+        },
+        "relationship": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+              "code": "PGRMTH",
+              "display": "paternal grandmother"
+            }
+          ]
+        },
+        "condition": [
+          {
+            "code": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "363443007",
+                  "display": "Malignant tumor of ovary"
+                }
+              ]
+            },
+            "deceasedAge": {
+              "value": 48,
+              "unit": "yr"
+            },
+            "note": [
+              {
+                "text": "Holocaust survivor who emigrated to Israel. Sarah views her own genetic risk as an extension of this generational trauma ('History's victim')."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "FamilyMemberHistory",
+        "id": "fam-aunt",
+        "status": "completed",
+        "patient": {
+          "reference": "Patient/sarah-levi-brca1"
+        },
+        "relationship": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+              "code": "PAUNT",
+              "display": "paternal aunt"
+            }
+          ]
+        },
+        "condition": [
+          {
+            "code": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "254837009",
+                  "display": "Malignant neoplasm of breast"
+                }
+              ]
+            },
+            "deceasedAge": {
+              "value": 36,
+              "unit": "yr"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
