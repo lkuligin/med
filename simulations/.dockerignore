@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+tests/
+local_chats/
+results/
+.git/
+.gitignore
+*.md
+deploy.sh

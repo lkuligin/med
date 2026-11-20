@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient Simulation Chat</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-header">
+        <h1 class="app-title">Patient Simulation Chat</h1>
+        <div class="user-badge" title="Logged-in Google account">
+          <span class="user-label">Doctor:</span>
+          <span id="doctor-email">Loading...</span>
+        </div>
+      </div>
+
+      <div class="topbar-controls">
+        <label class="control-group">
+          <span>Patient (EHR)</span>
+          <select id="ehr-select" disabled>
+            <option value="">Loading patients...</option>
+          </select>
+        </label>
+
+        <div class="button-group">
+          <button id="start-chat-btn" type="button" class="btn btn-primary" disabled>
+            Start New Chat
+          </button>
+          <button id="end-chat-btn" type="button" class="btn btn-danger" disabled>
+            End Chat
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <section class="status-banner" id="status-banner" aria-live="polite">
+      <div class="status-items">
+        <span><strong>Session:</strong> <code id="session-id">—</code></span>
+        <span><strong>Turns:</strong> <span id="turn-count">0</span></span>
+        <span class="save-pill" id="save-status">Not started</span>
+      </div>
+      <div class="ended-notice hidden" id="ended-notice">
+        Chat ended by doctor. Transcript is saved. Start a new chat to continue.
+      </div>
+    </section>
+
+    <div class="error-banner hidden" id="error-banner" role="alert"></div>
+
+    <main class="chat-pane" id="chat-pane" aria-live="polite">
+      <div class="empty-state" id="empty-state">
+        Select a patient above, then click <strong>Start New Chat</strong> to begin.
+      </div>
+      <div class="messages" id="messages"></div>
+      <div class="typing-indicator hidden" id="typing-indicator" aria-label="Patient is typing">
+        <span class="typing-label">Patient is typing</span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+    </main>
+
+    <form class="input-bar" id="chat-form" autocomplete="off">
+      <input
+        id="message-input"
+        type="text"
+        placeholder="Write your response as the doctor..."
+        disabled
+        aria-label="Doctor message"
+      />
+      <button id="send-btn" type="submit" class="btn btn-primary" disabled>
+        Send
+      </button>
+    </form>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
